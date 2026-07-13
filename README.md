@@ -50,6 +50,16 @@ Provider: OpenRouter. Budget target ≈ $38; hard ceiling $100. See [`configs/op
 
 Track progress on the [Hecate — Stage 1 GitHub Project](https://github.com/users/scottyUX/projects) (link updated after board setup).
 
+## Lab webpage
+
+Project overview and pipeline status: [`web/`](web/) (static site). Preview locally:
+
+```bash
+python -m http.server 8080 --directory web
+```
+
+Deploy via GitHub Pages — see [`web/README.md`](web/README.md).
+
 ## Quick start
 
 ```bash
@@ -60,6 +70,7 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env
 # Add your OpenRouter API key to .env
+pytest   # verify install and .env loading
 ```
 
 ### Run the pilot (once implemented)
