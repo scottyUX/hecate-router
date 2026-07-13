@@ -1,0 +1,15 @@
+---
+description: Python package, typing, and test conventions
+globs: "**/*.{py,pyi}"
+alwaysApply: false
+---
+
+# Python quality
+
+- Keep the package installable via the project manifest (`pyproject.toml` / equivalent). Declare dependencies there; do not assume undeclared packages.
+- Prefer `src/` layout imports when the repo uses them (e.g. `from package import ...`).
+- Type public functions and dataclasses when the surrounding code already uses typing.
+- Fail loudly on missing required configuration (e.g. API keys). Do not silently continue with empty credentials.
+- Put tests under `tests/` with pytest. Keep unit tests offline by default (no live network); mark integration tests explicitly if they need it.
+- Prefer focused tests for new behavior over broad unrelated suite churn.
+- Do not log or serialize secrets.
