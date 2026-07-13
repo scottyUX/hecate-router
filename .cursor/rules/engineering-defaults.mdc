@@ -1,0 +1,15 @@
+---
+description: General engineering defaults for scoped, safe changes
+alwaysApply: true
+---
+
+# Engineering defaults
+
+- Prefer small, reviewable diffs. Do not expand scope beyond the request.
+- Match existing naming, layout, and patterns before inventing new ones.
+- Read surrounding code and docs before changing behavior or inventing APIs.
+- Never commit secrets (API keys, tokens, credentials). Keep them in local `.env` (gitignored); commit only `.env.example` placeholders.
+- Do not update git config, force-push shared branches, or skip hooks unless explicitly asked.
+- Only create commits / PRs when the user asks.
+- Avoid editing markdown/docs the user did not ask for, unless required for the change to be usable.
+- Prefer fixing root causes over speculative refactors or drive-by cleanups.
