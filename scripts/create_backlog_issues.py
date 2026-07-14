@@ -92,7 +92,7 @@ Models to verify:
 - Qwen 2.5 72B (large)
 - Llama 3.3 70B (large)
 - Qwen 2.5 7B (small)
-- Llama 3 8B (small)
+- Llama 3.1 8B (small)
 
 ## Done when
 Config lists verified slugs + prices; a dry-run cost estimate for 1,200 samples is computed and recorded.

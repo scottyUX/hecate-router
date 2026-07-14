@@ -61,7 +61,7 @@ def test_generation_record_jsonl_roundtrip(tmp_path: Path):
     first = _sample_record(run_id="r1")
     second = _sample_record(
         run_id="r2",
-        model_slug="meta-llama/llama-3-8b-instruct",
+        model_slug="meta-llama/llama-3.1-8b-instruct",
         tier="small",
         patch_applied=True,
         fail_to_pass=["tests/test_foo.py::test_a"],
