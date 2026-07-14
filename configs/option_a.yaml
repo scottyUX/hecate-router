@@ -1,5 +1,6 @@
 # Option A model configuration — slugs and prices MUST be verified before spend (issue S4).
-# Placeholder values; confirm against OpenRouter live model list.
+# Qwen entries verified 2026-07-14 against OpenRouter's live /api/v1/models endpoint.
+# Llama entries are still placeholders; confirm against OpenRouter live model list.
 
 provider: openrouter
 base_url: https://openrouter.ai/api/v1
@@ -16,20 +17,20 @@ context:
   method: oracle  # oracle | bm25
 
 models:
-  - slug: qwen/qwen-2.5-72b-instruct  # VERIFY
+  - slug: qwen/qwen-2.5-72b-instruct  # verified 2026-07-14 via OpenRouter /api/v1/models
     tier: large
-    input_cost_per_1m: null  # VERIFY
-    output_cost_per_1m: null  # VERIFY
+    input_cost_per_1m: 0.36
+    output_cost_per_1m: 0.40
 
   - slug: meta-llama/llama-3.3-70b-instruct  # VERIFY
     tier: large
     input_cost_per_1m: null
     output_cost_per_1m: null
 
-  - slug: qwen/qwen-2.5-7b-instruct  # VERIFY
+  - slug: qwen/qwen-2.5-7b-instruct  # verified 2026-07-14 via OpenRouter /api/v1/models
     tier: small
-    input_cost_per_1m: null
-    output_cost_per_1m: null
+    input_cost_per_1m: 0.04
+    output_cost_per_1m: 0.10
 
   - slug: meta-llama/llama-3-8b-instruct  # VERIFY
     tier: small
