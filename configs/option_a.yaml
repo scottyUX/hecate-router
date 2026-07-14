@@ -22,17 +22,17 @@ models:
     input_cost_per_1m: 0.36
     output_cost_per_1m: 0.40
 
-  - slug: meta-llama/llama-3.3-70b-instruct  # VERIFY
+  - slug: meta-llama/llama-3.3-70b-instruct  # verified OpenRouter 2026-07-14
     tier: large
-    input_cost_per_1m: null
-    output_cost_per_1m: null
+    input_cost_per_1m: 0.10
+    output_cost_per_1m: 0.32
 
   - slug: qwen/qwen-2.5-7b-instruct  # verified 2026-07-14 via OpenRouter /api/v1/models
     tier: small
     input_cost_per_1m: 0.04
     output_cost_per_1m: 0.10
 
-  - slug: meta-llama/llama-3-8b-instruct  # VERIFY
+  - slug: meta-llama/llama-3.1-8b-instruct  # verified OpenRouter 2026-07-14 (was llama-3-8b)
     tier: small
-    input_cost_per_1m: null
-    output_cost_per_1m: null
+    input_cost_per_1m: 0.02
+    output_cost_per_1m: 0.03
