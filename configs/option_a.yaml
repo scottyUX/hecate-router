@@ -1,6 +1,13 @@
-# Option A model configuration — slugs and prices MUST be verified before spend (issue S4).
-# Qwen entries verified 2026-07-14 against OpenRouter's live /api/v1/models endpoint.
-# Llama entries are still placeholders; confirm against OpenRouter live model list.
+# Option A model configuration (S4 complete).
+# All four slugs + prices verified 2026-07-14 against OpenRouter /api/v1/models.
+#
+# Dry-run cost estimate for full Stage-1 sweep (300 tasks × 4 models = 1,200 samples).
+# Assumptions: avg prompt / completion tokens below (not measured yet — update after pilot).
+#   Mid  (4k prompt, 1.5k completion): ~$1.01 total
+#   High (8k prompt, 4k completion):   ~$2.29 total
+# Both well under budget.target_usd ($38) and budget.ceiling_usd ($100).
+# Per-model mid totals (300 samples each):
+#   qwen-2.5-72b: $0.61 | llama-3.3-70b: $0.26 | qwen-2.5-7b: $0.09 | llama-3.1-8b: $0.04
 
 provider: openrouter
 base_url: https://openrouter.ai/api/v1

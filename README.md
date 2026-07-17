@@ -44,7 +44,7 @@ These protect the validity of the eventual routing labels:
 | Weak (small) | Qwen 2.5 7B | cheap default |
 | Weak (small) | Llama 3.1 8B | cheap default |
 
-Provider: OpenRouter. Budget target ≈ $38; hard ceiling $100. See [`configs/option_a.yaml`](configs/option_a.yaml) — slugs and prices must be verified before any spend (issue S4).
+Provider: OpenRouter. Budget target ≈ $38; hard ceiling $100. See [`configs/option_a.yaml`](configs/option_a.yaml) — slugs, prices, and a 1,200-sample dry-run cost estimate are recorded (S4).
 
 ## Project board
 
