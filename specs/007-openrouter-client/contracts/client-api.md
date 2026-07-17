@@ -23,9 +23,12 @@ class OpenRouterError(Exception): ...
 class MissingCredentialError(OpenRouterError): ...
 class PermanentAPIError(OpenRouterError):
     status_code: int
+class MalformedResponseError(OpenRouterError):   # 2xx body missing completion shape
+    status_code: int | None
 class RetryExhaustedError(OpenRouterError):
     attempts: int
     last_status: int | None
+    last_error: BaseException | None             # underlying network exception, if any
 ```
 
 ## Client
@@ -64,11 +67,12 @@ class OpenRouterClient:
 
 | ID | Guarantee |
 |----|-----------|
-| C-1 | `complete` returns a `CompletionResult` with non-empty `text` on a 2xx response. |
+| C-1 | `complete` returns a `CompletionResult` with non-empty `text` on a well-formed 2xx response. A 2xx body that is non-JSON, has no `choices`, or has empty/missing `choices[0].message.content` raises `MalformedResponseError` rather than returning empty text. |
 | C-2 | `prompt_tokens` / `completion_tokens` reflect `usage`; both are `None` if `usage` is absent (no raise, no fabricated counts). |
+| C-2a | A `decoding` override MUST NOT set the reserved keys `model` or `messages`; doing so raises `ValueError`. Reserved fields are written last so decoding can never replace the validated prompt or slug. |
 | C-3 | `decoding_params` on the result equals what was sent (config values unless overridden). |
 | C-4 | Every request carries the configured `timeout` (targeting the configured `base_url`). |
-| C-5 | Transient responses — status `429` OR any 5xx (`500 <= status < 600`) — plus timeout / connection errors are retried with exponential back-off + full jitter, honoring `Retry-After` when present, up to `max_retries`; then `RetryExhaustedError` is raised. |
+| C-5 | Transient responses — status `429` OR any 5xx (`500 <= status < 600`) — plus timeout / connection errors are retried with exponential back-off + full jitter, honoring `Retry-After` when present, up to `max_retries`; then `RetryExhaustedError` is raised. For network-level exhaustion, the underlying exception is preserved on `last_error` and chained via `raise ... from`, so a timeout is distinguishable from a connection failure. |
 | C-6 | Any other 4xx (non-429) raises `PermanentAPIError` immediately with no retry. |
 | C-7 | At most `max_concurrency` requests are in flight across concurrent `complete` calls (shared `asyncio.Semaphore`). |
 | C-8 | Missing credential raises `MissingCredentialError` at construction, before any network call. The S2 loader `get_openrouter_api_key(required=True)` raises `RuntimeError`; the client MUST catch and re-raise it as `MissingCredentialError` so callers see the contract's error type. |

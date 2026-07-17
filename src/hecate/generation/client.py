@@ -26,12 +26,17 @@ import yaml
 from hecate.utils.env import get_openrouter_api_key
 
 from .errors import (
+    MalformedResponseError,
     MissingCredentialError,
     PermanentAPIError,
     RetryExhaustedError,
 )
 
 CHAT_COMPLETIONS_PATH = "/chat/completions"
+
+# Request-body keys the client owns; decoding overrides must never set these,
+# otherwise a caller could replace the validated prompt or model slug.
+RESERVED_BODY_KEYS = frozenset({"model", "messages"})
 
 DEFAULT_TIMEOUT = 60.0
 DEFAULT_MAX_RETRIES = 4
@@ -180,10 +185,19 @@ class OpenRouterClient:
             )
 
         resolved = {**self._decoding_defaults, **(decoding or {})}
+        reserved_conflicts = RESERVED_BODY_KEYS & resolved.keys()
+        if reserved_conflicts:
+            raise ValueError(
+                "decoding must not set reserved request keys "
+                f"{sorted(reserved_conflicts)}; the client owns 'model' and "
+                "'messages'."
+            )
+        # Reserved fields are written LAST so they can never be overridden by
+        # decoding params, preserving prompt fidelity and the requested slug.
         body: dict[str, Any] = {
+            **resolved,
             "model": model_slug,
             "messages": [{"role": "user", "content": prompt}],
-            **resolved,
         }
         headers = {
             "Authorization": f"Bearer {self._api_key}",
@@ -202,6 +216,7 @@ class OpenRouterClient:
     ) -> CompletionResult:
         max_attempts = self._max_retries + 1
         last_status: int | None = None
+        last_error: BaseException | None = None
 
         for attempt in range(1, max_attempts + 1):
             try:
@@ -211,10 +226,13 @@ class OpenRouterClient:
                     headers=headers,
                     timeout=self._timeout,
                 )
-            except (httpx.TimeoutException, httpx.TransportError):
+            except (httpx.TimeoutException, httpx.TransportError) as exc:
                 last_status = None
+                last_error = exc
                 if attempt >= max_attempts:
-                    raise RetryExhaustedError(attempts=attempt, last_status=last_status)
+                    raise RetryExhaustedError(
+                        attempts=attempt, last_status=None, last_error=exc
+                    ) from exc
                 await self._sleep(self._backoff_delay(attempt))
                 continue
 
@@ -224,14 +242,17 @@ class OpenRouterClient:
 
             if _is_transient_status(status):
                 last_status = status
+                last_error = None
                 if attempt >= max_attempts:
-                    raise RetryExhaustedError(attempts=attempt, last_status=last_status)
+                    raise RetryExhaustedError(attempts=attempt, last_status=status)
                 await self._sleep(self._backoff_delay(attempt, response))
                 continue
 
             raise PermanentAPIError(status_code=status)
 
-        raise RetryExhaustedError(attempts=max_attempts, last_status=last_status)
+        raise RetryExhaustedError(
+            attempts=max_attempts, last_status=last_status, last_error=last_error
+        ) from last_error
 
     def _backoff_delay(
         self, attempt: int, response: httpx.Response | None = None
@@ -254,10 +275,30 @@ class OpenRouterClient:
         response: httpx.Response,
         resolved_decoding: dict[str, Any],
     ) -> CompletionResult:
-        data = response.json()
-        choice = (data.get("choices") or [{}])[0]
-        message = choice.get("message") or {}
-        text = message.get("content") or ""
+        try:
+            data = response.json()
+        except ValueError as exc:
+            raise MalformedResponseError(
+                "OpenRouter returned a non-JSON success body",
+                status_code=response.status_code,
+            ) from exc
+
+        choices = data.get("choices") if isinstance(data, dict) else None
+        if not isinstance(choices, list) or not choices:
+            raise MalformedResponseError(
+                "OpenRouter success response has no 'choices'",
+                status_code=response.status_code,
+            )
+        message = choices[0].get("message") if isinstance(choices[0], dict) else None
+        content = message.get("content") if isinstance(message, dict) else None
+        if not isinstance(content, str) or not content:
+            raise MalformedResponseError(
+                "OpenRouter success response has empty or missing "
+                "'choices[0].message.content'",
+                status_code=response.status_code,
+            )
+        text = content
+        choice = choices[0]
         usage = data.get("usage") or {}
         return CompletionResult(
             model_slug=model_slug,

@@ -58,14 +58,17 @@ Client-behavior settings (constructor args, with defaults; not from the model co
 |------|---------|----------|
 | `OpenRouterError` | Base class for all client errors. | — |
 | `PermanentAPIError` | Deterministic 4xx (400/401/403/404/422). Carries status code. | No — fail fast (FR-006). |
-| `RetryExhaustedError` | Transient failures persisted past `max_retries`. Carries last status/exception and attempt count. | No — surfaced after retries (FR-007). |
-| `MissingCredentialError` | API key absent at construction. | No — raised before any network call (FR-009). |
+| `MalformedResponseError` | A 2xx body missing the completion shape (non-JSON, no `choices`, or empty/missing `content`). Carries the status code. | No — the response is degenerate, not transient. |
+| `RetryExhaustedError` | Transient failures persisted past `max_retries`. Carries `attempts`, `last_status`, and `last_error` (the underlying network exception); chained via `raise ... from`. | No — surfaced after retries (FR-007). |
+| `MissingCredentialError` | API key absent at construction (wraps the loader's `RuntimeError`). | No — raised before any network call (FR-009). |
 
-`RetryExhaustedError` and `PermanentAPIError` are distinct types so callers/tests can tell exhausted-retry from permanent failure (SC-003).
+`RetryExhaustedError` and `PermanentAPIError` are distinct types so callers/tests can tell exhausted-retry from permanent failure (SC-003). `MalformedResponseError` keeps a "successful" but unusable response from silently producing empty text (C-1 / SC-001).
 
 ## Validation rules
 
 - `prompt` must be non-empty.
 - `model_slug` should match a configured slug when validation is enabled; unknown slugs raise before the call.
+- `decoding` overrides must not contain the reserved request keys `model` or `messages`; reserved fields are always written last so a prompt/slug can never be overridden.
+- A 2xx response must contain `choices[0].message.content` as a non-empty string; otherwise `MalformedResponseError` is raised.
 - `max_concurrency`, `max_retries`, `timeout` must be positive.
 - Credential resolved (or explicitly provided) before any request is attempted.

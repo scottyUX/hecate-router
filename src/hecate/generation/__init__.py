@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .client import CompletionResult, OpenRouterClient
 from .errors import (
+    MalformedResponseError,
     MissingCredentialError,
     OpenRouterError,
     PermanentAPIError,
@@ -16,5 +17,6 @@ __all__ = [
     "OpenRouterError",
     "MissingCredentialError",
     "PermanentAPIError",
+    "MalformedResponseError",
     "RetryExhaustedError",
 ]

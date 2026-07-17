@@ -17,6 +17,7 @@ import pytest
 
 from hecate.generation import (
     CompletionResult,
+    MalformedResponseError,
     MissingCredentialError,
     OpenRouterClient,
     PermanentAPIError,
@@ -187,6 +188,48 @@ async def test_empty_prompt_rejected():
             await client.complete(model_slug=SLUG, prompt="")
 
 
+async def test_decoding_cannot_override_model_or_messages():  # P1
+    captured: dict[str, dict] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = json.loads(request.content)
+        return httpx.Response(200, json=SUCCESS_BODY)
+
+    async with make_client(handler) as client:
+        for reserved in ({"model": "attacker/model"}, {"messages": [{"x": 1}]}):
+            with pytest.raises(ValueError):
+                await client.complete(
+                    model_slug=SLUG, prompt="real prompt", decoding=reserved
+                )
+
+        # A benign decoding override still goes through with reserved fields intact.
+        result = await client.complete(
+            model_slug=SLUG, prompt="real prompt", decoding={"top_p": 0.9}
+        )
+    assert captured["body"]["model"] == SLUG
+    assert captured["body"]["messages"] == [{"role": "user", "content": "real prompt"}]
+    assert captured["body"]["top_p"] == 0.9
+    assert result.model_slug == SLUG
+
+
+async def test_empty_or_malformed_success_body_raises():  # P2 (shape validation)
+    # 2xx with no choices
+    async with make_client(lambda r: httpx.Response(200, json={})) as client:
+        with pytest.raises(MalformedResponseError):
+            await client.complete(model_slug=SLUG, prompt="hi")
+
+    # 2xx with empty content string
+    empty_content = {"choices": [{"message": {"content": ""}}]}
+    async with make_client(lambda r: httpx.Response(200, json=empty_content)) as client:
+        with pytest.raises(MalformedResponseError):
+            await client.complete(model_slug=SLUG, prompt="hi")
+
+    # 2xx with non-JSON body
+    async with make_client(lambda r: httpx.Response(200, text="not json")) as client:
+        with pytest.raises(MalformedResponseError):
+            await client.complete(model_slug=SLUG, prompt="hi")
+
+
 # --------------------------------------------------------------------------
 # User Story 2 — survive transient failures
 # --------------------------------------------------------------------------
@@ -253,6 +296,21 @@ async def test_connection_and_timeout_errors_are_retried():  # T022
     async with make_client(handler, max_retries=4) as client:
         result = await client.complete(model_slug=SLUG, prompt="hi")
     assert result.text.startswith("diff")
+
+
+async def test_network_exhaustion_preserves_underlying_error():  # P2 (chaining)
+    handler, _ = sequence_handler([httpx.ConnectError("no route to host")])
+    async with make_client(handler, max_retries=1) as client:
+        with pytest.raises(RetryExhaustedError) as excinfo:
+            await client.complete(model_slug=SLUG, prompt="hi")
+
+    err = excinfo.value
+    assert err.attempts == 2
+    assert err.last_status is None
+    assert isinstance(err.last_error, httpx.ConnectError)
+    # Exception is chained so the root cause is not lost.
+    assert isinstance(err.__cause__, httpx.ConnectError)
+    assert "ConnectError" in str(err)
 
 
 # --------------------------------------------------------------------------
