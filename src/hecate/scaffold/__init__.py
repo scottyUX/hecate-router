@@ -8,12 +8,22 @@ from hecate.scaffold.context import (
     build_context,
     load_context_method,
 )
+from hecate.scaffold.prompt import (
+    PROMPT_VERSION,
+    prompt_hash,
+    render_prompt,
+    write_prompt,
+)
 
 __all__ = [
     "DEFAULT_CONTEXT_METHOD",
+    "PROMPT_VERSION",
     "ContextBundle",
     "ContextFile",
     "ContextMethod",
     "build_context",
     "load_context_method",
+    "prompt_hash",
+    "render_prompt",
+    "write_prompt",
 ]
