@@ -33,3 +33,8 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "live: opt-in test that makes a real OpenRouter call (requires RUN_LIVE_TESTS=1 and OPENROUTER_API_KEY)",
+]
