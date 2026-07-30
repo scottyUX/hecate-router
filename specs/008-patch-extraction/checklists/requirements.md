@@ -1,0 +1,39 @@
+# Specification Quality Checklist: Patch Extraction and Normalization
+
+**Purpose**: Validate specification completeness and quality before planning
+**Created**: 2026-07-18
+**Feature**: [spec.md](../spec.md)
+**Issue**: [GitHub #8](https://github.com/scottyUX/hecate/issues/8)
+
+## Content Quality
+
+- [x] No implementation details (languages, frameworks, APIs)
+- [x] Focused on user value and business needs
+- [x] Written for non-technical stakeholders
+- [x] All mandatory sections completed
+
+## Requirement Completeness
+
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
+- [x] Success criteria are measurable
+- [x] Success criteria are technology-agnostic
+- [x] All acceptance scenarios are defined
+- [x] Edge cases are identified
+- [x] Scope is clearly bounded
+- [x] Dependencies and assumptions are identified
+
+## Feature Readiness
+
+- [x] All functional requirements have clear acceptance criteria
+- [x] User scenarios cover primary flows
+- [x] Feature meets measurable outcomes defined in Success Criteria
+- [x] No implementation details leak into the specification
+
+## Notes
+
+- The S8-to-Stage-2 format decision is explicit in FR-012 and is elaborated by
+  planning into a shared normative contract.
+- Clarification scan found no remaining high-impact product ambiguity: candidate
+  cardinality, wrapper handling, normalization, malformed storage, and scope
+  boundaries are all explicit.

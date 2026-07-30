@@ -10,6 +10,7 @@ from .errors import (
     PermanentAPIError,
     RetryExhaustedError,
 )
+from .patch import ExtractionResult, extract_patch
 
 __all__ = [
     "OpenRouterClient",
@@ -19,4 +20,6 @@ __all__ = [
     "PermanentAPIError",
     "MalformedResponseError",
     "RetryExhaustedError",
+    "ExtractionResult",
+    "extract_patch",
 ]
