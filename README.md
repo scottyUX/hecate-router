@@ -1,4 +1,6 @@
-# Hecate
+# Hecate Router
+
+> Repository: [`scottyUX/hecate-router`](https://github.com/scottyUX/hecate-router). Product name remains **Hecate**.
 
 **Hecate** is a lightweight routing framework for LLM-assisted software engineering. A small encoder-based router (DistilBERT-class) predicts whether a coding or debugging task can be handled by a *small* model or must be *escalated* to a *large* model — preserving task success while cutting expensive large-model calls.
 
@@ -46,9 +48,10 @@ These protect the validity of the eventual routing labels:
 
 Provider: OpenRouter. Budget target ≈ $38; hard ceiling $100. See [`configs/option_a.yaml`](configs/option_a.yaml) — slugs, prices, and a 1,200-sample dry-run cost estimate are recorded (S4).
 
-## Project board
+## Project boards
 
-Track progress on the [Hecate — Stage 1 GitHub Project](https://github.com/users/scottyUX/projects) (link updated after board setup).
+- **GCP route API (this board):** [Hecate Router](https://github.com/users/scottyUX/projects/6) — epic [#41](https://github.com/scottyUX/hecate-router/issues/41) (`POST /v1/route` on Cloud Run). Stage 1 / E-M3–E-M6 issues remain open and continue in parallel.
+- **Stage 1 / pipeline epics:** existing issues (#1–#20 and related) — not closed by the GCP serve board.
 
 ## Lab webpage
 
@@ -63,8 +66,8 @@ Deploy via GitHub Pages — see [`web/README.md`](web/README.md).
 ## Quick start
 
 ```bash
-git clone git@github.com:scottyUX/hecate.git
-cd hecate
+git clone git@github.com:scottyUX/hecate-router.git
+cd hecate-router
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
