@@ -1,13 +1,14 @@
-# Option A model configuration (S4 complete).
-# All four slugs + prices verified 2026-07-14 against OpenRouter /api/v1/models.
+# Option A model configuration (S4; narrowed for S14).
+# Active Stage-1 pair verified against OpenRouter; Llama slugs dropped after
+# the 2026-08-10 small-model selection pilot (Qwen-7B 65% vs Llama-8B 35%).
 #
-# Dry-run cost estimate for full Stage-1 sweep (300 tasks × 4 models = 1,200 samples).
-# Assumptions: avg prompt / completion tokens below (not measured yet — update after pilot).
-#   Mid  (4k prompt, 1.5k completion): ~$1.01 total
-#   High (8k prompt, 4k completion):   ~$2.29 total
+# Dry-run cost estimate for Stage-1 sweep (300 tasks × 2 models = 600 samples).
+# Assumptions: avg prompt / completion tokens below (not measured on full set).
+#   Mid  (4k prompt, 1.5k completion): ~$0.71 total
+#   High (8k prompt, 4k completion):   ~$1.56 total
 # Both well under budget.target_usd ($38) and budget.ceiling_usd ($100).
 # Per-model mid totals (300 samples each):
-#   qwen-2.5-72b: $0.61 | llama-3.3-70b: $0.26 | qwen-2.5-7b: $0.09 | llama-3.1-8b: $0.04
+#   qwen-2.5-72b: $0.61 | qwen-2.5-7b: $0.09
 
 provider: openrouter
 base_url: https://openrouter.ai/api/v1
@@ -22,6 +23,14 @@ decoding:
 
 context:
   method: oracle  # oracle | bm25
+  # Keep oracle file text inside small-model windows (~32k) after issue + instructions
+  # and a reserved completion budget (see decoding.max_tokens).
+  max_file_chars: 24000
+  max_total_file_chars: 48000
+
+generation:
+  # Used by the runner to shrink max_tokens when prompts are large (avoid HTTP 400).
+  context_window_tokens: 32768
 
 models:
   - slug: qwen/qwen-2.5-72b-instruct  # verified 2026-07-14 via OpenRouter /api/v1/models
@@ -29,17 +38,7 @@ models:
     input_cost_per_1m: 0.36
     output_cost_per_1m: 0.40
 
-  - slug: meta-llama/llama-3.3-70b-instruct  # verified OpenRouter 2026-07-14
-    tier: large
-    input_cost_per_1m: 0.10
-    output_cost_per_1m: 0.32
-
   - slug: qwen/qwen-2.5-7b-instruct  # verified 2026-07-14 via OpenRouter /api/v1/models
     tier: small
     input_cost_per_1m: 0.04
     output_cost_per_1m: 0.10
-
-  - slug: meta-llama/llama-3.1-8b-instruct  # verified OpenRouter 2026-07-14
-    tier: small
-    input_cost_per_1m: 0.02
-    output_cost_per_1m: 0.03

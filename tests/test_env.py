@@ -21,8 +21,9 @@ def test_load_env_reads_api_key_from_dotenv(tmp_path, monkeypatch):
     dotenv = tmp_path / ".env"
     dotenv.write_text(f"{OPENROUTER_API_KEY_ENV}=test-key-123\n")
     monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv(OPENROUTER_API_KEY_ENV, raising=False)
 
-    loaded = load_env()
+    loaded = load_env(dotenv_path=dotenv)
     assert loaded == dotenv
     assert get_openrouter_api_key() == "test-key-123"
 

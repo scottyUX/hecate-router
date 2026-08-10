@@ -1,4 +1,4 @@
-"""Tests for the Stage-1 oracle context builder."""
+"""Tests for the Stage-1 oracle context builder and prompt template."""
 
 from __future__ import annotations
 
@@ -8,7 +8,16 @@ import pytest
 from git import Repo as GitRepo
 
 from hecate.data import SwebenchTask
-from hecate.scaffold import ContextBundle, build_context, load_context_method
+from hecate.scaffold import (
+    PROMPT_VERSION,
+    ContextBundle,
+    ContextFile,
+    build_context,
+    load_context_method,
+    prompt_hash,
+    render_prompt,
+    write_prompt,
+)
 
 _SYNTHETIC_PATCH = """--- a/pkg/mod.py
 +++ b/pkg/mod.py
@@ -106,3 +115,177 @@ def test_real_lite_instance_oracle_context():
     assert bundle.repo == "psf/requests"
     assert bundle.paths == ["requests/sessions.py"]
     assert "class Session" in bundle.files[0].content
+
+
+# --- Prompt template (S6) -------------------------------------------------
+
+
+def _sample_prompt_task(**overrides) -> SwebenchTask:
+    base = dict(
+        instance_id="django__django-12345",
+        repo="django/django",
+        base_commit="abc123def456",
+        problem_statement="foo() raises KeyError when bar is missing.",
+        patch="--- a/foo.py\n+++ b/foo.py\n@@\n-bad\n+good\n",
+        test_patch=None,
+        fail_to_pass=None,
+        pass_to_pass=None,
+    )
+    base.update(overrides)
+    return SwebenchTask(**base)
+
+
+def _sample_prompt_context() -> ContextBundle:
+    return ContextBundle(
+        instance_id="django__django-12345",
+        repo="django/django",
+        base_commit="abc123def456",
+        method="oracle",
+        files=(
+            ContextFile(path="foo.py", content="def foo():\n    return bar['missing']\n"),
+            ContextFile(path="tests/test_foo.py", content="def test_foo():\n    assert foo()\n"),
+        ),
+    )
+
+
+def test_render_prompt_contains_issue_and_file_context():
+    task = _sample_prompt_task()
+    context = _sample_prompt_context()
+
+    prompt = render_prompt(task, context)
+
+    assert prompt
+    assert task.problem_statement in prompt
+    assert task.repo in prompt
+    assert task.instance_id in prompt
+    assert "foo.py" in prompt
+    assert "def foo():" in prompt
+    assert "tests/test_foo.py" in prompt
+    assert "unified diff" in prompt.lower()
+
+
+def test_render_prompt_is_deterministic():
+    task = _sample_prompt_task()
+    context = _sample_prompt_context()
+
+    first = render_prompt(task, context)
+    second = render_prompt(task, context)
+
+    assert first == second
+    assert prompt_hash(first) == prompt_hash(second)
+
+
+def test_render_prompt_does_not_leak_gold_patch():
+    task = _sample_prompt_task()
+    context = _sample_prompt_context()
+
+    prompt = render_prompt(task, context)
+
+    assert task.patch not in prompt
+
+
+def test_render_prompt_empty_context_is_valid():
+    task = _sample_prompt_task()
+    context = ContextBundle(
+        instance_id=task.instance_id,
+        repo=task.repo,
+        base_commit=task.base_commit,
+        method="oracle",
+        files=(),
+    )
+
+    prompt = render_prompt(task, context)
+
+    assert task.problem_statement in prompt
+    assert "unified diff" in prompt.lower()
+
+
+def test_render_prompt_empty_problem_statement_is_deterministic():
+    task = _sample_prompt_task(problem_statement="")
+    context = _sample_prompt_context()
+
+    first = render_prompt(task, context)
+    second = render_prompt(task, context)
+
+    assert first == second
+    assert "## Issue" in first
+    assert "unified diff" in first.lower()
+
+
+def test_render_prompt_includes_diff_like_content_verbatim():
+    task = _sample_prompt_task(patch="SECRET_GOLD_PATCH")
+    context = ContextBundle(
+        instance_id=task.instance_id,
+        repo=task.repo,
+        base_commit=task.base_commit,
+        method="oracle",
+        files=(
+            ContextFile(
+                path="foo.py",
+                content="```\n--- a/foo.py\n+++ b/foo.py\n@@ diff-like @@\n",
+            ),
+        ),
+    )
+
+    prompt = render_prompt(task, context)
+
+    assert "@@ diff-like @@" in prompt
+    assert "```" in prompt
+    assert task.patch not in prompt
+
+
+def test_prompt_version_is_stable():
+    assert PROMPT_VERSION == "v5"
+    task = _sample_prompt_task()
+    context = _sample_prompt_context()
+    prompt = render_prompt(task, context, version=PROMPT_VERSION)
+    assert "unified diff" in prompt.lower()
+    assert "---/+++" in prompt or "---" in prompt
+    assert "Example of a valid unified diff:" in prompt
+    assert "@@ -1,3 +1,3 @@" in prompt
+    with pytest.raises(ValueError, match="Unsupported prompt version"):
+        render_prompt(task, context, version="v999")
+
+
+def test_context_caps_truncate_large_files(tmp_path: Path):
+    from hecate.scaffold.context import _apply_context_caps, ContextFile
+
+    huge = "x" * 10_000
+    files = (
+        ContextFile(path="a.py", content=huge),
+        ContextFile(path="b.py", content=huge),
+    )
+    capped = _apply_context_caps(
+        files, max_file_chars=1_000, max_total_file_chars=1_500
+    )
+    assert len(capped[0].content) < len(huge)
+    assert "truncated" in capped[0].content
+    assert sum(len(f.content) for f in capped) <= 1_500 + 80  # placeholders
+
+
+def test_prompt_hash_and_write_prompt(tmp_path: Path):
+    prompt = "hello prompt"
+    digest = prompt_hash(prompt)
+    assert digest == prompt_hash(prompt)
+    assert len(digest) == 64
+
+    ref = write_prompt(prompt, output_dir=tmp_path)
+    path = Path(ref)
+    assert path.is_file()
+    assert path.name == f"{digest}.txt"
+    assert path.read_text(encoding="utf-8") == prompt
+
+
+def test_real_lite_instance_prompt():
+    """One real SWE-bench Lite instance: context + prompt (network required)."""
+    from hecate.data.tasks import get_task
+
+    task = get_task("psf__requests-1963")
+    bundle = build_context(task.instance_id, method="oracle", task=task)
+    prompt = render_prompt(task, bundle)
+
+    assert prompt
+    assert task.problem_statement in prompt
+    assert "requests/sessions.py" in prompt
+    assert task.patch not in prompt
+    assert prompt_hash(prompt) == prompt_hash(render_prompt(task, bundle))

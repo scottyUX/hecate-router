@@ -95,7 +95,7 @@ Models to verify:
 - Llama 3.1 8B (small)
 
 ## Done when
-Config lists verified slugs + prices; a dry-run cost estimate for 1,200 samples is computed and recorded.
+Config lists verified slugs + prices; a dry-run cost estimate for the Stage-1 sweep is computed and recorded.
 
 ## Invariants
 Do not assume slugs or prices — confirm against OpenRouter's live model list before any spend.
@@ -211,7 +211,7 @@ Maintain a running cost total; refuse to start a call that would exceed the ceil
 A simulated over-budget run halts gracefully before exceeding the ceiling and logs why.
 
 ## Invariants
-Budget target ≈ $38 for 1,200 samples; hard ceiling $100.
+Budget target ≈ $38 for 600 samples; hard ceiling $100.
 
 ## Dependencies
 Depends on S4, S7.
@@ -275,26 +275,32 @@ Depends on S12.
     },
     {
         "id": "S14",
-        "title": "S14 · Full generation sweep (4 × 300)",
-        "milestone": "M2 — Full sweep (1,200 patches)",
+        "title": "S14 · Full generation sweep (2 × 300)",
+        "milestone": "M2 — Full sweep (600 patches)",
         "labels": ["stage-1", "generation", "cost"],
         "body": """## Scope
-Run all four verified models across all 300 tasks with caching + budget guard active.
+Run the two verified Qwen Option A models across all 300 tasks with caching + budget guard active.
+
+**Models**
+- small: `qwen/qwen-2.5-7b-instruct`
+- large: `qwen/qwen-2.5-72b-instruct`
+
+Matrix: 300 × 2 = **600** samples.
 
 ## Done when
-Up to 1,200 records exist; total cost within ceiling; run is resumable if interrupted.
+Up to 600 records exist; total cost within ceiling; run is resumable if interrupted.
 
 ## Invariants
-- **Full counterfactual matrix:** every (task, model) pair must be accounted for.
+- **Full counterfactual matrix:** every (task, model) pair in the active two-model set must be accounted for.
 
 ## Dependencies
-Depends on S13 go/no-go approval.
+Depends on S13 (80% parse-clean waived for M2 after small-model selection).
 """,
     },
     {
         "id": "S15",
         "title": "S15 · Output validation",
-        "milestone": "M2 — Full sweep (1,200 patches)",
+        "milestone": "M2 — Full sweep (600 patches)",
         "labels": ["stage-1", "infra"],
         "body": """## Scope
 Verify completeness (every (task, model) accounted for, missing/failed ones logged), schema validity, and that the full counterfactual matrix is intact.
@@ -309,7 +315,7 @@ Depends on S14.
     {
         "id": "S16",
         "title": "S16 · Stage-1 handoff artifact",
-        "milestone": "M2 — Full sweep (1,200 patches)",
+        "milestone": "M2 — Full sweep (600 patches)",
         "labels": ["stage-1", "docs"],
         "body": """## Scope
 Package the records + manifest for Stage 2; write a short doc describing the schema and how to load it.

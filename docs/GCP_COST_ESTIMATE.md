@@ -33,7 +33,7 @@ Enter these in [cloud.google.com/products/calculator](https://cloud.google.com/p
 | Boot disk | 100 GB balanced persistent disk |
 | **Monthly subtotal** | **~$16** compute + **~$10** disk ≈ **$26** |
 
-*Assumption:* Docker-based patch execution for 300 SWE-bench Lite tasks × 4 models, plus reruns and student-repo pilots.
+*Assumption:* Docker-based patch execution for 300 SWE-bench Lite tasks × 2 models, plus reruns and student-repo pilots.
 
 ### 2. Compute Engine — GPU router training
 
@@ -60,7 +60,7 @@ Enter these in [cloud.google.com/products/calculator](https://cloud.google.com/p
 | Class B ops | 200,000 / month |
 | **Monthly subtotal** | **~$8** |
 
-*Stores:* SWE-bench records, 1,200 patches, execution logs, run manifests.
+*Stores:* SWE-bench records, 600 patches, execution logs, run manifests.
 
 ### 4. Persistent Disk — Docker layer cache
 
@@ -144,7 +144,7 @@ CPU execution is **bursty**, not 24/7. GPU training is **short runs** (minutes�
 
 | Cost | Provider | Est. |
 |------|----------|------|
-| Patch generation (1,200 LLM calls) | OpenRouter | ~$38–$100 |
+| Patch generation (600 LLM calls) | OpenRouter | ~$1–$38 (target $38 / ceiling $100) |
 | Local dev / pytest | Laptop | $0 |
 
 GCP credits cover **execution, training, and storage** — the compute-heavy research path after patches are generated.

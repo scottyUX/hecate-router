@@ -22,6 +22,10 @@ ContextMethod = Literal["oracle", "bm25"]
 
 DEFAULT_CONTEXT_METHOD: ContextMethod = "oracle"
 
+# Caps keep oracle prompts inside small-model context windows (~32k tokens).
+DEFAULT_MAX_FILE_CHARS = 24_000
+DEFAULT_MAX_TOTAL_FILE_CHARS = 48_000
+
 # SWE-bench's own GitHub mirror of task repos, pinned so base_commit history
 # is always available even if the upstream repo rewrites it.
 SWEBENCH_MIRROR_ORG = "swe-bench-repos"
@@ -79,6 +83,59 @@ def load_context_method(config_path: Path | str | None = None) -> str:
     return data.get("context", {}).get("method", DEFAULT_CONTEXT_METHOD)
 
 
+def load_context_limits(
+    config_path: Path | str | None = None,
+) -> tuple[int, int]:
+    """Return ``(max_file_chars, max_total_file_chars)`` from Option A config."""
+    path = Path(config_path) if config_path is not None else _default_config_path()
+    max_file = DEFAULT_MAX_FILE_CHARS
+    max_total = DEFAULT_MAX_TOTAL_FILE_CHARS
+    if path.is_file():
+        with path.open(encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+        ctx = data.get("context", {}) or {}
+        max_file = int(ctx.get("max_file_chars", max_file))
+        max_total = int(ctx.get("max_total_file_chars", max_total))
+    if max_file < 1 or max_total < 1:
+        raise ValueError("context max_*_chars must be >= 1")
+    return max_file, max_total
+
+
+def _truncate_text(content: str, limit: int) -> str:
+    if len(content) <= limit:
+        return content
+    omitted = len(content) - limit
+    # Keep a stable head prefix so truncation is deterministic.
+    return content[:limit] + f"\n\n... [truncated {omitted} chars] ...\n"
+
+
+def _apply_context_caps(
+    files: tuple[ContextFile, ...],
+    *,
+    max_file_chars: int,
+    max_total_file_chars: int,
+) -> tuple[ContextFile, ...]:
+    """Deterministically truncate file contents to per-file and total budgets."""
+    capped: list[ContextFile] = []
+    used = 0
+    for context_file in files:
+        remaining_total = max_total_file_chars - used
+        if remaining_total <= 0:
+            omitted = len(context_file.content)
+            placeholder = (
+                f"... [omitted: over total context budget; {omitted} chars] ...\n"
+                if omitted
+                else ""
+            )
+            capped.append(ContextFile(path=context_file.path, content=placeholder))
+            continue
+        per_file_limit = min(max_file_chars, remaining_total)
+        content = _truncate_text(context_file.content, per_file_limit)
+        capped.append(ContextFile(path=context_file.path, content=content))
+        used += len(content)
+    return tuple(capped)
+
+
 def _oracle_file_specs(patch_text: str) -> list[tuple[str, bool]]:
     """Ordered, deduped (path, is_added) pairs for files touched by a gold patch."""
     seen: dict[str, bool] = {}
@@ -115,7 +172,12 @@ def _read_file_at_commit(repo_dir: Path, commit: str, path: str) -> str:
         raise FileNotFoundError(f"{path!r} not found at {commit} in {repo_dir}") from exc
 
 
-def _build_oracle_context(task: SwebenchTask, cache_dir: Path) -> ContextBundle:
+def _build_oracle_context(
+    task: SwebenchTask,
+    cache_dir: Path,
+    *,
+    config_path: Path | str | None = None,
+) -> ContextBundle:
     repo_dir = _ensure_repo_clone(task.repo, cache_dir)
     files = tuple(
         ContextFile(
@@ -123,6 +185,10 @@ def _build_oracle_context(task: SwebenchTask, cache_dir: Path) -> ContextBundle:
             content="" if is_added else _read_file_at_commit(repo_dir, task.base_commit, path),
         )
         for path, is_added in _oracle_file_specs(task.patch)
+    )
+    max_file, max_total = load_context_limits(config_path)
+    files = _apply_context_caps(
+        files, max_file_chars=max_file, max_total_file_chars=max_total
     )
     return ContextBundle(
         instance_id=task.instance_id,
@@ -169,4 +235,6 @@ def build_context(
         )
 
     resolved_cache_dir = Path(cache_dir) if cache_dir is not None else _default_cache_dir()
-    return _build_oracle_context(resolved_task, resolved_cache_dir)
+    return _build_oracle_context(
+        resolved_task, resolved_cache_dir, config_path=config_path
+    )
