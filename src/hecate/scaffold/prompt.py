@@ -13,9 +13,8 @@ from pathlib import Path
 from hecate.data.tasks import SwebenchTask
 from hecate.scaffold.context import ContextBundle
 
-# v4: keep v1-style instructions (best parse-clean on pilot) after v2/v3
-# regressions; pair with context caps for context-window safety.
-PROMPT_VERSION = "v4"
+# v5: v4 instructions plus one short valid unified-diff example.
+PROMPT_VERSION = "v5"
 
 
 def _repo_root() -> Path:
@@ -68,6 +67,14 @@ def render_prompt(
             "Respond with a single unified diff that applies the fix.",
             "Use ---/+++ file headers and @@ hunk headers for every change.",
             "Do not include explanations outside the diff.",
+            "",
+            "Example of a valid unified diff:",
+            "--- a/path/file.py",
+            "+++ b/path/file.py",
+            "@@ -1,3 +1,3 @@",
+            " unchanged context",
+            "-old line",
+            "+new line",
         ]
     )
 

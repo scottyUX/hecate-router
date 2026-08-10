@@ -235,12 +235,14 @@ def test_render_prompt_includes_diff_like_content_verbatim():
 
 
 def test_prompt_version_is_stable():
-    assert PROMPT_VERSION == "v4"
+    assert PROMPT_VERSION == "v5"
     task = _sample_prompt_task()
     context = _sample_prompt_context()
     prompt = render_prompt(task, context, version=PROMPT_VERSION)
     assert "unified diff" in prompt.lower()
     assert "---/+++" in prompt or "---" in prompt
+    assert "Example of a valid unified diff:" in prompt
+    assert "@@ -1,3 +1,3 @@" in prompt
     with pytest.raises(ValueError, match="Unsupported prompt version"):
         render_prompt(task, context, version="v999")
 

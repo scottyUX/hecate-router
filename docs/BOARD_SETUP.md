@@ -37,7 +37,7 @@ bash scripts/setup_project.sh
 
 - M0 — Project setup (S1–S4)
 - M1 — Pilot (20 tasks) — **day-2 go/no-go gate**
-- M2 — Full sweep (1,200 patches)
+- M2 — Full sweep (600 patches)
 - M3–M6 — Downstream epics (E-M3–E-M6)
 
 ## 5. Issue index
@@ -57,7 +57,7 @@ bash scripts/setup_project.sh
 | S11 | #11 Generation runner | M1 |
 | S12 | #12 Run the pilot | M1 |
 | S13 | #13 Pilot report & go/no-go | M1 |
-| S14 | #14 Full generation sweep | M2 |
+| S14 | #14 Full generation sweep (2 × 300) | M2 |
 | S15 | #15 Output validation | M2 |
 | S16 | #16 Stage-1 handoff artifact | M2 |
 | E-M3 | #17 Execution & labels (epic) | M3 |

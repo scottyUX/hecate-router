@@ -29,6 +29,7 @@ from hecate.data import (
     SwebenchTask,
     append_jsonl,
     load_swebench_lite,
+    read_jsonl,
 )
 from hecate.generation.client import CompletionResult, OpenRouterClient
 from hecate.generation.errors import OpenRouterError
@@ -112,11 +113,44 @@ def _default_small_slug(config: dict[str, Any]) -> str:
     raise ValueError("No small-tier model slug found in config")
 
 
+def _ordered_model_slugs(config: dict[str, Any]) -> tuple[str, ...]:
+    """Return configured model slugs in YAML order (small tier before large)."""
+    small: list[str] = []
+    large: list[str] = []
+    other: list[str] = []
+    for model in config.get("models", []) or []:
+        if not isinstance(model, dict) or not model.get("slug"):
+            continue
+        slug = str(model["slug"])
+        tier = str(model.get("tier", ""))
+        if tier == "small":
+            small.append(slug)
+        elif tier == "large":
+            large.append(slug)
+        else:
+            other.append(slug)
+    ordered = tuple(small + large + other)
+    if not ordered:
+        raise ValueError("No model slugs found in config")
+    return ordered
+
+
+def _recorded_pairs(records_path: Path) -> set[tuple[str, str]]:
+    """Return ``(instance_id, model_slug)`` pairs already present in JSONL."""
+    if not records_path.is_file():
+        return set()
+    return {
+        (record.instance_id, record.model_slug) for record in read_jsonl(records_path)
+    }
+
+
 def load_run_config(
     *,
     config_path: Path | str | None = None,
     tasks: int = 1,
     model: str | None = None,
+    models: list[str] | tuple[str, ...] | None = None,
+    all_models: bool = False,
     dry_run: bool = False,
     output_dir: Path | str | None = None,
     cache_dir: Path | str | None = None,
@@ -124,7 +158,14 @@ def load_run_config(
     run_id: str | None = None,
     repo_cache_dir: Path | str | None = None,
 ) -> RunConfig:
-    """Build a :class:`RunConfig` from CLI-style arguments."""
+    """Build a :class:`RunConfig` from CLI-style arguments.
+
+    Model selection (first match wins):
+    - ``models``: explicit slug list
+    - ``all_models=True``: every slug in Option A (small before large)
+    - ``model``: single slug
+    - default: first small-tier slug
+    """
     if tasks < 1:
         raise ValueError("tasks must be >= 1")
 
@@ -133,10 +174,22 @@ def load_run_config(
     )
     data = _load_yaml(resolved_config)
     known = set(_model_tiers(data))
-    slug = model if model is not None else _default_small_slug(data)
-    if slug not in known:
+
+    if models is not None:
+        slugs = tuple(models)
+    elif all_models:
+        slugs = _ordered_model_slugs(data)
+    elif model is not None:
+        slugs = (model,)
+    else:
+        slugs = (_default_small_slug(data),)
+
+    if not slugs:
+        raise ValueError("At least one model slug is required")
+    unknown = [slug for slug in slugs if slug not in known]
+    if unknown:
         raise ValueError(
-            f"Unknown model slug: {slug!r}. Configured slugs: {sorted(known)}"
+            f"Unknown model slug(s): {unknown!r}. Configured slugs: {sorted(known)}"
         )
 
     rid = run_id or uuid.uuid4().hex[:12]
@@ -148,7 +201,7 @@ def load_run_config(
     return RunConfig(
         config_path=resolved_config,
         task_limit=tasks,
-        model_slugs=(slug,),
+        model_slugs=slugs,
         dry_run=dry_run,
         output_dir=out,
         cache_dir=Path(cache_dir) if cache_dir is not None else None,
@@ -196,6 +249,25 @@ def _clamp_decoding_for_prompt(
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def _build_repair_prompt(previous_response: str) -> str:
+    """One-shot rewrite prompt used when the first response fails S8 extract."""
+    prior = previous_response.strip()
+    if len(prior) > 4000:
+        prior = prior[:4000] + "\n... [truncated] ..."
+    return "\n".join(
+        [
+            "Your previous answer was not a valid unified diff "
+            "(missing or malformed ---/+++ headers or @@ hunks).",
+            "Rewrite it as exactly one valid unified diff and nothing else.",
+            "Requirements: include ---/+++ file headers and complete @@ hunks.",
+            "No prose, no multiple candidates.",
+            "",
+            "Previous answer:",
+            prior,
+        ]
+    )
 
 
 def _append_record(
@@ -293,8 +365,11 @@ async def run_generation(
     pairs_cache_hit = 0
     pairs_generated = 0
     pairs_refused_budget = 0
+    pairs_repaired = 0
+    pairs_already_recorded = 0
     halt_paid = False
     pair_timings: list[dict[str, Any]] = []
+    already_recorded = _recorded_pairs(records_path)
     run_started = time.perf_counter()
 
     try:
@@ -323,6 +398,22 @@ async def run_generation(
                 tier = tiers.get(model_slug)
                 if tier not in ("small", "large"):
                     raise ValueError(f"Missing tier for model slug {model_slug!r}")
+
+                if (task.instance_id, model_slug) in already_recorded:
+                    pairs_already_recorded += 1
+                    outcome = "already_recorded"
+                    pair_timings.append(
+                        {
+                            "instance_id": task.instance_id,
+                            "model_slug": model_slug,
+                            "outcome": outcome,
+                            "wall_clock_s": round(
+                                time.perf_counter() - pair_started, 3
+                            ),
+                            "cost_usd": None,
+                        }
+                    )
+                    continue
 
                 key = cache_key(
                     task.instance_id,
@@ -461,14 +552,66 @@ async def run_generation(
                         raw_response = result.text
                         prompt_tokens = result.prompt_tokens
                         completion_tokens = result.completion_tokens
+                        cost_usd = 0.0
                         if prompt_tokens is not None and completion_tokens is not None:
-                            cost_usd = tracker.record_usage(
+                            cost_usd += tracker.record_usage(
                                 model_slug, prompt_tokens, completion_tokens
                             )
                         pairs_generated += 1
                         outcome = "generated"
 
                         extraction = extract_patch(raw_response)
+                        if not (
+                            extraction.patch_parse_ok and extraction.extracted_patch
+                        ):
+                            repair_prompt = _build_repair_prompt(raw_response)
+                            repair_decoding = _clamp_decoding_for_prompt(
+                                base_decoding,
+                                repair_prompt,
+                                context_window_tokens=window_tokens,
+                            )
+                            # Prefer a tighter completion budget for format repairs.
+                            repair_decoding["max_tokens"] = min(
+                                int(repair_decoding["max_tokens"]), 2048
+                            )
+                            repair_est = estimate_cost(
+                                model_slug,
+                                max(1, len(repair_prompt.encode("utf-8")) // 4),
+                                int(repair_decoding["max_tokens"]),
+                            )
+                            try:
+                                tracker.authorize(repair_est)
+                                repair_result = await complete(
+                                    model_slug=model_slug,
+                                    prompt=repair_prompt,
+                                    decoding=dict(repair_decoding),
+                                )
+                            except BudgetExceededError:
+                                pass
+                            except OpenRouterError:
+                                pass
+                            else:
+                                if (
+                                    repair_result.prompt_tokens is not None
+                                    and repair_result.completion_tokens is not None
+                                ):
+                                    cost_usd += tracker.record_usage(
+                                        model_slug,
+                                        repair_result.prompt_tokens,
+                                        repair_result.completion_tokens,
+                                    )
+                                repair_extraction = extract_patch(repair_result.text)
+                                raw_response = repair_result.text
+                                prompt_tokens = repair_result.prompt_tokens
+                                completion_tokens = repair_result.completion_tokens
+                                if (
+                                    repair_extraction.patch_parse_ok
+                                    and repair_extraction.extracted_patch
+                                ):
+                                    extraction = repair_extraction
+                                    pairs_repaired += 1
+                                    outcome = "repaired"
+
                         if extraction.patch_parse_ok and extraction.extracted_patch:
                             cache.put(
                                 key,
@@ -493,7 +636,7 @@ async def run_generation(
                             raw_response=raw_response,
                             prompt_tokens=prompt_tokens,
                             completion_tokens=completion_tokens,
-                            cost_usd=cost_usd,
+                            cost_usd=cost_usd if cost_usd > 0 else None,
                             decoding=pair_decoding,
                             run_id=run_id,
                         )
@@ -505,6 +648,7 @@ async def run_generation(
                         "outcome": outcome,
                         "wall_clock_s": round(time.perf_counter() - pair_started, 3),
                         "cost_usd": cost_usd,
+                        "repaired": outcome == "repaired",
                     }
                 )
     finally:
@@ -529,6 +673,8 @@ async def run_generation(
             "pairs_attempted": pairs_attempted,
             "pairs_cache_hit": pairs_cache_hit,
             "pairs_generated": pairs_generated,
+            "pairs_repaired": pairs_repaired,
+            "pairs_already_recorded": pairs_already_recorded,
             "pairs_refused_budget": pairs_refused_budget,
             "wall_clock_s": wall_clock_s,
             "cost_per_sample_usd": (

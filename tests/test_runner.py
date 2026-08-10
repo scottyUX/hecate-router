@@ -215,7 +215,7 @@ async def test_shared_scaffold_prompt_hash(tmp_path: Path) -> None:
     k_a = cache_key(task.instance_id, QWEN_7B, h1, PROMPT_VERSION, dec_fp)
     k_b = cache_key(
         task.instance_id,
-        "meta-llama/llama-3.1-8b-instruct",
+        "qwen/qwen-2.5-72b-instruct",
         h1,
         PROMPT_VERSION,
         dec_fp,
@@ -237,6 +237,105 @@ class _FailingCompleter:
         decoding: dict[str, Any] | None = None,
     ) -> CompletionResult:
         raise PermanentAPIError(status_code=400, message="context length")
+
+
+INVALID_THEN_VALID = """\
+Here is a patch:
+diff --git a/pkg/mod.py b/pkg/mod.py
+index 111..222 100644
+--- pkg/mod.py
++++ pkg/mod.py
+@@ -1,2 +1,2 @@
+ def base():
+-    return 1
++    return 2
+"""
+
+
+class _RepairCompleter:
+    """First call returns invalid-structure text; repair call returns valid."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+        self.prompts: list[str] = []
+
+    async def complete(
+        self,
+        *,
+        model_slug: str,
+        prompt: str,
+        decoding: dict[str, Any] | None = None,
+    ) -> CompletionResult:
+        self.calls += 1
+        self.prompts.append(prompt)
+        text = INVALID_THEN_VALID if self.calls == 1 else VALID_PATCH
+        return CompletionResult(
+            model_slug=model_slug,
+            text=text,
+            prompt_tokens=80,
+            completion_tokens=40,
+            decoding_params=dict(decoding or {}),
+        )
+
+
+@pytest.mark.asyncio
+async def test_all_models_and_resume_skips_recorded(tmp_path: Path) -> None:
+    task, repo_cache = _make_local_task(tmp_path)
+    completer = _CountingCompleter()
+    out = tmp_path / "sweep"
+    shared = dict(
+        tasks=1,
+        all_models=True,
+        dry_run=False,
+        cache_dir=tmp_path / "gen_cache",
+        ledger_path=tmp_path / "ledger.json",
+        repo_cache_dir=repo_cache,
+        output_dir=out,
+    )
+    first = load_run_config(run_id="sweep1", **shared)
+    assert first.model_slugs == (
+        "qwen/qwen-2.5-7b-instruct",
+        "qwen/qwen-2.5-72b-instruct",
+    )
+    result1 = await run_generation(first, tasks=[task], completer=completer)
+    assert completer.calls == 2
+    assert result1.pairs_attempted == 2
+    assert result1.pairs_generated == 2
+    records1 = read_jsonl(result1.records_path)
+    assert len(records1) == 2
+
+    # Resume into the same output dir: pairs already in JSONL are skipped.
+    second = load_run_config(run_id="sweep1-resume", **shared)
+    result2 = await run_generation(second, tasks=[task], completer=completer)
+    assert completer.calls == 2  # no new provider calls
+    manifest2 = json.loads(result2.manifest_path.read_text(encoding="utf-8"))
+    assert manifest2["pairs_already_recorded"] == 2
+    assert len(read_jsonl(result2.records_path)) == 2  # no duplicate rows
+
+
+@pytest.mark.asyncio
+async def test_repair_retry_on_invalid_structure(tmp_path: Path) -> None:
+    task, repo_cache = _make_local_task(tmp_path)
+    completer = _RepairCompleter()
+    config = load_run_config(
+        tasks=1,
+        model=QWEN_7B,
+        dry_run=False,
+        output_dir=tmp_path / "out",
+        cache_dir=tmp_path / "gen_cache",
+        ledger_path=tmp_path / "ledger.json",
+        run_id="repair",
+        repo_cache_dir=repo_cache,
+    )
+    result = await run_generation(config, tasks=[task], completer=completer)
+    assert completer.calls == 2
+    assert "not a valid unified diff" in completer.prompts[1]
+    records = read_jsonl(result.records_path)
+    assert records[0].patch_parse_ok is True
+    assert records[0].extracted_patch is not None
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["pairs_repaired"] == 1
+    assert manifest["pair_timings"][0]["outcome"] == "repaired"
 
 
 @pytest.mark.asyncio

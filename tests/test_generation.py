@@ -25,7 +25,7 @@ from hecate.generation import (
 )
 
 # A slug that exists in configs/option_a.yaml.
-SLUG = "meta-llama/llama-3.1-8b-instruct"
+SLUG = "qwen/qwen-2.5-7b-instruct"
 
 SUCCESS_BODY = {
     "choices": [

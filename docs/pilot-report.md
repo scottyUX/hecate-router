@@ -1,16 +1,27 @@
 # Stage-1 Pilot Report & Go/No-Go (S13)
 
-**Date**: 2026-08-10 (updated after remediation re-pilots)  
-**Primary remediated run**: `data/outputs/runs/pilot-20x1-v4/`  
+**Date**: 2026-08-10 (updated after model selection + S13 waiver)  
+**Primary remediated run**: `data/outputs/runs/pilot-20x1-v5-repair/`  
 **Model**: `qwen/qwen-2.5-7b-instruct` (small tier)  
-**Config**: `configs/option_a.yaml` (context caps + `PROMPT_VERSION=v4`)
+**Config**: `configs/option_a.yaml` (context caps + `PROMPT_VERSION=v5` + one-shot repair)
 
 ## Recommendation
 
-**NO-GO for M2 (full 1,200-sample sweep).**
+**S13 80% parse-clean waived for M2** — proceed with a **reduced S14** (2 × 300 = 600).
 
-Context-length hard fails are fixed (0 HTTP 400s on the remediations). Parse-clean
-rate remains **well below 80%** (best remediations ~45–50%). Do not start S14 yet.
+Context-length hard fails are fixed (0 HTTP 400s). Parse-clean reached **65%** on
+Qwen-7B (still below the original 80% bar). After comparing small models, Stage-1
+locks to the Qwen size ladder and drops Llama from the matrix.
+
+## Model selection (small-model pilot)
+
+| Model | Parse-clean | ctx-400 |
+|-------|------------:|--------:|
+| `qwen/qwen-2.5-7b-instruct` | **65%** (13/20) | 0 |
+| `meta-llama/llama-3.1-8b-instruct` | 35% (7/20) | 0 |
+
+**Active Option A pair for S14:** small `qwen/qwen-2.5-7b-instruct` · large
+`qwen/qwen-2.5-72b-instruct`. Estimated mid cost for 600 samples ~$0.71 (≪ $38).
 
 ## Pilot metrics
 
@@ -26,40 +37,38 @@ rate remains **well below 80%** (best remediations ~45–50%). Do not start S14 
 
 ### Remediation matrix (same 20 × qwen-2.5-7b)
 
-| Run | Prompt | Parse-clean | ctx-400 | Cost |
-|-----|--------|------------:|--------:|-----:|
+| Run | Prompt / path | Parse-clean | ctx-400 | Cost |
+|-----|---------------|------------:|--------:|-----:|
 | remediated (v2 strict, no fences) | v2 | 35% | 0 | ~$0.011 |
 | v3 (strict + optional fence) | v3 | 25% | 0 | ~$0.015 |
-| **v4 (v1-like + header hint + caps)** | **v4** | **45%** | **0** | ~$0.019 |
+| v4 (v1-like + header hint + caps) | v4 | 45% | 0 | ~$0.019 |
+| **v5 + one-shot repair** | **v5 + repair** | **65%** | **0** | **~$0.024** |
+| v5 + repair (llama-3.1-8b) | v5 + repair | **35%** | 0 | ~$0.002 |
 
-**Shipped defaults after remediation:** context file caps in Option A + prompt `v4`
-+ runner `max_tokens` clamp against `generation.context_window_tokens`.
+**v5-repair detail (qwen):** 13 / 20 parse OK; `pairs_repaired=1`; remaining 7
+fails are still S8 `invalid_structure`. First-pass alone ≈ 60%.
 
-## Extrapolation to full sweep (unchanged conclusion)
+**Shipped defaults:** context file caps + prompt `v5` + runner one-shot repair +
+`max_tokens` clamp against `generation.context_window_tokens`.
 
-Budget is still fine (<< $38 / $100). **Quality is the blocker.**
+## Extrapolation
 
-## Red flags (updated)
+Budget is fine for the reduced 600-sample sweep. Format quality remains imperfect
+but is accepted under the M2 waiver so training patches can be collected.
 
-1. **Parse-clean still ~45%** under v4 — S8 `invalid_structure` dominates.
-2. **Stricter prompts hurt** — v2/v3 regressed vs the original pilot.
-3. **Context caps work** — `astropy__astropy-7746` no longer 400s; prompts may
-   include `[truncated …]` markers when files exceed budgets.
+## Red flags
 
-## Exit criteria to flip to GO (unchanged)
+1. **Parse-clean 65%** — waived, not solved.
+2. **Repair helps little** — only 1/≈7 failed first-passes became valid.
+3. **Stricter prompts hurt** — v2/v3 regressed vs the original pilot.
+4. **Context caps work** — no context-length 400s on remediated pilots.
 
-1. Parse-clean rate **≥ 80%** on a fresh 20×1 (same model), **or** advisor waiver.
-2. **0** context-length hard fails on the pilot set.
-3. Re-run checklist in `specs/012-pilot-run/quickstart.md`.
+## Next
 
-## Next engineering (toward S14)
-
-- Keep context caps + `max_tokens` clamp (keep).
-- Investigate S8 failure modes on the 11 v4 fails (snippet-only vs broken hunks).
-- Consider a single bounded repair retry on `patch_parse_ok=False` (cost-aware).
-- Optionally trial the other small model (`meta-llama/llama-3.1-8b-instruct`) on
-  the same 20 before changing the gate.
+- S14: `scripts/run_sweep.py` for 2 × 300 with caching (see issue #14).
+- Then S15 validation / Stage-1 handoff.
 
 ## Bottom line
 
-**NO-GO.** Context window risk is mitigated; parse-clean is not ready for M2.
+**Proceed to reduced S14 (Qwen 7B + 72B, 600 samples)** under S13 waiver.
+Journal: `2026-08-10-parse-repair-second-small-model`.

@@ -20,9 +20,9 @@ Later, the router is fine-tuned on AI-usage data from an undergraduate SDLC cour
 
 ## Stage 1 objective
 
-For each of the 300 SWE-bench Lite tasks, collect one attempted fix ("patch") from each of four models, using an identical generation setup.
+For each of the 300 SWE-bench Lite tasks, collect one attempted fix ("patch") from each of two models (small + large Qwen), using an identical generation setup.
 
-**Output:** 1,200 patches (4 models × 300 tasks) plus full metadata, stored in a schema that downstream stages can read.
+**Output:** 600 patches (2 models × 300 tasks) plus full metadata, stored in a schema that downstream stages can read.
 
 ## Non-negotiable invariants
 
@@ -40,11 +40,9 @@ These protect the validity of the eventual routing labels:
 | Tier | Model | Role |
 |------|-------|------|
 | Strong (large) | Qwen 2.5 72B | escalation target |
-| Strong (large) | Llama 3.3 70B | escalation target |
 | Weak (small) | Qwen 2.5 7B | cheap default |
-| Weak (small) | Llama 3.1 8B | cheap default |
 
-Provider: OpenRouter. Budget target ≈ $38; hard ceiling $100. See [`configs/option_a.yaml`](configs/option_a.yaml) — slugs, prices, and a 1,200-sample dry-run cost estimate are recorded (S4).
+Provider: OpenRouter. Budget target ≈ $38; hard ceiling $100. See [`configs/option_a.yaml`](configs/option_a.yaml) — slugs, prices, and a 600-sample dry-run cost estimate are recorded (narrowed for S14 after the small-model selection pilot).
 
 ## Project board
 
@@ -101,7 +99,7 @@ hecate/
 │   └── utils/                # logging, manifests, hashing
 ├── scripts/
 │   ├── run_pilot.py          # 20 tasks × 1 model
-│   └── run_sweep.py          # 4 models × 300 tasks
+│   └── run_sweep.py          # 2 models × 300 tasks
 ├── data/                     # gitignored: raw/, cache/, outputs/
 └── tests/
 ```

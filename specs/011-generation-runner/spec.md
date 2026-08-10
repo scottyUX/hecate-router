@@ -173,7 +173,7 @@ checks without a key.
 - S5–S10 libraries on `dev` are the integration surface.
 - Pilot default small model is `qwen/qwen-2.5-7b-instruct`.
 - Single-process runner; no distributed locking.
-- Full 4×300 sweep CLI remains a thin wrapper for S14; this feature delivers the
+- Full 2×300 sweep CLI remains a thin wrapper for S14; this feature delivers the
   orchestrator and makes the pilot script real.
 
 ## Out of Scope

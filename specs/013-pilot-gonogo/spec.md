@@ -14,7 +14,7 @@
 
 Advisors and the Stage-1 owner need a short report after the 20×1 pilot with
 parse-clean fraction, extrapolated full-sweep cost and wall-clock, red flags, and
-a clear go/no-go recommendation for the 1,200-sample sweep.
+a clear go/no-go recommendation for the Stage-1 sweep (now 600 samples: 2 × 300).
 
 **Why this priority**: M2 spend and calendar time must not start on a dirty pilot.
 
@@ -24,7 +24,7 @@ GO or NO-GO and the supporting metrics from the S12 run.
 ## Requirements
 
 - **FR-001**: Report parse-clean fraction from the S12 pilot records.
-- **FR-002**: Extrapolate cost and wall-clock to a 300×4 sweep (with assumptions).
+- **FR-002**: Extrapolate cost and wall-clock to a 300×2 sweep (with assumptions).
 - **FR-003**: List red flags (context length, extract failures, etc.).
 - **FR-004**: State a clear go/no-go for M2.
 - **FR-005**: Defer Stage-3 label scheme (binary vs multiclass) to advisors.

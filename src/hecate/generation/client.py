@@ -226,7 +226,9 @@ class OpenRouterClient:
                     headers=headers,
                     timeout=self._timeout,
                 )
-            except (httpx.TimeoutException, httpx.TransportError) as exc:
+            except (httpx.TimeoutException, httpx.TransportError, OSError) as exc:
+                # OSError covers ssl.SSLError and other low-level transport failures
+                # that httpx does not always wrap as TransportError.
                 last_status = None
                 last_error = exc
                 if attempt >= max_attempts:
