@@ -248,7 +248,16 @@ class OpenRouterClient:
                 await self._sleep(self._backoff_delay(attempt, response))
                 continue
 
-            raise PermanentAPIError(status_code=status)
+            detail = (response.text or "").strip()
+            if len(detail) > 500:
+                detail = detail[:500] + "…"
+            raise PermanentAPIError(
+                status_code=status,
+                message=(
+                    f"Permanent API error: HTTP {status}"
+                    + (f" — {detail}" if detail else "")
+                ),
+            )
 
         raise RetryExhaustedError(
             attempts=max_attempts, last_status=last_status, last_error=last_error

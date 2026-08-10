@@ -7,6 +7,7 @@ only integrator.
 
 from __future__ import annotations
 
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -30,6 +31,7 @@ from hecate.data import (
     load_swebench_lite,
 )
 from hecate.generation.client import CompletionResult, OpenRouterClient
+from hecate.generation.errors import OpenRouterError
 from hecate.generation.patch import extract_patch
 from hecate.scaffold import (
     PROMPT_VERSION,
@@ -264,6 +266,8 @@ async def run_generation(
     pairs_generated = 0
     pairs_refused_budget = 0
     halt_paid = False
+    pair_timings: list[dict[str, Any]] = []
+    run_started = time.perf_counter()
 
     try:
         for task in selected_tasks:
@@ -280,6 +284,7 @@ async def run_generation(
             context_paths = list(context.paths)
 
             for model_slug in config.model_slugs:
+                pair_started = time.perf_counter()
                 pairs_attempted += 1
                 tier = tiers.get(model_slug)
                 if tier not in ("small", "large"):
@@ -293,10 +298,13 @@ async def run_generation(
                     dec_fp,
                 )
                 cached = cache.get(key)
+                outcome = "unknown"
+                cost_usd: float | None = None
 
                 if cached is not None:
                     pairs_cache_hit += 1
                     pairs_generated += 1
+                    outcome = "cache_hit"
                     _append_record(
                         records_path,
                         task=task,
@@ -313,9 +321,8 @@ async def run_generation(
                         decoding=decoding,
                         run_id=run_id,
                     )
-                    continue
-
-                if config.dry_run:
+                elif config.dry_run:
+                    outcome = "dry_run"
                     _append_record(
                         records_path,
                         task=task,
@@ -332,10 +339,9 @@ async def run_generation(
                         decoding=decoding,
                         run_id=run_id,
                     )
-                    continue
-
-                if halt_paid:
+                elif halt_paid:
                     pairs_refused_budget += 1
+                    outcome = "refused_budget"
                     _append_record(
                         records_path,
                         task=task,
@@ -352,83 +358,127 @@ async def run_generation(
                         decoding=decoding,
                         run_id=run_id,
                     )
-                    continue
+                else:
+                    assert complete is not None
+                    prompt_est = max(1, len(prompt.encode("utf-8")) // 4)
+                    completion_est = int(decoding["max_tokens"])
+                    estimate = estimate_cost(model_slug, prompt_est, completion_est)
+                    try:
+                        tracker.authorize(estimate)
+                    except BudgetExceededError:
+                        pairs_refused_budget += 1
+                        halt_paid = True
+                        outcome = "refused_budget"
+                        _append_record(
+                            records_path,
+                            task=task,
+                            model_slug=model_slug,
+                            tier=tier,
+                            prompt=prompt,
+                            p_hash=p_hash,
+                            prompt_ref=prompt_ref,
+                            context_paths=context_paths,
+                            raw_response=None,
+                            prompt_tokens=None,
+                            completion_tokens=None,
+                            cost_usd=None,
+                            decoding=decoding,
+                            run_id=run_id,
+                        )
+                    else:
+                        try:
+                            result = await complete(
+                                model_slug=model_slug,
+                                prompt=prompt,
+                                decoding=dict(decoding),
+                            )
+                        except OpenRouterError as exc:
+                            outcome = "provider_error"
+                            pair_timings.append(
+                                {
+                                    "instance_id": task.instance_id,
+                                    "model_slug": model_slug,
+                                    "outcome": outcome,
+                                    "wall_clock_s": round(
+                                        time.perf_counter() - pair_started, 3
+                                    ),
+                                    "cost_usd": None,
+                                    "error": f"{type(exc).__name__}: {exc}",
+                                }
+                            )
+                            _append_record(
+                                records_path,
+                                task=task,
+                                model_slug=model_slug,
+                                tier=tier,
+                                prompt=prompt,
+                                p_hash=p_hash,
+                                prompt_ref=prompt_ref,
+                                context_paths=context_paths,
+                                raw_response=None,
+                                prompt_tokens=None,
+                                completion_tokens=None,
+                                cost_usd=None,
+                                decoding=decoding,
+                                run_id=run_id,
+                            )
+                            continue
 
-                assert complete is not None
-                prompt_est = max(1, len(prompt.encode("utf-8")) // 4)
-                completion_est = int(decoding["max_tokens"])
-                estimate = estimate_cost(model_slug, prompt_est, completion_est)
-                try:
-                    tracker.authorize(estimate)
-                except BudgetExceededError:
-                    pairs_refused_budget += 1
-                    halt_paid = True
-                    _append_record(
-                        records_path,
-                        task=task,
-                        model_slug=model_slug,
-                        tier=tier,
-                        prompt=prompt,
-                        p_hash=p_hash,
-                        prompt_ref=prompt_ref,
-                        context_paths=context_paths,
-                        raw_response=None,
-                        prompt_tokens=None,
-                        completion_tokens=None,
-                        cost_usd=None,
-                        decoding=decoding,
-                        run_id=run_id,
-                    )
-                    continue
+                        raw_response = result.text
+                        prompt_tokens = result.prompt_tokens
+                        completion_tokens = result.completion_tokens
+                        if prompt_tokens is not None and completion_tokens is not None:
+                            cost_usd = tracker.record_usage(
+                                model_slug, prompt_tokens, completion_tokens
+                            )
+                        pairs_generated += 1
+                        outcome = "generated"
 
-                result = await complete(
-                    model_slug=model_slug,
-                    prompt=prompt,
-                    decoding=dict(decoding),
-                )
-                raw_response = result.text
-                prompt_tokens = result.prompt_tokens
-                completion_tokens = result.completion_tokens
-                cost_usd = None
-                if prompt_tokens is not None and completion_tokens is not None:
-                    cost_usd = tracker.record_usage(
-                        model_slug, prompt_tokens, completion_tokens
-                    )
-                pairs_generated += 1
+                        extraction = extract_patch(raw_response)
+                        if extraction.patch_parse_ok and extraction.extracted_patch:
+                            cache.put(
+                                key,
+                                CachedGeneration(
+                                    raw_response=raw_response,
+                                    prompt_tokens=prompt_tokens,
+                                    completion_tokens=completion_tokens,
+                                    decoding_params=dict(decoding),
+                                    model_slug=model_slug,
+                                ),
+                            )
 
-                extraction = extract_patch(raw_response)
-                if extraction.patch_parse_ok and extraction.extracted_patch:
-                    cache.put(
-                        key,
-                        CachedGeneration(
+                        _append_record(
+                            records_path,
+                            task=task,
+                            model_slug=model_slug,
+                            tier=tier,
+                            prompt=prompt,
+                            p_hash=p_hash,
+                            prompt_ref=prompt_ref,
+                            context_paths=context_paths,
                             raw_response=raw_response,
                             prompt_tokens=prompt_tokens,
                             completion_tokens=completion_tokens,
-                            decoding_params=dict(decoding),
-                            model_slug=model_slug,
-                        ),
-                    )
+                            cost_usd=cost_usd,
+                            decoding=decoding,
+                            run_id=run_id,
+                        )
 
-                _append_record(
-                    records_path,
-                    task=task,
-                    model_slug=model_slug,
-                    tier=tier,
-                    prompt=prompt,
-                    p_hash=p_hash,
-                    prompt_ref=prompt_ref,
-                    context_paths=context_paths,
-                    raw_response=raw_response,
-                    prompt_tokens=prompt_tokens,
-                    completion_tokens=completion_tokens,
-                    cost_usd=cost_usd,
-                    decoding=decoding,
-                    run_id=run_id,
+                pair_timings.append(
+                    {
+                        "instance_id": task.instance_id,
+                        "model_slug": model_slug,
+                        "outcome": outcome,
+                        "wall_clock_s": round(time.perf_counter() - pair_started, 3),
+                        "cost_usd": cost_usd,
+                    }
                 )
     finally:
         if client is not None:
             await client.aclose()
 
+    wall_clock_s = round(time.perf_counter() - run_started, 3)
+    paid_costs = [t["cost_usd"] for t in pair_timings if t.get("cost_usd") is not None]
     write_run_manifest(
         manifest_path,
         {
@@ -446,6 +496,11 @@ async def run_generation(
             "pairs_cache_hit": pairs_cache_hit,
             "pairs_generated": pairs_generated,
             "pairs_refused_budget": pairs_refused_budget,
+            "wall_clock_s": wall_clock_s,
+            "cost_per_sample_usd": (
+                (sum(paid_costs) / len(paid_costs)) if paid_costs else None
+            ),
+            "pair_timings": pair_timings,
         },
     )
 

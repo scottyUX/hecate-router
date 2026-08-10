@@ -13,6 +13,7 @@ from hecate.caching import cache_key, decoding_fingerprint
 from hecate.cost import BudgetConfig, CostTracker, ModelPricing
 from hecate.data import SwebenchTask, read_jsonl
 from hecate.generation.client import CompletionResult
+from hecate.generation.errors import PermanentAPIError
 from hecate.generation.runner import load_run_config, run_generation
 from hecate.scaffold import PROMPT_VERSION, build_context, prompt_hash, render_prompt
 
@@ -225,6 +226,39 @@ async def test_shared_scaffold_prompt_hash(tmp_path: Path) -> None:
 def test_load_run_config_rejects_unknown_slug() -> None:
     with pytest.raises(ValueError, match="Unknown model slug"):
         load_run_config(tasks=1, model="not/a-real-model")
+
+
+class _FailingCompleter:
+    async def complete(
+        self,
+        *,
+        model_slug: str,
+        prompt: str,
+        decoding: dict[str, Any] | None = None,
+    ) -> CompletionResult:
+        raise PermanentAPIError(status_code=400, message="context length")
+
+
+@pytest.mark.asyncio
+async def test_provider_error_records_and_continues(tmp_path: Path) -> None:
+    task, repo_cache = _make_local_task(tmp_path)
+    config = load_run_config(
+        tasks=1,
+        model=QWEN_7B,
+        dry_run=False,
+        output_dir=tmp_path / "out",
+        cache_dir=tmp_path / "gen_cache",
+        ledger_path=tmp_path / "ledger.json",
+        run_id="err",
+        repo_cache_dir=repo_cache,
+    )
+    result = await run_generation(config, tasks=[task], completer=_FailingCompleter())
+    assert result.pairs_attempted == 1
+    assert result.pairs_generated == 0
+    records = read_jsonl(result.records_path)
+    assert records[0].raw_response is None
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["pair_timings"][0]["outcome"] == "provider_error"
 
 
 def test_dry_run_cli_exits_zero(tmp_path: Path) -> None:
