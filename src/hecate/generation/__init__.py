@@ -11,6 +11,7 @@ from .errors import (
     RetryExhaustedError,
 )
 from .patch import ExtractionResult, extract_patch
+from .runner import RunConfig, RunResult, load_run_config, run_generation
 
 __all__ = [
     "OpenRouterClient",
@@ -22,4 +23,8 @@ __all__ = [
     "RetryExhaustedError",
     "ExtractionResult",
     "extract_patch",
+    "RunConfig",
+    "RunResult",
+    "load_run_config",
+    "run_generation",
 ]

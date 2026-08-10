@@ -1,1 +1,3 @@
-{"feature_directory":"specs/008-patch-extraction"}
+{
+  "feature_directory": "specs/011-generation-runner"
+}
