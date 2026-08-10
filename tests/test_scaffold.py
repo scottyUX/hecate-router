@@ -235,12 +235,30 @@ def test_render_prompt_includes_diff_like_content_verbatim():
 
 
 def test_prompt_version_is_stable():
-    assert PROMPT_VERSION == "v1"
+    assert PROMPT_VERSION == "v4"
     task = _sample_prompt_task()
     context = _sample_prompt_context()
-    assert render_prompt(task, context, version=PROMPT_VERSION)
+    prompt = render_prompt(task, context, version=PROMPT_VERSION)
+    assert "unified diff" in prompt.lower()
+    assert "---/+++" in prompt or "---" in prompt
     with pytest.raises(ValueError, match="Unsupported prompt version"):
         render_prompt(task, context, version="v999")
+
+
+def test_context_caps_truncate_large_files(tmp_path: Path):
+    from hecate.scaffold.context import _apply_context_caps, ContextFile
+
+    huge = "x" * 10_000
+    files = (
+        ContextFile(path="a.py", content=huge),
+        ContextFile(path="b.py", content=huge),
+    )
+    capped = _apply_context_caps(
+        files, max_file_chars=1_000, max_total_file_chars=1_500
+    )
+    assert len(capped[0].content) < len(huge)
+    assert "truncated" in capped[0].content
+    assert sum(len(f.content) for f in capped) <= 1_500 + 80  # placeholders
 
 
 def test_prompt_hash_and_write_prompt(tmp_path: Path):

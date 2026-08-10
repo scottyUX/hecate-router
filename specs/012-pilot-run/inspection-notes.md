@@ -1,40 +1,31 @@
-# Pilot inspection notes (S12)
+# Pilot inspection notes (S12 + S13 remediation)
 
-**Run**: `data/outputs/runs/pilot-20x1-final/`  
 **Model**: `qwen/qwen-2.5-7b-instruct`  
 **Date**: 2026-08-10
 
-## Totals
+## Latest run (v4 — shipped direction)
+
+**Path**: `data/outputs/runs/pilot-20x1-v4/`
 
 | Metric | Value |
 |--------|------:|
 | Records | 20 |
-| `patch_parse_ok=True` | 10 |
-| `patch_parse_ok=False` | 9 |
-| No response (provider error) | 1 |
-| Parse rate among responses | 52.6% |
-| Total cost USD | ~0.0068 |
-| Cost per paid sample USD | ~0.00029 |
-| Wall clock (s) | ~102 |
+| `patch_parse_ok=True` | 9 |
+| `patch_parse_ok=False` | 11 |
+| No response | 0 |
+| Parse-clean | **45%** |
+| Context-length 400s | **0** |
+| Total cost USD | ~0.019 |
 
-## Sample OK
+## Comparison
 
-`astropy__astropy-12907` — human-readable unified diff touching
-`astropy/modeling/separable.py` (fenced `diff --git` style).
+| Run | Parse-clean | ctx-400 |
+|-----|------------:|--------:|
+| baseline `pilot-20x1-final` | 50% | 1 |
+| v2 strict | 35% | 0 |
+| v3 fence example | 25% | 0 |
+| v4 caps + light header hint | 45% | 0 |
 
-## Sample FAIL
+## Day-2 / S13 gate
 
-`astropy__astropy-14182` — model returned a fenced diff that looks like a patch
-but failed S8 structural validation (incomplete / non-conforming hunks). Suggests
-extraction strictness + prompt “single valid unified diff” pressure still need
-work, not a silent empty response.
-
-## Provider error
-
-`astropy__astropy-7746` — HTTP 400 context length (~32k model limit; prompt ~
-126k chars). Runner records `provider_error` and continues.
-
-## Day-2 gate
-
-Patches **do** produce for many tasks, but parse-clean rate is only ~53% and
-oversized oracle contexts can refuse. Not a clean pilot.
+Context overflow is solved. Parse-clean **does not** meet ≥80%. **NO-GO** for S14.

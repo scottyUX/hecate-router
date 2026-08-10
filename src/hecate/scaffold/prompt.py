@@ -2,7 +2,7 @@
 
 Every model in a run receives byte-identical prompts for the same task — the
 prompt is the shared scaffold; only the model slug varies at call time.
-Single-shot v1: one prompt → one unified diff; no tool loop.
+Single-shot: one prompt → one unified diff; no tool loop.
 """
 
 from __future__ import annotations
@@ -13,7 +13,9 @@ from pathlib import Path
 from hecate.data.tasks import SwebenchTask
 from hecate.scaffold.context import ContextBundle
 
-PROMPT_VERSION = "v1"
+# v4: keep v1-style instructions (best parse-clean on pilot) after v2/v3
+# regressions; pair with context caps for context-window safety.
+PROMPT_VERSION = "v4"
 
 
 def _repo_root() -> Path:
@@ -64,6 +66,7 @@ def render_prompt(
         [
             "## Instructions",
             "Respond with a single unified diff that applies the fix.",
+            "Use ---/+++ file headers and @@ hunk headers for every change.",
             "Do not include explanations outside the diff.",
         ]
     )

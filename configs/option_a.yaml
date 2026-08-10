@@ -22,6 +22,14 @@ decoding:
 
 context:
   method: oracle  # oracle | bm25
+  # Keep oracle file text inside small-model windows (~32k) after issue + instructions
+  # and a reserved completion budget (see decoding.max_tokens).
+  max_file_chars: 24000
+  max_total_file_chars: 48000
+
+generation:
+  # Used by the runner to shrink max_tokens when prompts are large (avoid HTTP 400).
+  context_window_tokens: 32768
 
 models:
   - slug: qwen/qwen-2.5-72b-instruct  # verified 2026-07-14 via OpenRouter /api/v1/models

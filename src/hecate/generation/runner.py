@@ -166,6 +166,34 @@ def _decoding_params(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _context_window_tokens(config: dict[str, Any]) -> int:
+    generation = config.get("generation", {}) or {}
+    return int(generation.get("context_window_tokens", 32_768))
+
+
+def _clamp_decoding_for_prompt(
+    decoding: dict[str, Any],
+    prompt: str,
+    *,
+    context_window_tokens: int,
+) -> dict[str, Any]:
+    """Shrink max_tokens so rough prompt+completion stays inside the window."""
+    prompt_est = max(1, len(prompt.encode("utf-8")) // 4)
+    # Leave a small safety margin for tokenizer mismatch / chat wrapping.
+    headroom = context_window_tokens - prompt_est - 256
+    max_tokens = int(decoding["max_tokens"])
+    if headroom < 256:
+        # Still attempt a tiny completion rather than requesting an impossible budget.
+        clamped = 256
+    else:
+        clamped = min(max_tokens, headroom)
+    if clamped == max_tokens:
+        return dict(decoding)
+    out = dict(decoding)
+    out["max_tokens"] = int(clamped)
+    return out
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -234,8 +262,8 @@ async def run_generation(
 
     yaml_data = _load_yaml(config.config_path)
     tiers = _model_tiers(yaml_data)
-    decoding = _decoding_params(yaml_data)
-    dec_fp = decoding_fingerprint(decoding)
+    base_decoding = _decoding_params(yaml_data)
+    window_tokens = _context_window_tokens(yaml_data)
 
     selected_tasks = tasks if tasks is not None else load_swebench_lite()
     selected_tasks = selected_tasks[: config.task_limit]
@@ -282,6 +310,12 @@ async def run_generation(
             p_hash = prompt_hash(prompt)
             prompt_ref = write_prompt(prompt, output_dir=output_dir / "prompts")
             context_paths = list(context.paths)
+            pair_decoding = _clamp_decoding_for_prompt(
+                base_decoding,
+                prompt,
+                context_window_tokens=window_tokens,
+            )
+            dec_fp = decoding_fingerprint(pair_decoding)
 
             for model_slug in config.model_slugs:
                 pair_started = time.perf_counter()
@@ -318,7 +352,7 @@ async def run_generation(
                         prompt_tokens=cached.prompt_tokens,
                         completion_tokens=cached.completion_tokens,
                         cost_usd=None,
-                        decoding=decoding,
+                        decoding=pair_decoding,
                         run_id=run_id,
                     )
                 elif config.dry_run:
@@ -336,7 +370,7 @@ async def run_generation(
                         prompt_tokens=None,
                         completion_tokens=None,
                         cost_usd=None,
-                        decoding=decoding,
+                        decoding=pair_decoding,
                         run_id=run_id,
                     )
                 elif halt_paid:
@@ -355,13 +389,13 @@ async def run_generation(
                         prompt_tokens=None,
                         completion_tokens=None,
                         cost_usd=None,
-                        decoding=decoding,
+                        decoding=pair_decoding,
                         run_id=run_id,
                     )
                 else:
                     assert complete is not None
                     prompt_est = max(1, len(prompt.encode("utf-8")) // 4)
-                    completion_est = int(decoding["max_tokens"])
+                    completion_est = int(pair_decoding["max_tokens"])
                     estimate = estimate_cost(model_slug, prompt_est, completion_est)
                     try:
                         tracker.authorize(estimate)
@@ -382,7 +416,7 @@ async def run_generation(
                             prompt_tokens=None,
                             completion_tokens=None,
                             cost_usd=None,
-                            decoding=decoding,
+                            decoding=pair_decoding,
                             run_id=run_id,
                         )
                     else:
@@ -390,7 +424,7 @@ async def run_generation(
                             result = await complete(
                                 model_slug=model_slug,
                                 prompt=prompt,
-                                decoding=dict(decoding),
+                                decoding=dict(pair_decoding),
                             )
                         except OpenRouterError as exc:
                             outcome = "provider_error"
@@ -419,7 +453,7 @@ async def run_generation(
                                 prompt_tokens=None,
                                 completion_tokens=None,
                                 cost_usd=None,
-                                decoding=decoding,
+                                decoding=pair_decoding,
                                 run_id=run_id,
                             )
                             continue
@@ -442,7 +476,7 @@ async def run_generation(
                                     raw_response=raw_response,
                                     prompt_tokens=prompt_tokens,
                                     completion_tokens=completion_tokens,
-                                    decoding_params=dict(decoding),
+                                    decoding_params=dict(pair_decoding),
                                     model_slug=model_slug,
                                 ),
                             )
@@ -460,7 +494,7 @@ async def run_generation(
                             prompt_tokens=prompt_tokens,
                             completion_tokens=completion_tokens,
                             cost_usd=cost_usd,
-                            decoding=decoding,
+                            decoding=pair_decoding,
                             run_id=run_id,
                         )
 
