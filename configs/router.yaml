@@ -1,0 +1,10 @@
+# Router v1 (semantic-only). Override on the CLI as needed.
+backbone: answerdotai/ModernBERT-base
+max_tokens: 2048
+n_folds: 5
+seeds: [0, 1, 2]
+epochs: 2
+batch_size: 8
+learning_rate: 2.0e-5
+m1_slug: qwen/qwen-2.5-7b-instruct
+m2_slug: qwen/qwen-2.5-72b-instruct

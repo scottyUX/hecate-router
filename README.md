@@ -16,7 +16,10 @@ Hecate's distinguishing idea: routing labels are **execution-grounded**. For eac
 
 Later, the router is fine-tuned on AI-usage data from an undergraduate SDLC course (staged domain adaptation).
 
-**This repository currently covers Stage 1 only** — patch generation. Stage 1 does not test whether patches work; that is Stage 2.
+**This repository currently covers Stages 1–4** — patch generation, execution
+harness, routing-label construction, and the v1 semantic router trainer.
+Stage 2 Docker evaluation is operator-run (local or GCP). Router fine-tune is
+opt-in (`pip install -e ".[train]"`). CI stays offline with fake harness/encoder.
 
 ## Stage 1 objective
 
@@ -85,28 +88,73 @@ python scripts/run_sweep.py --help
 python scripts/run_sweep.py --config configs/option_a.yaml
 ```
 
+### Run execution and labels (Stage 2–3)
+
+Offline dry-run (no Docker):
+
+```bash
+python scripts/run_execution.py --dry-run --tasks 2
+```
+
+Live eval needs Docker (on ARM Mac pass `--namespace none`; x86 GCP can pull prebuilt `swebench` images). Then:
+
+```bash
+python scripts/run_labels.py --input data/outputs/runs/<exec-run-id>/executions.jsonl
+```
+
+See [`specs/014-execution-labels/quickstart.md`](specs/014-execution-labels/quickstart.md)
+and the GCP runbook [`docs/EXECUTION_GCP.md`](docs/EXECUTION_GCP.md).
+
+### Train the v1 router (Stage 4)
+
+Offline tests (no weight download):
+
+```bash
+python -m pytest tests/test_router.py -q
+```
+
+Live fine-tune after labels exist (`pip install -e ".[train]"`):
+
+```bash
+python scripts/run_train.py \
+  --labels data/outputs/runs/exec-pilot-20/labels.jsonl \
+  --generations data/outputs/runs/sweep-2x300-qwen/generations.jsonl \
+  --output-dir data/outputs/runs/router-v1 \
+  --run-id router-v1 \
+  --backend modernbert
+```
+
+See [`specs/015-router-training/quickstart.md`](specs/015-router-training/quickstart.md).
+
 ## Repository layout
 
 ```
 hecate/
 ├── configs/option_a.yaml     # models, tiers, budget
+├── configs/execution.yaml    # Stage-2 harness settings
 ├── src/hecate/
 │   ├── data/                 # SWE-bench Lite loading, record schema
 │   ├── scaffold/             # context builder, prompt template
 │   ├── generation/           # OpenRouter client, patch extraction
 │   ├── caching/              # content-hash keyed cache
 │   ├── cost/                 # token accounting + budget guard
+│   ├── execution/            # SWE-bench eval adapter, labels, pre-flight
+│   ├── router/               # Stage-4 encoder (ModernBERT v1)
 │   └── utils/                # logging, manifests, hashing
 ├── scripts/
 │   ├── run_pilot.py          # 20 tasks × 1 model
-│   └── run_sweep.py          # 2 models × 300 tasks
+│   ├── run_sweep.py          # 2 models × 300 tasks
+│   ├── run_execution.py      # Stage-2 apply + test
+│   ├── run_labels.py         # Stage-3 labels + pre-flight
+│   └── run_train.py          # Stage-4 router CV
 ├── data/                     # gitignored: raw/, cache/, outputs/
 └── tests/
 ```
 
 ## Open question (deferred to advisors)
 
-Label scheme for Stage 3 — **binary "escalate?"** vs. **multiclass "cheapest-resolver."** Stage 1 stores outputs richly enough to defer this until after the pilot reveals the small/large solve-rate split.
+v1 routing labels are binary **m1-resolves** (small-model patch applies and tests
+pass), as specified for E-M4. Multiclass **cheapest-resolver** remains deferred.
 
 ## License
 

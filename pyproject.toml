@@ -24,6 +24,10 @@ dev = [
     "pytest>=8.0,<10",
     "pytest-asyncio>=0.23,<1",
 ]
+train = [
+    "torch>=2.2,<3",
+    "transformers>=4.44,<5",
+]
 
 [project.scripts]
 
@@ -37,4 +41,5 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
     "live: opt-in test that makes a real OpenRouter call (requires RUN_LIVE_TESTS=1 and OPENROUTER_API_KEY)",
+    "live_eval: opt-in Docker SWE-bench evaluation (requires RUN_LIVE_EVAL=1)",
 ]

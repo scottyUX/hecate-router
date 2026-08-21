@@ -1,0 +1,18 @@
+# Stage-2 execution (SWE-bench Lite harness). Override on the CLI as needed.
+# Default namespace pulls prebuilt x86 images (`swebench`). On ARM Macs use
+# `--namespace none` to build locally, or run the full matrix on an x86 VM.
+
+input_generations: data/outputs/runs/sweep-2x300-qwen/generations.jsonl
+option_a_config: configs/option_a.yaml
+
+dataset_name: SWE-bench/SWE-bench_Lite
+split: test
+
+max_workers: 4
+timeout: 1800
+namespace: swebench
+cache_level: env
+force_rebuild: false
+modal: false
+
+m1_positive_rate_flag_threshold: 0.15

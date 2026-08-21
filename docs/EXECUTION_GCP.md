@@ -86,8 +86,49 @@ python scripts/run_execution.py --dry-run --tasks 2 \
   --output-dir /tmp/exec-dry --run-id exec-dry
 ```
 
-`configs/execution.yaml` already uses `namespace: swebench` (prebuilt x86
-images). Do **not** pass `--namespace none` on this VM.
+`configs/execution.yaml` defaults to `namespace: swebench` (prebuilt x86
+images on Docker Hub). Do **not** pass `--namespace none` on this VM.
+
+On this GCP VM, pull those images through an Artifact Registry **remote
+repository** so Docker Hub rate limits (anonymous ~100 pulls / 6h) do not
+stall the matrix. Repo: `us-central1` / `dockerhub-cache`, upstream Docker
+Hub. SWE-bench namespace becomes the AR path plus `swebench`:
+
+```bash
+# one-time (laptop): API + remote repo + VM service account can pull
+gcloud services enable artifactregistry.googleapis.com --project "${HECATE_GCP_PROJECT}"
+gcloud artifacts repositories create dockerhub-cache \
+  --project "${HECATE_GCP_PROJECT}" \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description="Pull-through cache for Docker Hub" \
+  --mode=remote-repository \
+  --remote-repo-config-desc="Docker Hub" \
+  --remote-docker-repo=DOCKER-HUB
+gcloud artifacts repositories add-iam-policy-binding dockerhub-cache \
+  --project "${HECATE_GCP_PROJECT}" \
+  --location=us-central1 \
+  --member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+  --role="roles/artifactregistry.reader"
+```
+
+On the VM (uses the instance service account; `cloud-platform` scope required):
+
+```bash
+gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+export PATH="/snap/bin:$PATH"
+```
+
+Then pass:
+
+```bash
+--namespace us-central1-docker.pkg.dev/${HECATE_GCP_PROJECT}/dockerhub-cache/swebench
+```
+
+First pull of each image still goes Docker Hub → Artifact Registry, then the
+cache serves later pulls. Optional: add a Docker Hub PAT in Secret Manager
+(`--remote-username` / `--remote-password-secret-version`) if Google's
+unauthenticated Hub quota is still tight.
 
 ## 4. Gold smoke
 
