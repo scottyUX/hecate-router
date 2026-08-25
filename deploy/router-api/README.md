@@ -18,10 +18,9 @@ Qwen3-Coder-480B vs Claude 4 Opus (mini-SWE-agent, Verified).
 
 Related notes:
 
-- Lab journal: **Text-only router v1** (2026-08-25) — AUROC, logreg vs mlp,
-  grouped-by-repo split. Filename used in that writeup:
-  `lab-journal-2026-08-25-text-only-router-v1.md`. Search `/journal` in the
-  lab app; that file is not in this git tree.
+- Lab journal entry `2026-08-25-text-only-router-v1` (lab app `/journal`).
+  AUROC, logreg vs mlp, grouped-by-repo split, and training preferences from
+  `configs/router_text.yaml`.
 - Dataset / headroom / complementarity:
   [`data/external/README.md`](../../data/external/README.md)
 - Trainer (not this API): [`scripts/run_train_text.py`](../../scripts/run_train_text.py),

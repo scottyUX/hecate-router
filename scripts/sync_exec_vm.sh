@@ -7,7 +7,7 @@ ROOT="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT="${HECATE_GCP_PROJECT:?Set HECATE_GCP_PROJECT to your GCP project id}"
 ZONE="${HECATE_GCP_ZONE:-us-central1-a}"
 INSTANCE="${HECATE_GCP_INSTANCE:-hecate-exec}"
-REMOTE_DIR="${HECATE_GCP_REMOTE_DIR:-~/hecate}"
+REMOTE_DIR="${HECATE_GCP_REMOTE_DIR:-/opt/hecate}"
 GENERATIONS="${HECATE_GENERATIONS:-$ROOT/data/outputs/runs/sweep-2x300-qwen/generations.jsonl}"
 
 if [[ ! -f "${GENERATIONS}" ]]; then

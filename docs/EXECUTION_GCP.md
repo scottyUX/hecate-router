@@ -11,7 +11,40 @@ machine type is sold out, `e2-standard-8` is the same shape. Stop the VM when
 idle.
 
 No service-account JSON and no API keys are stored in the repo. SSH with
-`gcloud compute ssh`. Stage-1 `generations.jsonl` stays gitignored.
+`gcloud compute ssh`. Stage-1 `generations.jsonl` and other `data/outputs/`
+artifacts stay **gitignored** (generated run data, not source). They are
+shared on the VM at `/opt/hecate`, not in GitHub.
+
+## Lab shared checkout
+
+Every SSH user gets their own Linux home (`/home/jacob`, `/home/scottdavis`,
+…). The checkout is **not** copied into each home. Canonical tree:
+
+| Path | Role |
+|------|------|
+| `/opt/hecate` | Shared repo, `.venv`, and gitignored `data/outputs/` |
+| `~/hecate` | Symlink to `/opt/hecate` (same `cd ~/hecate` for everyone) |
+| `/opt/hecate/.env` | Owner-only (`0600`). Do not chmod this group-readable. |
+
+Group `hecate` can read the tree and write `data/outputs/` (new eval runs).
+`scripts/sync_exec_vm.sh` writes to `/opt/hecate` by default.
+
+Onboard a user after their first SSH (so `/home/<user>` exists):
+
+```bash
+gcloud compute ssh hecate-exec --project hecate-506120 --zone us-central1-a
+sudo bash /opt/hecate/scripts/onboard_exec_vm_user.sh jacob
+```
+
+They must disconnect and SSH again so `hecate` + `docker` groups apply. Then:
+
+```bash
+cd ~/hecate
+source .venv/bin/activate
+ls data/outputs/runs/exec-pilot-20/
+```
+
+Do **not** enter `/home/scottdavis`. Home dirs are private by design.
 
 ## 0. One-time laptop setup
 
@@ -62,8 +95,9 @@ gitignored generations file:
 bash scripts/sync_exec_vm.sh
 ```
 
-Remote layout: `~/hecate/` with
-`data/outputs/runs/sweep-2x300-qwen/generations.jsonl`.
+Remote layout: `/opt/hecate` (each user has `~/hecate` → `/opt/hecate`) with
+`data/outputs/runs/sweep-2x300-qwen/generations.jsonl`. Override with
+`HECATE_GCP_REMOTE_DIR` only if you are not using the shared tree.
 
 ## 3. Python env on the VM
 
