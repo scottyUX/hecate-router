@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Protocol
 
 from hecate.data import GenerationRecord
+from hecate.data.external_miniswe import JoinedLabelWithText
 from hecate.execution.labels import RoutingLabel
 
 
@@ -90,6 +91,49 @@ def build_examples(
         "n_examples": len(examples),
         "skipped_incomplete": skipped_incomplete,
         "skipped_no_text": skipped_no_text,
+        "truncated": truncated_n,
+    }
+    return examples, counts
+
+
+def build_examples_from_text(
+    rows: list[JoinedLabelWithText],
+    *,
+    tokenizer: Tokenizer | None = None,
+    max_tokens: int = 2048,
+) -> tuple[list[RouterExample], dict[str, int]]:
+    """Build router rows from Verified issue text. Fail closed on empty text.
+
+    Gold ``patch`` / ``test_patch`` are never read. Truncation is optional so
+    the live frozen path can log it from the ModernBERT tokenizer instead.
+    """
+    empty = [row.instance_id for row in rows if not (row.problem_statement or "").strip()]
+    if empty:
+        raise ValueError(f"{len(empty)} empty problem_statement values: {empty}")
+    examples: list[RouterExample] = []
+    truncated_n = 0
+    for row in rows:
+        raw = row.problem_statement
+        if tokenizer is None:
+            text, truncated = raw, False
+        else:
+            text, truncated = truncate_text(raw, tokenizer, max_tokens=max_tokens)
+        if truncated:
+            truncated_n += 1
+        examples.append(
+            RouterExample(
+                instance_id=row.instance_id,
+                repo=row.repo,
+                text=text,
+                truncated=truncated,
+                m1_resolves=bool(row.small_model_resolved),
+                m2_resolves=bool(row.large_model_resolved),
+            )
+        )
+    counts = {
+        "n_examples": len(examples),
+        "skipped_incomplete": 0,
+        "skipped_no_text": 0,
         "truncated": truncated_n,
     }
     return examples, counts

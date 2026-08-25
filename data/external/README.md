@@ -33,13 +33,18 @@ Methods caveats (full text in `metadata.json`):
 - Harness `swebench.yaml` at v1.0.0 sets `temperature=0.0`. Qwen3-Coder vendor recs are `temperature=0.7` / `top_p=0.8`; the published run's actual sampling is not in `metadata.yaml`.
 - Seven Opus trajectories were git-peek flagged; two of those resolved. The primary file keeps all 500 so 67.6% still matches the leaderboard. Recoding those two successes as false is **67.2%**.
 
-## Not a drop-in for `scripts/run_train.py`
+## Text-only trainer (v1)
 
-Issue text is joined. [`scripts/run_train.py`](../../scripts/run_train.py) /
-[`specs/015-router-training`](../../specs/015-router-training) still expect
-in-house Lite `generations.jsonl`. Do not point that trainer at this file yet.
-Do not use mini-SWE-agent trajectories as router input. Do not merge with Qwen
-2.5 Lite labels.
+[`scripts/run_train_text.py`](../../scripts/run_train_text.py) reads
+`qwen3coder_vs_claude4opus_with_text.csv` (frozen ModernBERT, grouped-by-repo
+CV). It is **not** [`scripts/run_train.py`](../../scripts/run_train.py) /
+[`specs/015-router-training`](../../specs/015-router-training) (Lite
+generations.jsonl). Do not use mini-SWE-agent trajectories as router input. Do
+not merge with Qwen 2.5 Lite labels.
+
+```bash
+python scripts/run_train_text.py --backend frozen --config configs/router_text.yaml
+```
 
 Regenerate labels with:
 

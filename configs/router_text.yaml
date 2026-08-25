@@ -1,0 +1,15 @@
+# Text-only router v1 (frozen ModernBERT). Not the Lite 015 trainer.
+backbone: answerdotai/ModernBERT-base
+max_tokens: 2048
+n_folds: 5
+seeds: [0, 1, 2]
+epochs: 4
+batch_size: 8
+learning_rate: 2.0e-5
+freeze_encoder: true
+heads: [logreg, mlp]
+hidden_size: 128
+dropout: 0.2
+csv_path: data/external/qwen3coder_vs_claude4opus_with_text.csv
+small_model: Qwen3-Coder-480B-A35B-Instruct
+large_model: Claude 4 Opus
