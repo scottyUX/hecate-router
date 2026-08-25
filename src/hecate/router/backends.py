@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Protocol
 
 
@@ -310,6 +311,33 @@ class FrozenHead:
             "dropout": self.dropout,
             "state_dict": {key: val.detach().cpu() for key, val in self._module.state_dict().items()},
         }
+
+    @classmethod
+    def from_checkpoint(cls, path: str | Path, *, device=None) -> FrozenHead:
+        """Load a head saved by ``state_dict`` / ``torch.save``. Defaults to CPU."""
+        torch = _torch()
+        target = Path(path)
+        try:
+            payload = torch.load(target, map_location="cpu", weights_only=True)
+        except TypeError:
+            payload = torch.load(target, map_location="cpu")
+        if not isinstance(payload, dict) or "kind" not in payload or "state_dict" not in payload:
+            raise ValueError(f"unrecognized head checkpoint: {target}")
+        head = cls(
+            str(payload["kind"]),
+            in_dim=int(payload.get("in_dim") or 768),
+            hidden_size=int(payload.get("hidden_size") or 128),
+            dropout=float(payload.get("dropout") or 0.2),
+        )
+        module = head._build(torch)
+        module.load_state_dict(payload["state_dict"])
+        if device is None:
+            device = torch.device("cpu")
+        module.to(device)
+        module.eval()
+        head._module = module
+        head._device = device
+        return head
 
 
 def _torch():

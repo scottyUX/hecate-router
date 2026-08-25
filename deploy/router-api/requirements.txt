@@ -1,0 +1,6 @@
+fastapi>=0.110,<1
+uvicorn[standard]>=0.27,<1
+google-cloud-storage>=2.14,<4
+transformers>=4.44,<5
+# CPU wheel is installed separately in the Dockerfile from the pytorch CPU index.
+torch>=2.2,<3

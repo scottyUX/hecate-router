@@ -42,4 +42,5 @@ asyncio_default_fixture_loop_scope = "function"
 markers = [
     "live: opt-in test that makes a real OpenRouter call (requires RUN_LIVE_TESTS=1 and OPENROUTER_API_KEY)",
     "live_eval: opt-in Docker SWE-bench evaluation (requires RUN_LIVE_EVAL=1)",
+    "slow_router: opt-in test that loads ModernBERT (~150M) and a real head checkpoint (requires RUN_ROUTER_INTEG=1)",
 ]
