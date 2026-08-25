@@ -85,8 +85,9 @@ The one resolve: **72B** on `django__django-10914`. 7B did not resolve that task
 | Routing headroom (oracle − always-72B) | **0** |
 | `m1_positive_rate_flag` (< 15%) | **true** |
 
-Artifacts (gitignored): `data/outputs/runs/exec-pilot-20/` and
-`data/outputs/runs/exec-smoke/`.
+Artifacts (gitignored; on the VM at `/opt/hecate`):
+`data/outputs/runs/exec-pilot-20/` and `data/outputs/runs/exec-smoke/`.
+Share them on the disk, do not commit `data/outputs/`.
 
 ## Interpretation
 
