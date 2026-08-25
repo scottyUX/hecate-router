@@ -1,7 +1,22 @@
 {
   "artifacts": {
     "csv": "data/external/qwen3coder_vs_claude4opus_miniswe_external.csv",
-    "json": "data/external/qwen3coder_vs_claude4opus_miniswe_external.json"
+    "json": "data/external/qwen3coder_vs_claude4opus_miniswe_external.json",
+    "with_text_csv": "data/external/qwen3coder_vs_claude4opus_with_text.csv",
+    "with_text_json": "data/external/qwen3coder_vs_claude4opus_with_text.json"
+  },
+  "complementarity": {
+    "always_large_pct": 67.6,
+    "always_small_pct": 55.4,
+    "both_resolved": 258,
+    "headroom_pp": 3.8,
+    "large_only": 80,
+    "n": 500,
+    "neither": 143,
+    "note": "Headroom vs always-large is the small-only count. Routing value on this pair is cost (send both-win tasks to the small model), not accuracy lift over Opus.",
+    "oracle_pct": 71.4,
+    "oracle_resolved": 357,
+    "small_only": 19
   },
   "dataset": "qwen3coder_vs_claude4opus_miniswe_external",
   "date_pulled": "2026-08-25T17:28:48.514151+00:00",
@@ -17,6 +32,21 @@
   "do_not_merge_with": "in-house Qwen 2.5 7B/72B SWE-bench Lite single-shot labels",
   "excluded_instances": [],
   "git_commit": "a072c0d7bb5f683fb708318fc0d4d26c6cb40e7a",
+  "issue_text_join": {
+    "dataset": "princeton-nlp/SWE-bench_Verified",
+    "date_joined": "2026-08-25T17:57:16.063180+00:00",
+    "excludes": [
+      "patch",
+      "test_patch"
+    ],
+    "fields": [
+      "problem_statement",
+      "base_commit"
+    ],
+    "git_commit": "f67ff992561359f434dc272f5d43ffe4b969cbe6",
+    "n_matched": 500,
+    "split": "test"
+  },
   "label": "externally sourced matched-scaffold substitute; not an in-house run",
   "large_model": {
     "display": "Claude 4 Opus (20250514)",
@@ -54,8 +84,9 @@
     "sensitivity_recode_false_pct": 67.2
   },
   "router_training": {
-    "blocked_on": "Join these labels with SWE-bench Verified issue-text prompts before scripts/run_train.py. Do not use mini-SWE-agent trajectories as router input.",
-    "drop_in_for_run_train": false
+    "blocked_on": "Issue text joined. scripts/run_train.py / spec 015 still expect Lite generations.jsonl; do not point them at this Verified file yet. Do not use mini-SWE-agent trajectories as router input.",
+    "drop_in_for_run_train": false,
+    "issue_text_joined": true
   },
   "scaffold": {
     "attempts": 1,
