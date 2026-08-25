@@ -1,0 +1,77 @@
+{
+  "artifacts": {
+    "csv": "data/external/qwen3coder_vs_claude4opus_miniswe_external.csv",
+    "json": "data/external/qwen3coder_vs_claude4opus_miniswe_external.json"
+  },
+  "dataset": "qwen3coder_vs_claude4opus_miniswe_external",
+  "date_pulled": "2026-08-25T17:28:48.514151+00:00",
+  "decoding": {
+    "caveat": "Harness config at mini-SWE-agent v1.0.0 sets temperature=0.0. Qwen3-Coder vendor recommendations are temperature=0.7, top_p=0.8; community reports greedy underperforms for this model. Actual sampling used in the published run is not recorded in metadata.yaml. Disclose as: harness config says greedy, but model-specific behavior under greedy is contested and unverified for this run.",
+    "harness_swebench_yaml_temperature": 0.0,
+    "published_run_sampling": "unknown — not in submission metadata.yaml",
+    "qwen3_coder_vendor_recommended": {
+      "temperature": 0.7,
+      "top_p": 0.8
+    }
+  },
+  "do_not_merge_with": "in-house Qwen 2.5 7B/72B SWE-bench Lite single-shot labels",
+  "excluded_instances": [],
+  "git_commit": "a072c0d7bb5f683fb708318fc0d4d26c6cb40e7a",
+  "label": "externally sourced matched-scaffold substitute; not an in-house run",
+  "large_model": {
+    "display": "Claude 4 Opus (20250514)",
+    "expected_resolved_count": 338,
+    "metadata_url": "https://github.com/SWE-bench/experiments/blob/main/evaluation/bash-only/20250802_mini-v1.0.0_claude-4-opus-20250514/metadata.yaml",
+    "published_resolve_pct": 67.6,
+    "resolved_count": 338,
+    "source_url": "https://raw.githubusercontent.com/SWE-bench/experiments/main/evaluation/bash-only/20250802_mini-v1.0.0_claude-4-opus-20250514/per_instance_details.json",
+    "submission": "20250802_mini-v1.0.0_claude-4-opus-20250514"
+  },
+  "leaderboard_track": "bash-only",
+  "n_instances": 500,
+  "not_lite": true,
+  "opus_git_peek": {
+    "flagged_instance_ids": [
+      "pylint-dev__pylint-7080",
+      "matplotlib__matplotlib-22871",
+      "matplotlib__matplotlib-21568",
+      "pytest-dev__pytest-6197",
+      "pytest-dev__pytest-5840",
+      "sympy__sympy-13031",
+      "django__django-13513"
+    ],
+    "flagged_resolved_instance_ids": [
+      "matplotlib__matplotlib-22871",
+      "sympy__sympy-13031"
+    ],
+    "keep_all_rows": true,
+    "n_flagged": 7,
+    "n_flagged_resolved": 2,
+    "note": "Seven Opus trajectories were flagged for git log/show/blame. Two of those resolved. Primary file keeps all 500 so the published 67.6% still matches. Recoding those two successes as false yields (338 - 2) / 500 = 67.2% vs 67.6% published.",
+    "published_large_resolve_pct": 67.6,
+    "qwen_git_peek_count": 0,
+    "sensitivity_recode_false_count": 336,
+    "sensitivity_recode_false_pct": 67.2
+  },
+  "router_training": {
+    "blocked_on": "Join these labels with SWE-bench Verified issue-text prompts before scripts/run_train.py. Do not use mini-SWE-agent trajectories as router input.",
+    "drop_in_for_run_train": false
+  },
+  "scaffold": {
+    "attempts": 1,
+    "large_model_version": "1.0.0",
+    "name": "mini-SWE-agent",
+    "same_day": "2025-08-02",
+    "small_model_version": "1.0.0"
+  },
+  "small_model": {
+    "display": "Qwen3-Coder 480B/A35B Instruct",
+    "expected_resolved_count": 277,
+    "metadata_url": "https://github.com/SWE-bench/experiments/blob/main/evaluation/bash-only/20250802_mini-v1.0.0_qwen3-coder-480b-a35b-instruct/metadata.yaml",
+    "published_resolve_pct": 55.4,
+    "resolved_count": 277,
+    "source_url": "https://raw.githubusercontent.com/SWE-bench/experiments/main/evaluation/bash-only/20250802_mini-v1.0.0_qwen3-coder-480b-a35b-instruct/per_instance_details.json",
+    "submission": "20250802_mini-v1.0.0_qwen3-coder-480b-a35b-instruct"
+  },
+  "split": "verified"
+}
