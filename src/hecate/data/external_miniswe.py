@@ -40,12 +40,29 @@ LARGE_METADATA_URL = (
 
 CSV_NAME = "qwen3coder_vs_claude4opus_miniswe_external.csv"
 JSON_NAME = "qwen3coder_vs_claude4opus_miniswe_external.json"
+TEXT_CSV_NAME = "qwen3coder_vs_claude4opus_with_text.csv"
+TEXT_JSON_NAME = "qwen3coder_vs_claude4opus_with_text.json"
 FIELDNAMES = (
     "instance_id",
     "repo",
     "small_model_resolved",
     "large_model_resolved",
 )
+TEXT_FIELDNAMES = (
+    "instance_id",
+    "repo",
+    "small_model_resolved",
+    "large_model_resolved",
+    "problem_statement",
+    "base_commit",
+)
+BOTH_RESOLVED_COUNT = 258
+SMALL_ONLY_COUNT = 19
+LARGE_ONLY_COUNT = 80
+NEITHER_COUNT = 143
+ORACLE_RESOLVED_COUNT = 357
+ORACLE_PCT = 71.4
+HEADROOM_PP = 3.8
 
 OPUS_GIT_PEEK_IDS = (
     "pylint-dev__pylint-7080",
@@ -74,6 +91,19 @@ class JoinedLabel:
     repo: str
     small_model_resolved: bool
     large_model_resolved: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class JoinedLabelWithText:
+    instance_id: str
+    repo: str
+    small_model_resolved: bool
+    large_model_resolved: bool
+    problem_statement: str
+    base_commit: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -159,6 +189,91 @@ def join_labels(
             f"does not match published {large_published_pct}%"
         )
     return rows
+
+
+def complementarity(rows: list[JoinedLabel]) -> dict[str, Any]:
+    """Counts for the cost-vs-accuracy framing: headroom is small-only wins."""
+    both = sum(
+        1 for row in rows if row.small_model_resolved and row.large_model_resolved
+    )
+    small_only = sum(
+        1 for row in rows if row.small_model_resolved and not row.large_model_resolved
+    )
+    large_only = sum(
+        1 for row in rows if not row.small_model_resolved and row.large_model_resolved
+    )
+    neither = sum(
+        1
+        for row in rows
+        if not row.small_model_resolved and not row.large_model_resolved
+    )
+    n = len(rows)
+    oracle = both + small_only + large_only
+    return {
+        "n": n,
+        "both_resolved": both,
+        "small_only": small_only,
+        "large_only": large_only,
+        "neither": neither,
+        "oracle_resolved": oracle,
+        "oracle_pct": percent_one_decimal(oracle, n) if n else 0.0,
+        "always_small_pct": percent_one_decimal(both + small_only, n) if n else 0.0,
+        "always_large_pct": percent_one_decimal(both + large_only, n) if n else 0.0,
+        "headroom_pp": percent_one_decimal(small_only, n) if n else 0.0,
+        "note": (
+            "Headroom vs always-large is the small-only count. Routing value on "
+            "this pair is cost (send both-win tasks to the small model), not "
+            "accuracy lift over Opus."
+        ),
+    }
+
+
+def join_problem_statements(
+    labels: list[JoinedLabel],
+    by_id: Mapping[str, Mapping[str, Any]],
+) -> list[JoinedLabelWithText]:
+    """Left-join Verified issue text onto labels. Fail closed; never drop rows."""
+    missing = [row.instance_id for row in labels if row.instance_id not in by_id]
+    if missing:
+        raise JoinError(
+            f"{len(missing)} instance_ids missing from SWE-bench Verified: {missing}"
+        )
+    empty_text: list[str] = []
+    empty_commit: list[str] = []
+    repo_mismatch: list[str] = []
+    out: list[JoinedLabelWithText] = []
+    for row in labels:
+        payload = by_id[row.instance_id]
+        text = str(payload.get("problem_statement") or "")
+        commit = str(payload.get("base_commit") or "")
+        if not text.strip():
+            empty_text.append(row.instance_id)
+        if not commit.strip():
+            empty_commit.append(row.instance_id)
+        verified_repo = payload.get("repo")
+        if verified_repo is not None and str(verified_repo) != row.repo:
+            repo_mismatch.append(
+                f"{row.instance_id}: label={row.repo!r} verified={verified_repo!r}"
+            )
+        out.append(
+            JoinedLabelWithText(
+                instance_id=row.instance_id,
+                repo=row.repo,
+                small_model_resolved=row.small_model_resolved,
+                large_model_resolved=row.large_model_resolved,
+                problem_statement=text,
+                base_commit=commit,
+            )
+        )
+    if empty_text:
+        raise JoinError(
+            f"{len(empty_text)} empty problem_statement values: {empty_text}"
+        )
+    if empty_commit:
+        raise JoinError(f"{len(empty_commit)} empty base_commit values: {empty_commit}")
+    if repo_mismatch:
+        raise JoinError(f"repo mismatch vs SWE-bench Verified: {repo_mismatch}")
+    return out
 
 
 def git_peek_sensitivity(rows: list[JoinedLabel]) -> dict[str, Any]:
@@ -254,6 +369,73 @@ def read_joined_csv(path: Path | str) -> list[JoinedLabel]:
                 )
             )
     return rows
+
+
+def write_text_csv(rows: list[JoinedLabelWithText], path: Path | str) -> Path:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=TEXT_FIELDNAMES)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(
+                {
+                    "instance_id": row.instance_id,
+                    "repo": row.repo,
+                    "small_model_resolved": str(row.small_model_resolved).lower(),
+                    "large_model_resolved": str(row.large_model_resolved).lower(),
+                    "problem_statement": row.problem_statement,
+                    "base_commit": row.base_commit,
+                }
+            )
+    return target
+
+
+def write_text_json(rows: list[JoinedLabelWithText], path: Path | str) -> Path:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = [row.to_dict() for row in rows]
+    target.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return target
+
+
+def read_joined_text_csv(path: Path | str) -> list[JoinedLabelWithText]:
+    target = Path(path)
+    rows: list[JoinedLabelWithText] = []
+    with target.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        if reader.fieldnames != list(TEXT_FIELDNAMES):
+            raise JoinError(
+                f"CSV columns {reader.fieldnames!r} do not match {list(TEXT_FIELDNAMES)!r}"
+            )
+        for payload in reader:
+            rows.append(
+                JoinedLabelWithText(
+                    instance_id=payload["instance_id"],
+                    repo=payload["repo"],
+                    small_model_resolved=_parse_bool(payload["small_model_resolved"]),
+                    large_model_resolved=_parse_bool(payload["large_model_resolved"]),
+                    problem_statement=payload["problem_statement"],
+                    base_commit=payload["base_commit"],
+                )
+            )
+    return rows
+
+
+def join_and_write_text(
+    labels: list[JoinedLabel],
+    by_id: Mapping[str, Mapping[str, Any]],
+    output_dir: Path | str,
+) -> tuple[list[JoinedLabelWithText], Path, Path]:
+    """Join first, then write. Raises before any text artifact is created."""
+    rows = join_problem_statements(labels, by_id)
+    target_dir = Path(output_dir)
+    csv_path = write_text_csv(rows, target_dir / TEXT_CSV_NAME)
+    json_path = write_text_json(rows, target_dir / TEXT_JSON_NAME)
+    return rows, csv_path, json_path
 
 
 def _parse_bool(value: str) -> bool:

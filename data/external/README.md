@@ -12,27 +12,43 @@ single-shot labels. This split is SWE-bench **Verified / bash-only (500)**.
 |------|------|
 | `qwen3coder_vs_claude4opus_miniswe_external.csv` | Joined labels |
 | `qwen3coder_vs_claude4opus_miniswe_external.json` | Same rows as JSON |
+| `qwen3coder_vs_claude4opus_with_text.csv` | Labels plus Verified `problem_statement` / `base_commit` |
+| `qwen3coder_vs_claude4opus_with_text.json` | Same rows as JSON |
 | `metadata.json` | Sources, scaffold versions, date pulled, caveats |
 
-Schema: `instance_id, repo, small_model_resolved, large_model_resolved`.
+Label schema: `instance_id, repo, small_model_resolved, large_model_resolved`.
+
+Text schema: the four label columns plus `problem_statement, base_commit`. Gold
+`patch` / `test_patch` are **not** stored.
 
 Published rates (fail-closed): small **55.4%** (277/500), large **67.6%** (338/500).
+
+Complementarity (fail-closed): both 258, Qwen-only 19, Opus-only 80, neither 143.
+Oracle (either resolves) **71.4%**. Headroom vs always-Opus is **3.8pp**. Routing
+value on this pair is **cost** (send the 258 both-win tasks to Qwen), not
+accuracy lift over Opus.
 
 Methods caveats (full text in `metadata.json`):
 
 - Harness `swebench.yaml` at v1.0.0 sets `temperature=0.0`. Qwen3-Coder vendor recs are `temperature=0.7` / `top_p=0.8`; the published run's actual sampling is not in `metadata.yaml`.
 - Seven Opus trajectories were git-peek flagged; two of those resolved. The primary file keeps all 500 so 67.6% still matches the leaderboard. Recoding those two successes as false is **67.2%**.
 
-## Not a drop-in for router training
+## Not a drop-in for `scripts/run_train.py`
 
-These are labels only. [`scripts/run_train.py`](../../scripts/run_train.py) still
-needs SWE-bench Verified **issue-text prompts** joined onto these rows. Do not
-use mini-SWE-agent trajectories as router input. Do not point Stage-4 v1
-(`specs/015-router-training`) at this file; that spec is still the in-house Lite
-path.
+Issue text is joined. [`scripts/run_train.py`](../../scripts/run_train.py) /
+[`specs/015-router-training`](../../specs/015-router-training) still expect
+in-house Lite `generations.jsonl`. Do not point that trainer at this file yet.
+Do not use mini-SWE-agent trajectories as router input. Do not merge with Qwen
+2.5 Lite labels.
 
-Regenerate with:
+Regenerate labels with:
 
 ```bash
 python scripts/extract_miniswe_labels.py --output-dir data/external
+```
+
+Join Verified issue text with:
+
+```bash
+python scripts/join_miniswe_issue_text.py --output-dir data/external
 ```

@@ -1,4 +1,4 @@
-"""SWE-bench Lite task loading."""
+"""SWE-bench task loading (Lite and Verified)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,9 @@ from datasets import load_dataset
 SWEBENCH_LITE_DATASET = "princeton-nlp/SWE-bench_Lite"
 SWEBENCH_LITE_SPLIT = "test"
 SWEBENCH_LITE_EXPECTED_COUNT = 300
+SWEBENCH_VERIFIED_DATASET = "princeton-nlp/SWE-bench_Verified"
+SWEBENCH_VERIFIED_SPLIT = "test"
+SWEBENCH_VERIFIED_EXPECTED_COUNT = 500
 
 
 def _default_cache_dir() -> Path:
@@ -20,7 +23,7 @@ def _default_cache_dir() -> Path:
 
 @dataclass(frozen=True)
 class SwebenchTask:
-    """One SWE-bench Lite instance used as a Stage-1 task."""
+    """One SWE-bench instance (Lite or Verified)."""
 
     instance_id: str
     repo: str
@@ -45,27 +48,48 @@ def _row_to_task(row: dict) -> SwebenchTask:
     )
 
 
+def _load_swebench_split(
+    dataset: str,
+    split: str,
+    expected_count: int,
+    *,
+    cache_dir: Path | str | None = None,
+) -> list[SwebenchTask]:
+    resolved_cache = Path(cache_dir) if cache_dir is not None else _default_cache_dir()
+    resolved_cache.mkdir(parents=True, exist_ok=True)
+    hf_dataset = load_dataset(dataset, split=split, cache_dir=str(resolved_cache))
+    tasks = [_row_to_task(row) for row in hf_dataset]
+    if len(tasks) != expected_count:
+        raise ValueError(
+            f"Expected {expected_count} instances, got {len(tasks)} from {dataset} ({split})"
+        )
+    return tasks
+
+
 def load_swebench_lite(*, cache_dir: Path | str | None = None) -> list[SwebenchTask]:
     """Load all SWE-bench Lite test instances (expected: 300).
 
     Caches under ``data/raw/hf`` by default (gitignored via ``data/raw/``).
     """
-    resolved_cache = Path(cache_dir) if cache_dir is not None else _default_cache_dir()
-    resolved_cache.mkdir(parents=True, exist_ok=True)
-
-    dataset = load_dataset(
+    return _load_swebench_split(
         SWEBENCH_LITE_DATASET,
-        split=SWEBENCH_LITE_SPLIT,
-        cache_dir=str(resolved_cache),
+        SWEBENCH_LITE_SPLIT,
+        SWEBENCH_LITE_EXPECTED_COUNT,
+        cache_dir=cache_dir,
     )
-    tasks = [_row_to_task(row) for row in dataset]
 
-    if len(tasks) != SWEBENCH_LITE_EXPECTED_COUNT:
-        raise ValueError(
-            f"Expected {SWEBENCH_LITE_EXPECTED_COUNT} SWE-bench Lite instances, "
-            f"got {len(tasks)} from {SWEBENCH_LITE_DATASET} ({SWEBENCH_LITE_SPLIT})"
-        )
-    return tasks
+
+def load_swebench_verified(*, cache_dir: Path | str | None = None) -> list[SwebenchTask]:
+    """Load all SWE-bench Verified test instances (expected: 500).
+
+    Caches under ``data/raw/hf`` by default (gitignored via ``data/raw/``).
+    """
+    return _load_swebench_split(
+        SWEBENCH_VERIFIED_DATASET,
+        SWEBENCH_VERIFIED_SPLIT,
+        SWEBENCH_VERIFIED_EXPECTED_COUNT,
+        cache_dir=cache_dir,
+    )
 
 
 def get_task(
