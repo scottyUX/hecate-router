@@ -51,9 +51,11 @@ def test_generation_record_to_dict_includes_stage2_nulls():
     assert "patch_applied" in data
     assert "fail_to_pass" in data
     assert "pass_to_pass" in data
+    assert "resolved" in data
     assert data["patch_applied"] is None
     assert data["fail_to_pass"] is None
     assert data["pass_to_pass"] is None
+    assert data["resolved"] is None
 
 
 def test_generation_record_jsonl_roundtrip(tmp_path: Path):
@@ -66,6 +68,7 @@ def test_generation_record_jsonl_roundtrip(tmp_path: Path):
         patch_applied=True,
         fail_to_pass=["tests/test_foo.py::test_a"],
         pass_to_pass=["tests/test_foo.py::test_b"],
+        resolved=True,
     )
 
     append_jsonl(path, first)
@@ -73,6 +76,13 @@ def test_generation_record_jsonl_roundtrip(tmp_path: Path):
     restored = read_jsonl(path)
 
     assert restored == [first, second]
+
+
+def test_generation_record_from_dict_missing_resolved():
+    payload = _sample_record().to_dict()
+    payload.pop("resolved")
+    restored = GenerationRecord.from_dict(payload)
+    assert restored.resolved is None
 
 
 def test_load_swebench_lite_has_300_instances():

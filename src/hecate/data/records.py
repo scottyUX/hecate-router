@@ -14,9 +14,9 @@ Tier = Literal["small", "large"]
 class GenerationRecord:
     """One Stage-1 generation outcome for a (task, model) pair.
 
-    Stage-2 placeholders (``patch_applied``, ``fail_to_pass``, ``pass_to_pass``)
-    are always present in serialized form so execution results can be appended
-    later without reshaping the schema.
+    Stage-2 placeholders (``patch_applied``, ``fail_to_pass``, ``pass_to_pass``,
+    ``resolved``) are always present in serialized form so execution results can
+    be appended later without reshaping the schema.
     """
 
     instance_id: str
@@ -41,6 +41,7 @@ class GenerationRecord:
     patch_applied: bool | None = None
     fail_to_pass: list[str] | None = None
     pass_to_pass: list[str] | None = None
+    resolved: bool | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-safe dict; Stage-2 keys are always present."""
@@ -56,6 +57,8 @@ class GenerationRecord:
             payload["context_files"] = []
         if "decoding_params" not in payload or payload["decoding_params"] is None:
             payload["decoding_params"] = {}
+        if "resolved" not in payload:
+            payload["resolved"] = None
         return cls(**payload)
 
     def to_json(self, *, indent: int | None = None) -> str:

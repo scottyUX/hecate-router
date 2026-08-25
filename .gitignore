@@ -12,4 +12,5 @@ build/
 data/raw/
 data/cache/
 data/outputs/
+logs/
 *.log
