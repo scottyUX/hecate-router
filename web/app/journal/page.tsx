@@ -5,8 +5,9 @@ import { signOut } from "@/app/login/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { requireLabMember } from "@/lib/auth";
-import { reportForEntry } from "@/lib/experiments";
+import { EXPERIMENT_REPORTS } from "@/lib/experiments";
 import type { JournalEntry } from "@/lib/journal";
+import { paperForEntry } from "@/lib/static-papers";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,12 @@ export default async function JournalIndexPage() {
   }
 
   const entries = (data ?? []) as JournalEntry[];
+  const dbIds = new Set(entries.map((entry) => entry.entry_id));
+  const staticOnly = EXPERIMENT_REPORTS.filter(
+    (item) => item.archiveEntryId && !dbIds.has(item.archiveEntryId)
+  );
+
+  const empty = entries.length === 0 && staticOnly.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-4xl px-5 py-10 md:px-8">
@@ -65,12 +72,29 @@ export default async function JournalIndexPage() {
         </div>
       </div>
 
-      {entries.length === 0 ? (
+      {empty ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-muted-foreground">
           No entries yet. Create the first experiment note.
         </div>
       ) : (
         <ul className="space-y-3">
+          {staticOnly.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className="block rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
+              >
+                <p className="text-sm text-muted-foreground">{item.date}</p>
+                <h2 className="mt-1 font-heading text-2xl font-medium">
+                  {item.title}
+                </h2>
+                <Badge variant="outline" className="mt-2">
+                  {item.status}
+                </Badge>
+                <p className="mt-2 text-sm text-muted-foreground">{item.summary}</p>
+              </Link>
+            </li>
+          ))}
           {entries.map((entry) => (
             <li key={entry.id}>
               <Link
@@ -81,7 +105,7 @@ export default async function JournalIndexPage() {
                 <h2 className="mt-1 font-heading text-2xl font-medium">
                   {entry.title}
                 </h2>
-                {reportForEntry(entry.entry_id) ? (
+                {paperForEntry(entry.entry_id) ? (
                   <Badge variant="outline" className="mt-2">
                     paper
                   </Badge>

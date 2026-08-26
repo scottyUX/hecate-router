@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { createClient } from "@/lib/supabase/server";
 
 export async function getSessionUser() {
@@ -25,4 +27,15 @@ export async function requireLabMember() {
   if (!user?.email) return { user: null, authorized: false as const };
   const authorized = await isLabMember(user.email);
   return { user, authorized };
+}
+
+export async function requireJournalPage(nextPath: string) {
+  const { user, authorized } = await requireLabMember();
+  if (!user) redirect(`/login?next=${nextPath}`);
+  if (!authorized) {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    redirect(`/login?next=${nextPath}`);
+  }
+  return user;
 }

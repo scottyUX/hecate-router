@@ -129,6 +129,28 @@ export function PaperAbstract({ children }: { children: ReactNode }) {
   );
 }
 
+export function PaperCallout({
+  id,
+  label,
+  children,
+}: {
+  id?: string;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      id={id}
+      className="rounded-xl border border-[var(--paper-line)] bg-[var(--paper-card)] px-[17.6px] py-4"
+    >
+      <p className="font-sans text-xs font-medium tracking-wide text-[var(--paper-muted)] uppercase">
+        {label}
+      </p>
+      <div className="mt-2 space-y-3 text-lg leading-[1.5]">{children}</div>
+    </div>
+  );
+}
+
 export function PaperToc({ items }: { items: PaperTocItem[] }) {
   return (
     <nav
@@ -197,6 +219,50 @@ export function PaperSubsection({
         {number} {title}
       </h3>
       <div className="mt-3 space-y-4 text-lg leading-[1.5]">{children}</div>
+    </section>
+  );
+}
+
+export function PaperCite({ n }: { n: number | number[] }) {
+  const nums = Array.isArray(n) ? n : [n];
+  return (
+    <sup className="text-[0.75em]">
+      {nums.map((num, index) => (
+        <span key={num}>
+          {index > 0 ? "," : null}
+          <a href={`#ref-${num}`} className="no-underline">
+            [{num}]
+          </a>
+        </span>
+      ))}
+    </sup>
+  );
+}
+
+export function PaperReferences({
+  items,
+}: {
+  items: { id: number; href: string; text: ReactNode }[];
+}) {
+  return (
+    <section id="references" className="mt-12 scroll-mt-8">
+      <h2 className="font-serif text-[2.5rem] leading-[1.2] font-medium text-[#333]">
+        References
+      </h2>
+      <ol className="mt-4 list-none space-y-3 p-0 text-base leading-[1.5]">
+        {items.map((item) => (
+          <li
+            key={item.id}
+            id={`ref-${item.id}`}
+            className="scroll-mt-8 pl-8 -indent-8"
+          >
+            [{item.id}]{" "}
+            <a href={item.href} className="no-underline hover:underline">
+              {item.text}
+            </a>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }
