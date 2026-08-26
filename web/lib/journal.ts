@@ -5,7 +5,7 @@ export const JOURNAL_STATUSES = [
   "abandoned",
 ] as const;
 
-export const JOURNAL_VISIBILITIES = ["private", "public"] as const;
+export const JOURNAL_VISIBILITIES = ["public", "private"] as const;
 
 export const JOURNAL_COMPONENTS = [
   "semantic-gate",

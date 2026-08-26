@@ -38,7 +38,8 @@ export default async function JournalIndexPage() {
           </Link>
           <h1 className="mt-2 font-heading text-4xl font-medium">Lab journal</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Signed in as {user.email}
+            Shared lab notes — every allowlisted member can read entries marked
+            Lab. Signed in as {user.email}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

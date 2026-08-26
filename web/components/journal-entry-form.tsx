@@ -111,15 +111,16 @@ export function JournalEntryForm({ action, initial, submitLabel }: Props) {
           <select
             id="visibility"
             name="visibility"
-            defaultValue={initial?.visibility ?? "private"}
+            defaultValue={initial?.visibility ?? "public"}
             className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
           >
-            {JOURNAL_VISIBILITIES.map((visibility) => (
-              <option key={visibility} value={visibility}>
-                {visibility}
-              </option>
-            ))}
+            <option value="public">Lab (all members)</option>
+            <option value="private">Author only</option>
           </select>
+          <p className="text-xs text-muted-foreground">
+            Lab journal entries are shared with every allowlisted member by
+            default.
+          </p>
         </div>
 
         <div className="space-y-2">
