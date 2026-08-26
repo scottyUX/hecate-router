@@ -83,7 +83,7 @@ export default async function JournalIndexPage() {
                 </h2>
                 {reportForEntry(entry.entry_id) ? (
                   <Badge variant="outline" className="mt-2">
-                    styled page
+                    paper
                   </Badge>
                 ) : null}
                 {entry.author_email ? (
