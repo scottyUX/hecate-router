@@ -32,13 +32,15 @@ function FigureFrame({
   children,
 }: {
   id: string
-  title: string
+  title: ReactNode
   children: ReactNode
 }) {
   return (
-    <figure id={id} className="scroll-mt-24 rounded-2xl border border-border bg-card p-4 md:p-5">
-      <div className="h-[280px] w-full">{children}</div>
-      <figcaption className="mt-4 text-sm leading-relaxed text-muted-foreground">
+    <figure id={id} className="my-8 scroll-mt-8">
+      <div className="h-[300px] w-full rounded-xl border border-[var(--paper-line)] bg-white/70 p-3 md:p-4">
+        {children}
+      </div>
+      <figcaption className="mt-3 text-sm leading-[1.5] text-[#555]">
         {title}
       </figcaption>
     </figure>
@@ -47,14 +49,20 @@ function FigureFrame({
 
 export function RouterV2Figures() {
   return (
-    <div className="space-y-6">
+    <div>
       <FigureFrame
         id="fig-route-auc"
-        title="Figure 1. Logistic Route-AUC by arm and split. Dashed line is the django target (0.55). Grouped fusion looks like a win; django holdout does not move."
+        title={
+          <>
+            Figure 1: <strong>Logistic Route-AUC by arm and split.</strong> The
+            dashed line is the django-holdout target (0.55). Grouped fusion
+            looks like a win; django holdout does not move.
+          </>
+        }
       >
         <ChartContainer config={config} className="h-full w-full aspect-auto">
           <BarChart data={[...R.chart.routeAuc]} accessibilityLayer>
-            <CartesianGrid vertical={false} />
+            <CartesianGrid vertical={false} stroke="rgba(26,36,51,0.08)" />
             <XAxis dataKey="split" tickLine={false} axisLine={false} />
             <YAxis
               domain={[0.4, 0.8]}
@@ -65,25 +73,31 @@ export function RouterV2Figures() {
             />
             <ReferenceLine
               y={R.target.djangoRouteAuc}
-              stroke="var(--destructive)"
+              stroke="var(--paper-accent)"
               strokeDasharray="4 4"
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey="text" fill="var(--color-text)" radius={4} />
-            <Bar dataKey="fusion" fill="var(--color-fusion)" radius={4} />
-            <Bar dataKey="metrics" fill="var(--color-metrics)" radius={4} />
+            <Bar dataKey="text" fill="var(--color-text)" radius={2} />
+            <Bar dataKey="fusion" fill="var(--color-fusion)" radius={2} />
+            <Bar dataKey="metrics" fill="var(--color-metrics)" radius={2} />
           </BarChart>
         </ChartContainer>
       </FigureFrame>
 
       <FigureFrame
         id="fig-auroc"
-        title="Figure 2. Logistic AUROC by arm and split. Dashed line is the django target (0.60). All arms sit at chance on holdout (~0.52)."
+        title={
+          <>
+            Figure 2: <strong>Logistic AUROC by arm and split.</strong> The
+            dashed line is the django-holdout target (0.60). All arms sit at
+            chance on holdout (~0.52).
+          </>
+        }
       >
         <ChartContainer config={config} className="h-full w-full aspect-auto">
           <BarChart data={[...R.chart.auroc]} accessibilityLayer>
-            <CartesianGrid vertical={false} />
+            <CartesianGrid vertical={false} stroke="rgba(26,36,51,0.08)" />
             <XAxis dataKey="split" tickLine={false} axisLine={false} />
             <YAxis
               domain={[0.4, 0.8]}
@@ -94,14 +108,14 @@ export function RouterV2Figures() {
             />
             <ReferenceLine
               y={R.target.djangoAuroc}
-              stroke="var(--destructive)"
+              stroke="var(--paper-accent)"
               strokeDasharray="4 4"
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey="text" fill="var(--color-text)" radius={4} />
-            <Bar dataKey="fusion" fill="var(--color-fusion)" radius={4} />
-            <Bar dataKey="metrics" fill="var(--color-metrics)" radius={4} />
+            <Bar dataKey="text" fill="var(--color-text)" radius={2} />
+            <Bar dataKey="fusion" fill="var(--color-fusion)" radius={2} />
+            <Bar dataKey="metrics" fill="var(--color-metrics)" radius={2} />
           </BarChart>
         </ChartContainer>
       </FigureFrame>
