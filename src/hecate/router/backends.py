@@ -202,6 +202,9 @@ class FrozenModernBertEmbedder:
                 encoded = {key: val.to(device) for key, val in encoded.items()}
                 hidden = model(**encoded).last_hidden_state[:, 0, :]
                 vectors.extend(row.tolist() for row in hidden.cpu())
+                done = min(start + len(batch), len(texts))
+                if start == 0 or done == len(texts) or (start // self.batch_size) % 10 == 0:
+                    print(f"[frozen CLS] {done}/{len(texts)}", flush=True)
         self.n_truncated = truncated
         return vectors
 

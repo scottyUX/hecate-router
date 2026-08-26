@@ -7,6 +7,7 @@ from hecate.scaffold.context import (
     ContextMethod,
     build_context,
     load_context_method,
+    load_oracle_files_uncapped,
 )
 from hecate.scaffold.prompt import (
     PROMPT_VERSION,
@@ -23,6 +24,7 @@ __all__ = [
     "ContextMethod",
     "build_context",
     "load_context_method",
+    "load_oracle_files_uncapped",
     "prompt_hash",
     "render_prompt",
     "write_prompt",

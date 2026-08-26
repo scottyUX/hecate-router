@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { DeleteEntryButton } from "@/components/delete-entry-button";
+import { JournalBody } from "@/components/journal-body";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { requireLabMember } from "@/lib/auth";
+import { reportForEntry } from "@/lib/experiments";
 import type { JournalEntry } from "@/lib/journal";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -33,6 +35,7 @@ export default async function JournalEntryPage({ params }: Props) {
   if (!data) notFound();
 
   const entry = data as JournalEntry;
+  const report = reportForEntry(entry.entry_id);
 
   const sections = [
     ["Context", entry.context],
@@ -53,6 +56,14 @@ export default async function JournalEntryPage({ params }: Props) {
           ← Journal
         </Link>
         <div className="flex gap-2">
+          {report ? (
+            <Link
+              href={report.href}
+              className={cn(buttonVariants(), "h-8 px-3")}
+            >
+              Static report
+            </Link>
+          ) : null}
           <Link
             href={`/journal/${entry.entry_id}/edit`}
             className={cn(buttonVariants({ variant: "outline" }), "h-8 px-3")}
@@ -116,9 +127,7 @@ export default async function JournalEntryPage({ params }: Props) {
         {sections.map(([title, body]) => (
           <section key={title}>
             <h2 className="mb-2 font-heading text-2xl font-medium">{title}</h2>
-            <div className="whitespace-pre-wrap text-muted-foreground">
-              {body.trim() ? body : "—"}
-            </div>
+            <JournalBody text={body} />
           </section>
         ))}
       </div>

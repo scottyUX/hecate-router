@@ -37,17 +37,26 @@ export default async function JournalIndexPage() {
             ← Hecate Lab
           </Link>
           <h1 className="mt-2 font-heading text-4xl font-medium">Lab journal</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Shared lab notes — every allowlisted member can read entries marked
-            Lab. Signed in as {user.email}
+          <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+            Database archive. New experiment write-ups are static pages under{" "}
+            <Link href="/experiments" className="text-primary hover:underline">
+              Experiments
+            </Link>
+            . Signed in as {user.email}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
-            href="/journal/new"
+            href="/experiments"
             className={cn(buttonVariants(), "h-9 px-3")}
           >
-            New journal entry
+            Experiments
+          </Link>
+          <Link
+            href="/journal/new"
+            className={cn(buttonVariants({ variant: "outline" }), "h-9 px-3")}
+          >
+            New archive entry
           </Link>
           <Link
             href="/profile"

@@ -172,6 +172,31 @@ def _read_file_at_commit(repo_dir: Path, commit: str, path: str) -> str:
         raise FileNotFoundError(f"{path!r} not found at {commit} in {repo_dir}") from exc
 
 
+def load_oracle_files_uncapped(
+    task: SwebenchTask,
+    *,
+    cache_dir: Path | str | None = None,
+) -> tuple[ContextFile, ...]:
+    """Gold-patch file list at ``base_commit`` with no prompt char caps.
+
+    Used for structural metrics. Localization is leaked (oracle files).
+    Added files and missing paths yield empty content.
+    """
+    resolved_cache = Path(cache_dir) if cache_dir is not None else _default_cache_dir()
+    repo_dir = _ensure_repo_clone(task.repo, resolved_cache)
+    files: list[ContextFile] = []
+    for path, is_added in _oracle_file_specs(task.patch or ""):
+        if is_added:
+            files.append(ContextFile(path=path, content=""))
+            continue
+        try:
+            content = _read_file_at_commit(repo_dir, task.base_commit, path)
+        except FileNotFoundError:
+            content = ""
+        files.append(ContextFile(path=path, content=content))
+    return tuple(files)
+
+
 def _build_oracle_context(
     task: SwebenchTask,
     cache_dir: Path,
