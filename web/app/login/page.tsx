@@ -68,10 +68,16 @@ function LoginForm() {
 
     try {
       const supabase = createClient();
-      // Prefer the public site URL so reset emails land on production, not
-      // whatever origin happened to trigger the form (e.g. localhost).
+      // Always send recovery links to the deployed lab site. Localhost as
+      // redirectTo is rejected (or falls back to Site URL) unless it is
+      // explicitly allowlisted — and Site URL must not be localhost in prod.
+      const PRODUCTION_ORIGIN = "https://hecate-production.up.railway.app";
       const siteOrigin = (
-        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+          ? PRODUCTION_ORIGIN
+          : window.location.origin)
       ).replace(/\/$/, "");
       const redirectTo = `${siteOrigin}/auth/callback?type=recovery&next=${encodeURIComponent(next)}`;
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
