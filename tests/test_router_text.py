@@ -13,8 +13,10 @@ from hecate.router.metrics import auroc, route_metrics, text_route_metrics
 from hecate.router.splits import (
     GROUPED_REPO,
     LABEL_STRATIFIED,
+    LEAVE_REPO,
     assign_grouped_repo_folds,
     assign_label_stratified_folds,
+    assign_leave_repo_out,
     repo_histogram,
 )
 from hecate.router.text_runner import load_text_train_config, run_text_train
@@ -141,6 +143,85 @@ def test_normalized_route_auc_perfect_ranker() -> None:
     assert metrics["accuracy"] == 1.0
 
 
+def test_leave_repo_out_is_exact_and_fails_closed() -> None:
+    examples = [
+        _example(f"django-{i}", m1=bool(i % 2), m2=True, repo="django/django")
+        for i in range(4)
+    ] + [
+        _example(f"sympy-{i}", m1=True, m2=True, repo="sympy/sympy")
+        for i in range(3)
+    ]
+    assignment = assign_leave_repo_out(examples, "django/django", seed=0)
+    assert assignment.strategy == LEAVE_REPO
+    assert assignment.n_folds == 2
+    by_id = {ex.instance_id: ex for ex in examples}
+    hold0 = {by_id[iid].repo for iid, fold in assignment.fold_of.items() if fold == 0}
+    hold1 = {by_id[iid].repo for iid, fold in assignment.fold_of.items() if fold == 1}
+    assert hold0 == {"django/django"}
+    assert "django/django" not in hold1
+    assert hold1 == {"sympy/sympy"}
+    assert assignment.fold_of["django-0"] == 0
+    assert assignment.fold_of["sympy-0"] == 1
+    with pytest.raises(ValueError, match="missing"):
+        assign_leave_repo_out(examples, "missing/repo")
+    with pytest.raises(ValueError, match="non-empty"):
+        assign_leave_repo_out(examples, "  ")
+    only_django = [ex for ex in examples if ex.repo == "django/django"]
+    with pytest.raises(ValueError, match="covers every example"):
+        assign_leave_repo_out(only_django, "django/django")
+
+
+def test_run_text_train_leave_repo_writes_two_directions(tmp_path: Path) -> None:
+    examples = []
+    scores: dict[str, float] = {}
+    for i in range(4):
+        iid = f"django/django-{i}"
+        examples.append(
+            _example(iid, m1=True, m2=True, repo="django/django", text=f"text {iid}")
+        )
+        scores[iid] = 0.9
+    for i in range(4):
+        iid = f"sympy/sympy-{i}"
+        examples.append(
+            _example(iid, m1=False, m2=True, repo="sympy/sympy", text=f"text {iid}")
+        )
+        scores[iid] = 0.1
+    config = load_text_train_config(
+        csv_path=tmp_path / "unused.csv",
+        output_dir=tmp_path / "ldo",
+        run_id="ldo-test",
+        split="leave-repo",
+        hold_repo="django/django",
+    )
+    config = config.__class__(**{**config.__dict__, "seeds": (0,)})
+    result = run_text_train(
+        config, backend="scripted", scripted_scores=scores, examples=examples
+    )
+    payload = json.loads(result.results_path.read_text(encoding="utf-8"))
+    assert payload["split_primary"] == "leave_repo"
+    assert payload["split_sensitivity"] is None
+    assert payload["hold_repo"] == "django/django"
+    assert payload["arm"] == "text-only v1 leave-django-out"
+    assert payload["features"] == "text"
+    assert payload["oracle_leak"] is False
+    assert payload["primary"] == {}
+    assert "route_auc" not in payload["primary"]
+    dirs = payload["directions"]["scripted"]
+    assert set(dirs) == {"hold_django", "hold_rest"}
+    assert dirs["hold_django"]["n_hold"] == 4
+    assert dirs["hold_rest"]["n_hold"] == 4
+    for row in payload["primary_folds"]["scripted"]:
+        assert row["repo_leak"] == []
+        if row["direction"] == "hold_django":
+            assert row["hold_repos"] == ["django/django"]
+        else:
+            assert "django/django" not in row["hold_repos"]
+    readme = result.readme_path.read_text(encoding="utf-8")
+    assert "leave-repo" in readme.lower()
+    assert "hold_django" in readme
+    assert result.split_strategy == "leave_repo"
+
+
 def test_run_text_train_scripted_writes_results(tmp_path: Path) -> None:
     examples = []
     scores: dict[str, float] = {}
@@ -167,9 +248,52 @@ def test_run_text_train_scripted_writes_results(tmp_path: Path) -> None:
     assert payload["split_primary"] == "grouped_repo"
     assert payload["split_sensitivity"] == "label_stratified"
     assert payload["arm"] == "text-only v1"
+    assert payload["features"] == "text"
+    assert payload["oracle_leak"] is False
     assert "scripted" in payload["primary"]
     readme = result.readme_path.read_text(encoding="utf-8")
     assert "3.8" in readme
     assert "text-only" in readme.lower()
     for row in payload["primary_folds"]["scripted"]:
         assert row["repo_leak"] == []
+
+
+def test_run_text_train_scripted_fusion_flags_oracle_leak(tmp_path: Path) -> None:
+    from hecate.router.struct_metrics import METRIC_NAMES
+
+    examples = []
+    scores: dict[str, float] = {}
+    zeros = [0.0] * len(METRIC_NAMES)
+    metric_vectors: dict[str, list[float]] = {}
+    for repo, n, m1 in (("aa/aa", 4, True), ("bb/bb", 4, False), ("cc/cc", 4, True)):
+        for i in range(n):
+            iid = f"{repo}-{i}"
+            examples.append(
+                _example(iid, m1=m1, m2=True, repo=repo, text=f"text {iid}")
+            )
+            scores[iid] = 0.9 if m1 else 0.1
+            metric_vectors[iid] = list(zeros)
+    config = load_text_train_config(
+        csv_path=tmp_path / "unused.csv",
+        output_dir=tmp_path / "run-fusion",
+        run_id="fusion-test",
+        features="fusion",
+    )
+    config = config.__class__(**{**config.__dict__, "n_folds": 2, "seeds": (0,)})
+    result = run_text_train(
+        config,
+        backend="scripted",
+        scripted_scores=scores,
+        examples=examples,
+        metric_vectors=metric_vectors,
+    )
+    payload = json.loads(result.results_path.read_text(encoding="utf-8"))
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert payload["features"] == "fusion"
+    assert payload["oracle_leak"] is True
+    assert payload["arm"] == "oracle-metrics fusion v2"
+    assert manifest["features"] == "fusion"
+    assert manifest["oracle_leak"] is True
+    readme = result.readme_path.read_text(encoding="utf-8")
+    assert "leak gold localization" in readme.lower()
+    assert "fusion" in readme.lower()

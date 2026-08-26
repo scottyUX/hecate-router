@@ -14,6 +14,7 @@ from hecate.scaffold import (
     ContextFile,
     build_context,
     load_context_method,
+    load_oracle_files_uncapped,
     prompt_hash,
     render_prompt,
     write_prompt,
@@ -75,6 +76,14 @@ def test_oracle_context_reads_base_commit_and_handles_added_files(tmp_path: Path
     assert modified.content == "def base():\n    return 1\n"
     # Added file doesn't exist at base_commit: empty content, not an error.
     assert added.content == ""
+
+
+def test_load_oracle_files_uncapped_skips_prompt_caps(tmp_path: Path):
+    task, cache_dir = _make_local_task(tmp_path)
+    files = load_oracle_files_uncapped(task, cache_dir=cache_dir)
+    assert [item.path for item in files] == ["pkg/mod.py", "pkg/new_mod.py"]
+    assert files[0].content == "def base():\n    return 1\n"
+    assert files[1].content == ""
 
 
 def test_oracle_context_is_deterministic(tmp_path: Path):

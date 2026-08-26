@@ -14,12 +14,19 @@ from hecate.router.dataset import (
     build_examples_from_text,
 )
 from hecate.router.metrics import route_metrics, text_route_metrics
+from hecate.router.struct_metrics import (
+    METRIC_NAMES,
+    assemble_features,
+    fit_metric_scaler,
+    metrics_from_python_source,
+)
 from hecate.router.runner import TrainConfig, TrainResult, load_train_config, run_train
 from hecate.router.splits import (
     FoldAssignment,
     assign_folds,
     assign_grouped_repo_folds,
     assign_label_stratified_folds,
+    assign_leave_repo_out,
 )
 from hecate.router.text_runner import (
     TextTrainConfig,
@@ -39,9 +46,14 @@ __all__ = [
     "TrainConfig",
     "TrainResult",
     "WhitespaceTokenizer",
+    "METRIC_NAMES",
+    "assemble_features",
     "assign_folds",
+    "fit_metric_scaler",
+    "metrics_from_python_source",
     "assign_grouped_repo_folds",
     "assign_label_stratified_folds",
+    "assign_leave_repo_out",
     "build_examples",
     "build_examples_from_text",
     "load_text_train_config",

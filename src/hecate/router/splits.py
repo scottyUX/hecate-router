@@ -14,6 +14,7 @@ REPO = "repo"
 ROUND_ROBIN = "round_robin"
 GROUPED_REPO = "grouped_repo"
 LABEL_STRATIFIED = "label_stratified"
+LEAVE_REPO = "leave_repo"
 
 
 @dataclass(frozen=True)
@@ -160,4 +161,31 @@ def assign_label_stratified_folds(
         strategy=LABEL_STRATIFIED,
         n_folds=n_folds,
         fold_of=_assign_from_groups(by_label, n_folds=n_folds, rng=rng),
+    )
+
+
+def assign_leave_repo_out(
+    examples: list[RouterExample],
+    repo: str,
+    *,
+    seed: int = 0,
+) -> FoldAssignment:
+    """Two folds: hold ``repo`` (fold 0), then hold everything else (fold 1).
+
+    Not greedy pack. Fold 0 is exactly ``repo``; fold 1 is the complement.
+    """
+    hold_repo = (repo or "").strip()
+    if not hold_repo:
+        raise ValueError("hold repo must be a non-empty string")
+    in_repo = [ex.instance_id for ex in examples if ex.repo == hold_repo]
+    out_repo = [ex.instance_id for ex in examples if ex.repo != hold_repo]
+    if not in_repo:
+        present = sorted({ex.repo for ex in examples})
+        raise ValueError(f"hold repo {hold_repo!r} is missing from examples; have {present}")
+    if not out_repo:
+        raise ValueError(f"hold repo {hold_repo!r} covers every example; reverse split is empty")
+    fold_of = {iid: 0 for iid in in_repo}
+    fold_of.update({iid: 1 for iid in out_repo})
+    return FoldAssignment(
+        seed=seed, strategy=LEAVE_REPO, n_folds=2, fold_of=fold_of
     )
