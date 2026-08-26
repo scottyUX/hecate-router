@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signOut } from "@/app/login/actions";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { requireLabMember } from "@/lib/auth";
+import { reportForEntry } from "@/lib/experiments";
 import type { JournalEntry } from "@/lib/journal";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -38,25 +40,16 @@ export default async function JournalIndexPage() {
           </Link>
           <h1 className="mt-2 font-heading text-4xl font-medium">Lab journal</h1>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            Database archive. New experiment write-ups are static pages under{" "}
-            <Link href="/experiments" className="text-primary hover:underline">
-              Experiments
-            </Link>
-            . Signed in as {user.email}
+            Lab notes. New write-ups are static pages under{" "}
+            <code>/journal</code>. Signed in as {user.email}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
-            href="/experiments"
-            className={cn(buttonVariants(), "h-9 px-3")}
-          >
-            Experiments
-          </Link>
-          <Link
             href="/journal/new"
             className={cn(buttonVariants({ variant: "outline" }), "h-9 px-3")}
           >
-            New archive entry
+            New journal entry
           </Link>
           <Link
             href="/profile"
@@ -88,6 +81,11 @@ export default async function JournalIndexPage() {
                 <h2 className="mt-1 font-heading text-2xl font-medium">
                   {entry.title}
                 </h2>
+                {reportForEntry(entry.entry_id) ? (
+                  <Badge variant="outline" className="mt-2">
+                    styled page
+                  </Badge>
+                ) : null}
                 {entry.author_email ? (
                   <p className="mt-2 text-sm text-muted-foreground">
                     {entry.author_email}

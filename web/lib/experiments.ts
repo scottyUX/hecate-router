@@ -9,7 +9,7 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
-    href: "/experiments/router-v2",
+    href: "/journal/2026-08-26-oracle-metrics-fusion-v2",
     title: "Structural fusion v2",
     date: "2026-08-26",
     status: "missed target",
