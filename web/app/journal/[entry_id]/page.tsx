@@ -3,13 +3,12 @@ import { notFound, redirect } from "next/navigation";
 
 import { DeleteEntryButton } from "@/components/delete-entry-button";
 import { JournalBody } from "@/components/journal-body";
-import { RouterV2Paper } from "@/components/journal/router-v2-paper";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { requireLabMember } from "@/lib/auth";
-import { reportForEntry } from "@/lib/experiments";
 import type { JournalEntry } from "@/lib/journal";
+import { paperForEntry } from "@/lib/static-papers";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -17,9 +16,8 @@ type Props = { params: Promise<{ entry_id: string }> };
 
 export default async function JournalEntryPage({ params }: Props) {
   const { entry_id } = await params;
-  if (reportForEntry(entry_id)) {
-    return <RouterV2Paper />;
-  }
+  const Paper = paperForEntry(entry_id);
+  if (Paper) return <Paper />;
 
   const { user, authorized } = await requireLabMember();
   if (!user) redirect(`/login?next=/journal/${entry_id}`);
