@@ -7,7 +7,6 @@ const navLinks = [
   { href: "#program", label: "Program" },
   { href: "#architecture", label: "Architecture" },
   { href: "#roadmap", label: "Milestones" },
-  { href: "/experiments", label: "Experiments" },
   { href: "/journal", label: "Journal" },
   { href: "/profile", label: "Profile" },
 ] as const;
@@ -41,7 +40,7 @@ export function SiteHeader() {
             ))}
           </nav>
           <Link
-            href="/login?next=/experiments"
+            href="/login?next=/journal"
             className={cn(
               buttonVariants({ size: "sm", variant: "outline" }),
               "h-9 rounded-full border-border px-4 text-sm font-medium"
