@@ -1,3 +1,4 @@
+import { AuthRedirectHandler } from "@/components/auth-redirect-handler";
 import { HecateArchitecture } from "@/components/hecate-architecture";
 import { RoadmapMilestones } from "@/components/pipeline-stages";
 import { SiteHeader } from "@/components/site-header";
@@ -22,6 +23,7 @@ const workstreams = [
 export default function Home() {
   return (
     <>
+      <AuthRedirectHandler />
       <SiteHeader />
 
       <main id="top" className="flex-1">

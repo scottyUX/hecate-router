@@ -68,7 +68,12 @@ function LoginForm() {
 
     try {
       const supabase = createClient();
-      const redirectTo = `${window.location.origin}/auth/callback?type=recovery&next=${encodeURIComponent(next)}`;
+      // Prefer the public site URL so reset emails land on production, not
+      // whatever origin happened to trigger the form (e.g. localhost).
+      const siteOrigin = (
+        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+      ).replace(/\/$/, "");
+      const redirectTo = `${siteOrigin}/auth/callback?type=recovery&next=${encodeURIComponent(next)}`;
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email,
         { redirectTo }
@@ -104,9 +109,12 @@ function LoginForm() {
       {(authError || error) && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error ||
-            (authError === "auth_callback_error"
-              ? "That invite or reset link is invalid or expired. Request a new one."
-              : authError)}
+            (searchParams.get("error_code") === "otp_expired" ||
+            searchParams.get("error_description")?.includes("expired")
+              ? "That password reset link is invalid or has expired. Use “Forgot password?” below to request a new one, then open the email on this same device/browser."
+              : authError === "auth_callback_error"
+                ? "That invite or reset link is invalid or expired. Request a new one."
+                : authError)}
         </div>
       )}
 

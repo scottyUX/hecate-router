@@ -30,6 +30,21 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
+  // Auth emails sometimes bounce to Site URL (`/`) with error query params.
+  if (
+    path === "/" &&
+    (request.nextUrl.searchParams.has("error") ||
+      request.nextUrl.searchParams.has("error_code"))
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    if (!url.searchParams.has("error")) {
+      url.searchParams.set("error", "auth_callback_error");
+    }
+    return NextResponse.redirect(url);
+  }
+
   const isProtected =
     path === "/journal" ||
     path.startsWith("/journal/") ||
