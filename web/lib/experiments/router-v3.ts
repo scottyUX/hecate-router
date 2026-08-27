@@ -1,32 +1,103 @@
-/** v3 trajectory router. PENDING spec until a smoke run exists. */
+/** v3 trajectory router. K=0 smoke scored; K=3 still training. */
 
 export const ROUTER_V3 = {
-  status: "pending",
-  date: "2026-08-26",
-  rev: 2,
+  status: "in-progress",
+  date: "2026-08-27",
+  rev: 3,
   n: 500,
   djangoN: 231,
   restN: 269,
+  djangoAlwaysSmall: 0.58,
   stretch: {
     djangoRouteAuc: 0.55,
+    djangoAuroc: 0.6,
   },
   v1v2: {
     djangoRouteAuc: { text: "0.477 ± 0.030", fusion: "0.482 ± 0.020" },
     djangoAuroc: { text: "0.516 ± 0.015", fusion: "0.518 ± 0.021" },
+    djangoAcc: { text: "0.519 ± 0.060", fusion: "0.527 ± 0.068" },
+    djangoBrier: { text: "0.250 ± 0.008", fusion: "0.250 ± 0.010" },
     groupedRouteAuc: { text: "0.589 ± 0.194", fusion: "0.593 ± 0.180" },
+  },
+  chart: {
+    routeAuc: [
+      {
+        split: "django",
+        text: 0.477,
+        textCi: 0.03,
+        fusion: 0.482,
+        fusionCi: 0.02,
+        metrics: 0.479,
+        metricsCi: 0.101,
+        k0: 0.686,
+      },
+    ],
+    auroc: [
+      {
+        split: "django",
+        text: 0.516,
+        textCi: 0.015,
+        fusion: 0.518,
+        fusionCi: 0.021,
+        metrics: 0.48,
+        metricsCi: 0.081,
+        k0: 0.563,
+      },
+    ],
+    accuracy: [
+      {
+        split: "django",
+        text: 0.519,
+        textCi: 0.06,
+        fusion: 0.527,
+        fusionCi: 0.068,
+        metrics: 0.494,
+        metricsCi: 0.078,
+        k0: 0.45,
+      },
+    ],
+    brier: [
+      {
+        split: "django",
+        text: 0.25,
+        textCi: 0.008,
+        fusion: 0.25,
+        fusionCi: 0.01,
+        metrics: 0.259,
+        metricsCi: 0.014,
+        k0: 0.288,
+      },
+    ],
+  },
+  k0: {
+    seeds: 1,
+    nHold: 231,
+    nTrain: 269,
+    routeAuc: 0.686,
+    auroc: 0.563,
+    accuracy: 0.45,
+    f1: 0.14,
+    brier: 0.288,
+    alwaysSmall: 0.58,
+    alwaysLarge: 0.706,
+    oracle: 0.745,
+  },
+  k3: {
+    scored: false,
+    epoch0MeanLoss: 0.82,
+    stepsDone: 1613,
+    stepsTotal: 6725,
+    epochs: 5,
+    ln2: 0.693,
   },
   sweRouter: {
     mix1: {
-      gpt5miniK0: "0.549",
-      gpt5miniK3: "0.694",
-      deepseekK0: "0.627",
-      deepseekK3: "0.750",
+      gpt5mini: { k0: 0.549, k1: 0.702, k2: 0.703, k3: 0.694, k4: 0.709 },
+      deepseek: { k0: 0.627, k1: 0.768, k2: 0.78, k3: 0.75, k4: 0.718 },
     },
     smithRepoDisjoint: {
-      gpt5miniK0: "0.626",
-      gpt5miniK3: "0.547",
-      deepseekK0: "0.555",
-      deepseekK3: "0.547",
+      gpt5mini: { k0: 0.626, k3: 0.547 },
+      deepseek: { k0: 0.555, k3: 0.547 },
     },
   },
   paperDeviation:
@@ -41,9 +112,9 @@ export const ROUTER_V3 = {
     maxTokens: 11008,
   },
   gpu: {
-    blocked: true,
-    reason:
-      "Quota GPUS_ALL_REGIONS is 0 on hecate-506120 (regional NVIDIA_L4_GPUS is 1). Smoke not run. Full protocol not started.",
+    blocked: false,
+    instance: "hecate-traj-l4",
+    reason: "K=3 still training on hecate-traj-l4 (L4).",
   },
   secondHoldout: "sympy/sympy",
   related: [

@@ -14,18 +14,18 @@ export function PaperTable({
   highlight?: (row: string[]) => boolean;
 }) {
   return (
-    <figure id={id} className="my-8 scroll-mt-8">
-      <figcaption className="mb-3 text-sm leading-[1.5] text-[#555]">
+    <figure id={id} className="my-6 scroll-mt-8">
+      <figcaption className="mb-2 font-sans text-[13px] leading-[1.45] text-[#555]">
         {caption}
       </figcaption>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-lg">
+        <table className="w-full border-collapse font-sans text-[13px] leading-[1.4]">
           <thead>
-            <tr className="border-b border-[var(--paper-ink)]">
+            <tr className="border-b border-[var(--paper-ink)]/70">
               {headers.map((header) => (
                 <th
                   key={header}
-                  className="px-1.5 py-1.5 text-left align-bottom font-bold"
+                  className="px-1 py-1 text-left align-bottom font-medium"
                 >
                   {header}
                 </th>
@@ -45,7 +45,7 @@ export function PaperTable({
                   <td
                     key={`${row[0]}-${index}`}
                     className={cn(
-                      "px-1.5 py-1.5 align-top",
+                      "px-1 py-1 align-top",
                       index > 0 ? "tabular-nums" : undefined
                     )}
                   >

@@ -11,10 +11,10 @@ export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
     href: "/journal/2026-08-26-v3-trajectory-router-spec",
     title: "K-turn trajectory router v3",
-    date: "2026-08-26",
-    status: "pre-registration",
+    date: "2026-08-27",
+    status: "in progress",
     summary:
-      "PENDING spec. K=0 LoRA vs packed K=3 on Qwen traces. Django holdout is the number that matters.",
+      "K=0 LoRA django Route-AUC 0.686 (1 seed). K=3 still training. Gate is vs 0.686, not the v1 0.48 floor.",
     archiveEntryId: "2026-08-26-v3-trajectory-router-spec",
   },
   {

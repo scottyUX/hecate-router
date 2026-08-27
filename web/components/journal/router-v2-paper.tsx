@@ -7,12 +7,12 @@ import {
   PaperSection,
   PaperShell,
   PaperSubsection,
-  PaperToc,
   type PaperTocItem,
 } from "@/components/paper/paper-shell";
 import { PaperTable } from "@/components/paper/paper-table";
 import { requireJournalPage } from "@/lib/auth";
 import { ROUTER_V2 as R } from "@/lib/experiments/router-v2";
+import { glossaryEntries } from "@/lib/paper-glossary";
 
 const SLUG = "2026-08-26-oracle-metrics-fusion-v2";
 
@@ -30,7 +30,7 @@ const toc: PaperTocItem[] = [
     ],
   },
   { href: "#discussion", label: "Discussion" },
-  { href: "#next", label: "Next" },
+  { href: "#next", label: "Future work" },
   { href: "#references", label: "References" },
 ];
 
@@ -88,6 +88,14 @@ export async function RouterV2Paper() {
       updated="2026-08-26"
       tags="router · structural-fusion · ast · oracle-ceiling · verified"
       toc={toc}
+      glossary={glossaryEntries(
+        "Route-AUC",
+        "AUROC",
+        "AST",
+        "CLS",
+        "MLP",
+        "Brier"
+      )}
     >
       <PaperAbstract>
         <p>
@@ -95,10 +103,12 @@ export async function RouterV2Paper() {
           frontier model (Claude 4 Opus) is only useful if the router can tell,
           before execution, which issues the cheap model will resolve. Frozen
           issue text is already at chance on held-out repos: v1 django holdout
-          Route-AUC {R.logistic.django.text.routeAuc}, AUROC{" "}
-          {R.logistic.django.text.auroc}. Prompt-only LLM routers share that
-          Bayes-error floor: two issues can read alike and hide a typo versus a
-          multi-file refactor.
+          Route-AUC {R.logistic.django.text.routeAuc} (routing quality as the
+          cheap/expensive threshold is swept; 0.5 is chance), AUROC{" "}
+          {R.logistic.django.text.auroc} (pairwise ranking of Qwen-successes
+          versus failures; 0.5 is a coin flip). Prompt-only LLM routers share
+          that Bayes-error floor: two issues can read alike and hide a typo
+          versus a multi-file refactor.
         </p>
         <p>
           <strong>Research question.</strong> Does static code structure — even
@@ -107,9 +117,10 @@ export async function RouterV2Paper() {
         </p>
         <p>
           <strong>Hypothesis.</strong> If structure carries that signal, then a
-          12-d Python AST vector on gold-patch files at{" "}
-          <code>base_commit</code>, fused with frozen ModernBERT CLS, should
-          beat text-only on django holdout (n={R.djangoN}) and meet Route-AUC ≥{" "}
+          12-d Python AST vector — abstract syntax tree counts on gold-patch
+          files at <code>base_commit</code> — fused with frozen ModernBERT CLS
+          (the encoder’s classification-token embedding), should beat text-only
+          on django holdout (n={R.djangoN}) and meet Route-AUC ≥{" "}
           {R.target.djangoRouteAuc.toFixed(2)} and AUROC ≥{" "}
           {R.target.djangoAuroc.toFixed(2)}. Metrics-only should itself rank
           above chance. Failure of this leaky ceiling would close leak-free
@@ -128,8 +139,6 @@ export async function RouterV2Paper() {
           trajectory-level.
         </p>
       </PaperAbstract>
-
-      <PaperToc items={toc} />
 
       <PaperSection id="introduction" number="1" title="Introduction">
         <p>
@@ -447,7 +456,7 @@ export async function RouterV2Paper() {
         </p>
       </PaperSection>
 
-      <PaperSection id="next" number="7" title="Next">
+      <PaperSection id="next" number="7" title="Future work">
         <ol className="list-decimal space-y-2 pl-6">
           <li>
             Do not pursue static structural fusion (BM25 files, whole-repo

@@ -34,6 +34,19 @@ from hecate.router.text_runner import (
     load_text_train_config,
     run_text_train,
 )
+from hecate.router.traj import (
+    TrajExample,
+    TrajError,
+    build_traj_examples,
+    parse_trajectory,
+    second_holdout_repo,
+)
+from hecate.router.traj_runner import (
+    TrajTrainConfig,
+    TrajTrainResult,
+    load_traj_train_config,
+    run_traj_train,
+)
 
 __all__ = [
     "EncoderBackend",
@@ -43,6 +56,10 @@ __all__ = [
     "ScriptedBackend",
     "TextTrainConfig",
     "TextTrainResult",
+    "TrajError",
+    "TrajExample",
+    "TrajTrainConfig",
+    "TrajTrainResult",
     "TrainConfig",
     "TrainResult",
     "WhitespaceTokenizer",
@@ -57,9 +74,14 @@ __all__ = [
     "build_examples",
     "build_examples_from_text",
     "load_text_train_config",
+    "load_traj_train_config",
     "load_train_config",
     "route_metrics",
     "run_text_train",
+    "run_traj_train",
     "run_train",
     "text_route_metrics",
+    "parse_trajectory",
+    "build_traj_examples",
+    "second_holdout_repo",
 ]

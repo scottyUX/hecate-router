@@ -1,3 +1,4 @@
+import type { GlossaryEntry } from "@/lib/paper-glossary";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -16,6 +17,7 @@ export function PaperShell({
   updated,
   tags,
   toc,
+  glossary,
   children,
 }: {
   title: string;
@@ -26,6 +28,7 @@ export function PaperShell({
   updated: string;
   tags: string;
   toc: PaperTocItem[];
+  glossary?: GlossaryEntry[];
   children: ReactNode;
 }) {
   return (
@@ -49,7 +52,13 @@ export function PaperShell({
 
       <div className="mx-auto grid w-full max-w-[1270px] items-start gap-8 px-3 py-8 md:px-4 lg:grid-cols-[minmax(0,823px)_minmax(0,400px)] lg:justify-between">
         <article className="min-w-0">
-          <h1 className="font-display text-[2.35rem] leading-[1.25] font-semibold tracking-tight text-[var(--paper-ink)]">
+          <Link
+            href="/journal"
+            className="font-sans text-sm text-[var(--paper-muted)] no-underline hover:text-[var(--paper-accent)] hover:underline"
+          >
+            ← Journal
+          </Link>
+          <h1 className="mt-3 font-display text-[2.35rem] leading-[1.25] font-semibold tracking-tight text-[var(--paper-ink)]">
             {title}
           </h1>
           <p className="mt-4 text-lg leading-[1.5] text-[var(--paper-muted)]">
@@ -63,8 +72,8 @@ export function PaperShell({
           {children}
         </article>
 
-        <aside className="space-y-4 font-sans lg:sticky lg:top-6">
-          <div className="rounded-xl border border-[var(--paper-line)] bg-[var(--paper-card)] p-4">
+        <aside className="space-y-6 font-sans lg:sticky lg:top-6">
+          <div>
             <p className="text-xs font-medium tracking-wide text-[var(--paper-muted)] uppercase">
               Subjects
             </p>
@@ -74,14 +83,14 @@ export function PaperShell({
               ))}
             </ul>
           </div>
-          <div className="rounded-xl border border-[var(--paper-line)] bg-[var(--paper-card)] p-4">
+          <div>
             <p className="text-xs font-medium tracking-wide text-[var(--paper-muted)] uppercase">
               Updated
             </p>
             <p className="mt-2 text-sm text-[var(--paper-ink)]">{updated}</p>
             <p className="mt-3 text-xs text-[var(--paper-muted)]">{tags}</p>
           </div>
-          <nav className="hidden rounded-xl border border-[var(--paper-line)] bg-[var(--paper-card)] p-4 lg:block">
+          <nav className="hidden lg:block">
             <p className="text-xs font-medium tracking-wide text-[var(--paper-muted)] uppercase">
               Contents
             </p>
@@ -109,6 +118,25 @@ export function PaperShell({
               ))}
             </ol>
           </nav>
+          {glossary && glossary.length > 0 ? (
+            <div>
+              <p className="text-xs font-medium tracking-wide text-[var(--paper-muted)] uppercase">
+                Glossary
+              </p>
+              <dl className="mt-2 space-y-3 text-[13px] leading-[1.4]">
+                {glossary.map((item) => (
+                  <div key={item.term}>
+                    <dt className="font-medium text-[var(--paper-ink)]">
+                      {item.term}
+                    </dt>
+                    <dd className="mt-0.5 text-[var(--paper-muted)]">
+                      {item.definition}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>
@@ -117,11 +145,8 @@ export function PaperShell({
 
 export function PaperAbstract({ children }: { children: ReactNode }) {
   return (
-    <section
-      id="abstract"
-      className="mt-6 scroll-mt-8 rounded-xl border border-[var(--paper-line)] bg-[var(--paper-card)] px-[17.6px] py-4"
-    >
-      <h2 className="font-serif text-2xl font-bold text-[#333]">Abstract</h2>
+    <section id="abstract" className="mt-6 scroll-mt-8">
+      <h2 className="font-serif text-xl font-semibold text-[#333]">Abstract</h2>
       <div className="mt-2 space-y-3 text-[15px] leading-[1.5] text-[var(--paper-ink)]">
         {children}
       </div>
@@ -139,45 +164,12 @@ export function PaperCallout({
   children: ReactNode;
 }) {
   return (
-    <div
-      id={id}
-      className="rounded-xl border border-[var(--paper-line)] bg-[var(--paper-card)] px-[17.6px] py-4"
-    >
+    <div id={id} className="py-1">
       <p className="font-sans text-xs font-medium tracking-wide text-[var(--paper-muted)] uppercase">
         {label}
       </p>
-      <div className="mt-2 space-y-3 text-lg leading-[1.5]">{children}</div>
+      <div className="mt-1.5 space-y-3 text-base leading-[1.55]">{children}</div>
     </div>
-  );
-}
-
-export function PaperToc({ items }: { items: PaperTocItem[] }) {
-  return (
-    <nav
-      id="TOC"
-      className="mt-4 rounded-xl border border-[var(--paper-line)] bg-[var(--paper-card)] px-[17.6px] py-4 font-sans"
-    >
-      <ol className="space-y-1 text-[15px]">
-        {items.map((item, index) => (
-          <li key={item.href}>
-            <a href={item.href} className="no-underline hover:underline">
-              {index + 1} {item.label}
-            </a>
-            {item.children ? (
-              <ol className="mt-1 ml-4 space-y-1 text-sm">
-                {item.children.map((child, childIndex) => (
-                  <li key={child.href}>
-                    <a href={child.href} className="no-underline hover:underline">
-                      {index + 1}.{childIndex + 1} {child.label}
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            ) : null}
-          </li>
-        ))}
-      </ol>
-    </nav>
   );
 }
 
@@ -194,10 +186,10 @@ export function PaperSection({
 }) {
   return (
     <section id={id} className="mt-12 scroll-mt-8">
-      <h2 className="font-serif text-[2.5rem] leading-[1.2] font-medium text-[#333]">
+      <h2 className="font-serif text-[1.5rem] leading-[1.25] font-medium text-[#333]">
         {number} {title}
       </h2>
-      <div className="mt-4 space-y-4 text-lg leading-[1.5]">{children}</div>
+      <div className="mt-3 space-y-4 text-base leading-[1.55]">{children}</div>
     </section>
   );
 }
@@ -215,10 +207,10 @@ export function PaperSubsection({
 }) {
   return (
     <section id={id} className="mt-10 scroll-mt-8">
-      <h3 className="font-serif text-[2rem] leading-[1.2] font-medium text-[#333]">
+      <h3 className="font-serif text-[1.2rem] leading-[1.3] font-medium text-[#333]">
         {number} {title}
       </h3>
-      <div className="mt-3 space-y-4 text-lg leading-[1.5]">{children}</div>
+      <div className="mt-2 space-y-4 text-base leading-[1.55]">{children}</div>
     </section>
   );
 }
@@ -246,7 +238,7 @@ export function PaperReferences({
 }) {
   return (
     <section id="references" className="mt-12 scroll-mt-8">
-      <h2 className="font-serif text-[2.5rem] leading-[1.2] font-medium text-[#333]">
+      <h2 className="font-serif text-[1.5rem] leading-[1.25] font-medium text-[#333]">
         References
       </h2>
       <ol className="mt-4 list-none space-y-3 p-0 text-base leading-[1.5]">

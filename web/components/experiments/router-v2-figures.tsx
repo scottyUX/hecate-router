@@ -37,7 +37,7 @@ function FigureFrame({
 }) {
   return (
     <figure id={id} className="my-8 scroll-mt-8">
-      <div className="h-[300px] w-full rounded-xl border border-[var(--paper-line)] bg-white/70 p-3 md:p-4">
+      <div className="h-[300px] w-full p-1 md:p-2">
         {children}
       </div>
       <figcaption className="mt-3 text-sm leading-[1.5] text-[#555]">

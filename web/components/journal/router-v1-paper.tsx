@@ -7,12 +7,12 @@ import {
   PaperSection,
   PaperShell,
   PaperSubsection,
-  PaperToc,
   type PaperTocItem,
 } from "@/components/paper/paper-shell";
 import { PaperTable } from "@/components/paper/paper-table";
 import { requireJournalPage } from "@/lib/auth";
 import { ROUTER_V1 as R } from "@/lib/experiments/router-v1";
+import { glossaryEntries } from "@/lib/paper-glossary";
 
 const SLUG = "2026-08-25-text-only-router-v1";
 
@@ -30,7 +30,7 @@ const toc: PaperTocItem[] = [
     ],
   },
   { href: "#discussion", label: "Discussion" },
-  { href: "#next", label: "Next" },
+  { href: "#next", label: "Future work" },
   { href: "#references", label: "References" },
 ];
 
@@ -88,6 +88,7 @@ export async function RouterV1Paper() {
       updated="2026-08-26"
       tags="router · text-only · modernbert · verified · E-M4"
       toc={toc}
+      glossary={glossaryEntries("Route-AUC", "AUROC", "CLS", "MLP", "Brier")}
     >
       <PaperAbstract>
         <p>
@@ -106,11 +107,15 @@ export async function RouterV1Paper() {
         </p>
         <p>
           <strong>Hypothesis.</strong> If issue text is a sufficient routing
-          signal, logistic readout of frozen CLS should meet Route-AUC ≥{" "}
-          {R.target.routeAuc.toFixed(2)} and AUROC ≥ {R.target.auroc.toFixed(2)}{" "}
-          on grouped-by-repo CV, and the same bar on django holdout
-          (n={R.djangoN}). MLP should beat logistic if the embedding space has a
-          nonlinear pattern.
+          signal, logistic readout of frozen CLS (ModernBERT’s 768-d
+          classification-token embedding) should meet Route-AUC ≥{" "}
+          {R.target.routeAuc.toFixed(2)} — routing quality as the
+          cheap/expensive threshold is swept; 0.5 is chance — and AUROC ≥{" "}
+          {R.target.auroc.toFixed(2)} — pairwise ranking of Qwen-successes
+          versus failures; 0.5 is a coin flip — on grouped-by-repo CV, and the
+          same bar on django holdout (n={R.djangoN}). An MLP (small nonlinear
+          net) should beat logistic if the embedding space has a nonlinear
+          pattern.
         </p>
         <p>
           <strong>Result.</strong> The hypothesis is not supported. Logistic
@@ -120,8 +125,6 @@ export async function RouterV1Paper() {
           the v1 floor; it is chance, not a router.
         </p>
       </PaperAbstract>
-
-      <PaperToc items={toc} />
 
       <PaperSection id="introduction" number="1" title="Introduction">
         <p>
@@ -186,7 +189,8 @@ export async function RouterV1Paper() {
           truncation ({(R.truncation * 100).toFixed(1)}% of examples). Two
           heads, same recipe (4 epochs, batch 8, AdamW, lr 2e-5, BCE): logistic
           768→1 and MLP 768→128→GELU→dropout 0.2→1. Primary metric is
-          normalized Route-AUC; AUROC, accuracy, and Brier are secondary. F1 at
+          normalized Route-AUC; AUROC, accuracy, and Brier (mean squared error
+          of predicted probabilities; lower is better) are secondary. F1 at
           0.5 is a threshold trap and is not confirmatory.
         </p>
         <p>
@@ -321,7 +325,7 @@ export async function RouterV1Paper() {
         </p>
       </PaperSection>
 
-      <PaperSection id="next" number="7" title="Next">
+      <PaperSection id="next" number="7" title="Future work">
         <ol className="list-decimal space-y-2 pl-6">
           <li>
             Oracle-file metrics fusion v2 is done: django 0.482 / 0.518 vs v1

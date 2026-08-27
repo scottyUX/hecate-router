@@ -1,0 +1,21 @@
+# Trajectory-conditioned router v3 (Qwen2.5-Coder-7B LoRA value head).
+# K=0 is a separate adapter on issue text. K=3 packs K in {0..4} inside that arm.
+backbone: Qwen/Qwen2.5-Coder-7B-Instruct
+max_tokens: 8192
+n_folds: 5
+seeds: [0, 1, 2]
+epochs: 5
+batch_size: 1
+grad_accum: 16
+learning_rate: 5.0e-5
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+qlora: true
+k_eval: 3
+k_max: 4
+csv_path: data/external/qwen3coder_vs_claude4opus_with_text.csv
+traj_dir: data/raw/trajs
+small_model: Qwen3-Coder-480B-A35B-Instruct
+large_model: Claude 4 Opus
+paper_deviation: "No 3-way LLM paraphrases of q (SWE-Router §A.2); skipped for cost."
