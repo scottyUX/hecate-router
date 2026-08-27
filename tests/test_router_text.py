@@ -9,7 +9,12 @@ import pytest
 
 from hecate.data.external_miniswe import JoinedLabelWithText
 from hecate.router.dataset import RouterExample, WhitespaceTokenizer, build_examples_from_text
-from hecate.router.metrics import auroc, route_metrics, text_route_metrics
+from hecate.router.metrics import (
+    auroc,
+    route_metrics,
+    sweep_lambda_curve,
+    text_route_metrics,
+)
 from hecate.router.splits import (
     GROUPED_REPO,
     LABEL_STRATIFIED,
@@ -141,6 +146,12 @@ def test_normalized_route_auc_perfect_ranker() -> None:
     )["route_auc"]
     assert auroc([ex.m1_resolves for ex in examples], scores) == pytest.approx(1.0)
     assert metrics["accuracy"] == 1.0
+    curve = sweep_lambda_curve(examples, scores, lambdas=(0.0, 0.5, 1.0))
+    assert [row["lambda"] for row in curve] == [0.0, 0.5, 1.0]
+    assert curve[0]["frac_cheap"] == 1.0
+    assert curve[0]["cost"] == 0.0
+    assert curve[-1]["frac_cheap"] == 0.0
+    assert curve[-1]["cost"] == 1.0
 
 
 def test_leave_repo_out_is_exact_and_fails_closed() -> None:

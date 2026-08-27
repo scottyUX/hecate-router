@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts"
 
+import { RouteAucSweepChart } from "@/components/experiments/route-auc-curve"
 import {
   ChartContainer,
   ChartLegend,
@@ -18,6 +19,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { ROUTER_V1 } from "@/lib/experiments/router-v1"
 import { ROUTER_V2 as R } from "@/lib/experiments/router-v2"
 
 const config = {
@@ -47,6 +49,55 @@ function FigureFrame({
   )
 }
 
+export function RouterV2RouteAucCurve() {
+  const curve = R.chart.routeCurve
+  return (
+    <RouteAucSweepChart
+      id="fig-route-auc-curve"
+      heading="How Route-AUC works"
+      intro={
+        <>
+          Same django holdout as v1 (n={R.djangoN}). Left is “send everything
+          to Opus.” Right is “send everything to Qwen.” A working router would
+          bow above the dashed chance line; fusion does not.
+        </>
+      }
+      n={R.djangoN}
+      alwaysOpus={R.djangoAlwaysLarge}
+      alwaysQwen={curve.router[curve.router.length - 1].rate}
+      oracleCeiling={R.djangoOracle}
+      both={curve.both}
+      smallOnly={curve.smallOnly}
+      oracle={curve.oracle}
+      series={[
+        {
+          key: "v1",
+          label: "v1 text, seed 0",
+          color: "#7a8494",
+          strokeDasharray: "4 3",
+          points: ROUTER_V1.chart.routeCurve.router,
+        },
+        {
+          key: "fusion",
+          label: "v2 fusion, seed 0",
+          color: "var(--chart-2)",
+          points: curve.router,
+        },
+      ]}
+      caption={
+        <>
+          Figure 2: <strong>Django holdout Route-AUC curve.</strong> Oracle AST
+          fusion (seed 0 = 0.469; 3-seed mean {R.logistic.django.fusion.routeAuc}
+          ) sits on the same chance line as v1 text (seed 0 = 0.445). Ranking
+          quality only changes the path between always-Opus and always-Qwen —
+          the endpoints are identical because they depend on labels, not the
+          router.
+        </>
+      }
+    />
+  )
+}
+
 export function RouterV2Figures() {
   return (
     <div>
@@ -54,9 +105,9 @@ export function RouterV2Figures() {
         id="fig-route-auc"
         title={
           <>
-            Figure 1: <strong>H1 test, logistic Route-AUC.</strong> Dashed line
+            Figure 3: <strong>Logistic Route-AUC by split.</strong> Dashed line
             is the django ship bar (0.55). Fusion does not clear it; grouped
-            fusion is not confirmatory.
+            fusion is the same 0.589 trap as v1.
           </>
         }
       >
@@ -89,8 +140,8 @@ export function RouterV2Figures() {
         id="fig-auroc"
         title={
           <>
-            Figure 2: <strong>H1/H2 test, logistic AUROC.</strong> Dashed line
-            is the django ship bar (0.60). Fusion stays at chance; metrics-only
+            Figure 4: <strong>Logistic AUROC by split.</strong> Dashed line is
+            the django ship bar (0.60). Fusion stays at chance; metrics-only
             is at or below chance.
           </>
         }

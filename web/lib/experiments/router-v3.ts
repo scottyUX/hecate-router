@@ -1,7 +1,7 @@
-/** v3 trajectory router. K=0 smoke scored; K=3 still training. */
+/** v3 trajectory router. K=0 and K=3 django smokes scored (1 seed each). */
 
 export const ROUTER_V3 = {
-  status: "in-progress",
+  status: "missed-target",
   date: "2026-08-27",
   rev: 3,
   n: 500,
@@ -27,9 +27,8 @@ export const ROUTER_V3 = {
         textCi: 0.03,
         fusion: 0.482,
         fusionCi: 0.02,
-        metrics: 0.479,
-        metricsCi: 0.101,
         k0: 0.686,
+        k3: 0.587,
       },
     ],
     auroc: [
@@ -39,9 +38,8 @@ export const ROUTER_V3 = {
         textCi: 0.015,
         fusion: 0.518,
         fusionCi: 0.021,
-        metrics: 0.48,
-        metricsCi: 0.081,
         k0: 0.563,
+        k3: 0.573,
       },
     ],
     accuracy: [
@@ -51,9 +49,8 @@ export const ROUTER_V3 = {
         textCi: 0.06,
         fusion: 0.527,
         fusionCi: 0.068,
-        metrics: 0.494,
-        metricsCi: 0.078,
         k0: 0.45,
+        k3: 0.455,
       },
     ],
     brier: [
@@ -63,9 +60,8 @@ export const ROUTER_V3 = {
         textCi: 0.008,
         fusion: 0.25,
         fusionCi: 0.01,
-        metrics: 0.259,
-        metricsCi: 0.014,
         k0: 0.288,
+        k3: 0.409,
       },
     ],
   },
@@ -83,12 +79,20 @@ export const ROUTER_V3 = {
     oracle: 0.745,
   },
   k3: {
-    scored: false,
-    epoch0MeanLoss: 0.82,
-    stepsDone: 1613,
-    stepsTotal: 6725,
-    epochs: 5,
-    ln2: 0.693,
+    scored: true,
+    seeds: 1,
+    nHold: 231,
+    nTrain: 269,
+    routeAuc: 0.587,
+    auroc: 0.573,
+    accuracy: 0.455,
+    f1: 0.149,
+    brier: 0.409,
+    alwaysSmall: 0.58,
+    alwaysLarge: 0.706,
+    oracle: 0.745,
+    bestLambda: 0.67,
+    bestRouteRate: 0.706,
   },
   sweRouter: {
     mix1: {
@@ -114,7 +118,7 @@ export const ROUTER_V3 = {
   gpu: {
     blocked: false,
     instance: "hecate-traj-l4",
-    reason: "K=3 still training on hecate-traj-l4 (L4).",
+    reason: "K=3 scored; instance stopped 2026-08-27.",
   },
   secondHoldout: "sympy/sympy",
   related: [

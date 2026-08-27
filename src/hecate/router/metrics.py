@@ -5,6 +5,7 @@ from __future__ import annotations
 from hecate.router.dataset import RouterExample
 
 _DEFAULT_LAMBDAS = tuple(i / 100 for i in range(101))
+DEFAULT_LAMBDAS = _DEFAULT_LAMBDAS
 
 
 def _routed_resolves(example: RouterExample, score: float, lam: float) -> bool:
@@ -130,6 +131,46 @@ def brier_score(labels: list[bool], scores: list[float]) -> float:
     return total / len(labels)
 
 
+def sweep_lambda_curve(
+    examples: list[RouterExample],
+    scores: list[float],
+    *,
+    lambdas: tuple[float, ...] | None = None,
+) -> list[dict[str, float]]:
+    """Per-λ routing curve using the same policy as ``_normalized_route_auc``.
+
+    ``use_small = score >= lam``. ``cost`` is the share routed to the large
+    model (existing definition). ``frac_cheap`` is the share routed to Qwen.
+    """
+    if len(examples) != len(scores):
+        raise ValueError("examples and scores must be the same length")
+    grid = lambdas if lambdas is not None else _DEFAULT_LAMBDAS
+    n = len(examples)
+    if n == 0:
+        return []
+    rows: list[dict[str, float]] = []
+    for lam in grid:
+        large_n = 0
+        hits = 0
+        for ex, score in zip(examples, scores, strict=True):
+            use_small = score >= lam
+            if use_small:
+                hits += int(ex.m1_resolves)
+            else:
+                large_n += 1
+                hits += int(ex.m2_resolves)
+        cost = large_n / n
+        rows.append(
+            {
+                "lambda": float(lam),
+                "frac_cheap": (n - large_n) / n,
+                "cost": cost,
+                "resolved_rate": hits / n,
+            }
+        )
+    return rows
+
+
 def _normalized_route_auc(
     examples: list[RouterExample],
     scores: list[float],
@@ -141,18 +182,9 @@ def _normalized_route_auc(
     always_large = sum(1 for ex in examples if ex.m2_resolves) / n
     denom = always_large - always_small
     points: dict[float, float] = {0.0: 0.0, 1.0: 1.0}
-    for lam in lambdas:
-        large_n = 0
-        hits = 0
-        for ex, score in zip(examples, scores, strict=True):
-            use_small = score >= lam
-            if use_small:
-                hits += int(ex.m1_resolves)
-            else:
-                large_n += 1
-                hits += int(ex.m2_resolves)
-        cost = large_n / n
-        rate = hits / n
+    for row in sweep_lambda_curve(examples, scores, lambdas=lambdas):
+        cost = row["cost"]
+        rate = row["resolved_rate"]
         y = 0.0 if denom == 0 else (rate - always_small) / denom
         if cost not in (0.0, 1.0):
             points[cost] = y

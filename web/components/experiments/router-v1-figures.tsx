@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts"
 
+import { RouteAucSweepChart } from "@/components/experiments/route-auc-curve"
 import {
   ChartContainer,
   ChartLegend,
@@ -33,20 +34,65 @@ function FigureFrame({
   id,
   title,
   children,
+  tall,
 }: {
   id: string
   title: ReactNode
   children: ReactNode
+  tall?: boolean
 }) {
   return (
     <figure id={id} className="my-8 scroll-mt-8">
-      <div className="h-[300px] w-full p-1 md:p-2">
-        {children}
-      </div>
+      <div className={tall ? "p-0" : "h-[300px] w-full p-1 md:p-2"}>{children}</div>
       <figcaption className="mt-3 text-sm leading-[1.5] text-[#555]">
         {title}
       </figcaption>
     </figure>
+  )
+}
+
+export function RouterV1RouteAucCurve() {
+  const curve = R.chart.routeCurve
+  return (
+    <RouteAucSweepChart
+      id="fig-route-auc-curve"
+      heading="How Route-AUC works"
+      intro={
+        <>
+          Left is “send everything to Opus.” Right is “send everything to
+          Qwen.” Oracle stays at {(R.djangoAlwaysLarge * 100).toFixed(1)}% until
+          the {curve.both} both-win tasks are routed — free savings — then
+          briefly rises to {(R.djangoOracle * 100).toFixed(1)}% on the{" "}
+          {curve.smallOnly} Qwen-only tasks.
+        </>
+      }
+      n={R.djangoN}
+      alwaysOpus={R.djangoAlwaysLarge}
+      alwaysQwen={curve.router[curve.router.length - 1].rate}
+      oracleCeiling={R.djangoOracle}
+      both={curve.both}
+      smallOnly={curve.smallOnly}
+      oracle={curve.oracle}
+      series={[
+        {
+          key: "router",
+          label: "v1 logistic, seed 0",
+          color: "var(--chart-2)",
+          points: curve.router,
+        },
+      ]}
+      caption={
+        <>
+          Figure 2: <strong>Django holdout Route-AUC curve.</strong> Sweeping
+          the cheap/expensive threshold traces resolved rate versus the share
+          sent to Qwen. Normalized Route-AUC is how much of the band between
+          the dashed chance line and the oracle ceiling that curve captures
+          (0.5 is chance). Seed 0 sits at 0.445; the 3-seed mean is{" "}
+          {R.logistic.django.routeAuc}. The curve wobbles around the no-signal
+          diagonal rather than bowing above it.
+        </>
+      }
+    />
   )
 }
 
@@ -57,9 +103,9 @@ export function RouterV1Figures() {
         id="fig-v1-route-auc"
         title={
           <>
-            Figure 1: <strong>H1 test, Route-AUC by split.</strong> Dashed line
-            is the ship bar (0.55). Django holdout is confirmatory; grouped
-            0.589 is the trap.
+            Figure 3: <strong>Route-AUC by split.</strong> Dashed line is the
+            ship bar (0.55). Django holdout is the real test; grouped 0.589 is
+            the trap.
           </>
         }
       >
@@ -91,7 +137,7 @@ export function RouterV1Figures() {
         id="fig-v1-folds"
         title={
           <>
-            Figure 2: <strong>Grouped 5-fold, logistic, seed 0.</strong> Django
+            Figure 4: <strong>Grouped 5-fold, logistic, seed 0.</strong> Django
             is 46% of the data and sits at chance. The 0.589 mean is that fold
             averaged against small noisy ones.
           </>

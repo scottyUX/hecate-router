@@ -1,7 +1,6 @@
-import { RouterV1Figures } from "@/components/experiments/router-v1-figures";
+import { RouterV1Figures, RouterV1RouteAucCurve } from "@/components/experiments/router-v1-figures";
 import {
   PaperAbstract,
-  PaperCallout,
   PaperCite,
   PaperReferences,
   PaperSection,
@@ -9,6 +8,7 @@ import {
   PaperSubsection,
   type PaperTocItem,
 } from "@/components/paper/paper-shell";
+import { RouterArchitectureV1 } from "@/components/paper/router-architecture";
 import { PaperTable } from "@/components/paper/paper-table";
 import { requireJournalPage } from "@/lib/auth";
 import { ROUTER_V1 as R } from "@/lib/experiments/router-v1";
@@ -17,20 +17,24 @@ import { glossaryEntries } from "@/lib/paper-glossary";
 const SLUG = "2026-08-25-text-only-router-v1";
 
 const toc: PaperTocItem[] = [
-  { href: "#introduction", label: "Introduction" },
-  { href: "#rq", label: "Research question" },
-  { href: "#hypothesis", label: "Hypothesis" },
-  { href: "#setup", label: "Setup" },
+  { href: "#context", label: "Context" },
   {
-    href: "#results",
-    label: "Results",
+    href: "#method",
+    label: "Method",
+    children: [{ href: "#fig-arch", label: "Architecture" }],
+  },
+  {
+    href: "#result",
+    label: "Result",
     children: [
-      { href: "#figures", label: "Figures" },
+      { href: "#fig-route-auc-curve", label: "Route-AUC curve" },
+      { href: "#figures", label: "More figures" },
       { href: "#tables", label: "Tables" },
     ],
   },
-  { href: "#discussion", label: "Discussion" },
-  { href: "#next", label: "Future work" },
+  { href: "#interpretation", label: "Interpretation" },
+  { href: "#next", label: "Next" },
+  { href: "#notes", label: "Notes" },
   { href: "#references", label: "References" },
 ];
 
@@ -72,199 +76,138 @@ export async function RouterV1Paper() {
 
   return (
     <PaperShell
-      title="Text-only router v1: frozen ModernBERT on Verified issue text"
+      title="Text-only router v1 (frozen embedding, logistic/MLP head)"
       authors={
         <>
           <a href="/">Hecate Lab</a>
         </>
       }
-      affiliations="SWE-bench Verified (500) · frozen ModernBERT-base"
-      date="August 25, 2026"
+      affiliations="SWE-bench Verified (500) · closed — superseded by v2, v3"
+      date="August 27, 2026 (entry authored retroactively; original run predates this project's other write-ups)"
       subjects={[
         "Software Engineering (cs.SE)",
         "Machine Learning (cs.LG)",
         "Artificial Intelligence (cs.AI)",
       ]}
-      updated="2026-08-26"
-      tags="router · text-only · modernbert · verified · E-M4"
+      updated="2026-08-27"
+      tags="router · text-only · modernbert · verified · closed"
       toc={toc}
       glossary={glossaryEntries("Route-AUC", "AUROC", "CLS", "MLP", "Brier")}
     >
       <PaperAbstract>
         <p>
-          A router between Qwen3-Coder-480B and Claude 4 Opus is only useful if
-          it can rank, before execution, which SWE-bench issues the cheap model
-          will resolve. The input here is only GitHub issue text: no repo,
-          diffs, tests, or traces.<PaperCite n={[1, 2]} /> Resolve-rate headroom
-          versus always-Opus is {R.headroomPp}pp (oracle {R.oracle} vs always-large{" "}
-          {R.alwaysLarge}); the 258 both-win tasks are a cost prize, not an
-          accuracy prize.
+          First router experiment on the Qwen3-Coder-480B-A35B-Instruct vs
+          Claude 4 Opus pair. Question: does the GitHub issue’s own text,
+          encoded by a general-purpose frozen embedding, predict whether the
+          cheap model resolves the task — before either model has run? This is
+          the strictest version of the router problem: no repo, no diffs, no
+          tests, no traces, matching Hecate’s original pre-execution,
+          reverse-proxy deployment constraint.<PaperCite n={[1, 2]} />
         </p>
         <p>
-          <strong>Research question.</strong> Can a frozen ModernBERT embedding
-          of <code>problem_statement</code> alone rank “will Qwen3-Coder resolve
-          this task” above chance when the test repository is held out?
-        </p>
-        <p>
-          <strong>Hypothesis.</strong> If issue text is a sufficient routing
-          signal, logistic readout of frozen CLS (ModernBERT’s 768-d
-          classification-token embedding) should meet Route-AUC ≥{" "}
-          {R.target.routeAuc.toFixed(2)} — routing quality as the
-          cheap/expensive threshold is swept; 0.5 is chance — and AUROC ≥{" "}
-          {R.target.auroc.toFixed(2)} — pairwise ranking of Qwen-successes
-          versus failures; 0.5 is a coin flip — on grouped-by-repo CV, and the
-          same bar on django holdout (n={R.djangoN}). An MLP (small nonlinear
-          net) should beat logistic if the embedding space has a nonlinear
-          pattern.
-        </p>
-        <p>
-          <strong>Result.</strong> The hypothesis is not supported. Logistic
-          django holdout is {R.logistic.django.routeAuc} Route-AUC /{" "}
-          {R.logistic.django.auroc} AUROC. Grouped {R.logistic.grouped.routeAuc}{" "}
-          is a django-weighted trap. MLP loses to logistic. Frozen issue text is
-          the v1 floor; it is chance, not a router.
+          Django holdout (n={R.djangoN}): Route-AUC {R.logistic.django.routeAuc}{" "}
+          — chance. Logistic and MLP heads land at the same number, so the
+          failure is in the frozen embedding, not the head’s capacity. Grouped
+          5-fold {R.logistic.grouped.routeAuc} is a django-weighted trap, not a
+          working router.
         </p>
       </PaperAbstract>
 
-      <PaperSection id="introduction" number="1" title="Introduction">
+      <PaperSection id="context" number="1" title="Context">
         <p>
           Prompt-only LLM routers decide from the query string
-          alone.<PaperCite n={5} /> In agentic SWE that string can look the same
-          for a one-line typo and a multi-file refactor, which is a Bayes-error
-          floor.<PaperCite n={6} /> v1 measures that floor on this lab’s pair:
-          Qwen3-Coder-480B vs Claude 4 Opus, mini-SWE-agent v1.0.0, SWE-bench
-          Verified (500).<PaperCite n={[2, 3]} />
+          alone.<PaperCite n={5} /> In agentic software engineering that string
+          can look the same for a one-line typo and a multi-file refactor,
+          which is a Bayes-error floor.<PaperCite n={6} /> v1 measures that
+          floor on this lab’s pair: Qwen3-Coder-480B vs Claude 4 Opus,
+          mini-SWE-agent v1.0.0, SWE-bench Verified (500).<PaperCite n={[2, 3]} />
         </p>
         <p>
-          The encoder is frozen ModernBERT-base.<PaperCite n={4} /> If a linear
-          readout of locked CLS cannot rank Qwen-success, unfreezing would only
-          let the encoder memorize Verified phrasing. That is why this run is
-          the text floor later fusion and trajectory work have to beat.
+          If a cheap frozen encoder of issue text already ranks “will Qwen
+          resolve this” above chance, later work can stay pre-execution. If it
+          does not, the lab has to look elsewhere — structure (v2) or the
+          cheap model’s own first turns (v3).
         </p>
       </PaperSection>
 
-      <PaperSection id="rq" number="2" title="Research question">
-        <PaperCallout label="RQ1">
-          <p>
-            Does frozen issue text, with no codebase or trace, rank “will
-            Qwen3-Coder resolve this SWE-bench Verified task” above chance when
-            evaluation is grouped by repository?
-          </p>
-        </PaperCallout>
+      <PaperSection id="method" number="2" title="Method">
+        <RouterArchitectureV1 />
         <p>
-          Confirmatory split is leave-django-out (n={R.djangoN}, 46% of the
-          data). Grouped 5-fold is reported; it is not the decision split if
-          django is chance and a few small folds inflate the mean. A leaky
-          label-stratified split is a sensitivity check: if it looks much
-          better than grouped, the headline was repo leak.
+          Backbone: <code>answerdotai/ModernBERT-base</code>, frozen, no
+          fine-tuning.<PaperCite n={4} /> Issue text → CLS embedding (the
+          encoder’s 768-d classification-token summary) → a small trained head
+          (logistic regression, and separately an MLP) predicting P(resolve).
+          Only the head is trained; the encoder never sees a gradient. Recipe:
+          4 epochs, batch 8, AdamW, lr 2e-5, binary cross-entropy. 2048-token
+          truncation hits {(R.truncation * 100).toFixed(1)}% of examples.
+        </p>
+        <p>
+          Primary split: leave-django-out (train on {R.restN} tasks from the
+          other 11 repos, evaluate on the {R.djangoN} django tasks) — the
+          genuine repository-shift test. Grouped 5-fold × 3-seed is also
+          reported, not headlined (django’s 46% dataset share makes it
+          high-variance and unrepresentative — the “0.589 trap”).
+        </p>
+        <p>
+          Primary metric is Route-AUC: routing quality as the cheap/expensive
+          threshold is swept (0.5 is chance). AUROC (pairwise ranking of
+          Qwen-successes vs failures; 0.5 is a coin flip) and Brier (mean
+          squared error of predicted probabilities; 0.25 is an uninformative
+          0.5 guess) are secondary.
         </p>
       </PaperSection>
 
-      <PaperSection id="hypothesis" number="3" title="Hypothesis">
+      <PaperSection id="result" number="3" title="Result">
+        <p>Django holdout (n={R.djangoN}):</p>
+        <PaperTable
+          id="tab-v1-django"
+          caption="Table 1: Leave-django-out, logistic head, 3 seeds. Confirmatory split."
+          headers={["Metric", "Value"]}
+          rows={[
+            ["Route-AUC", R.logistic.django.routeAuc],
+            ["AUROC", R.logistic.django.auroc],
+            ["Accuracy", R.logistic.django.acc],
+            ["Brier", R.logistic.django.brier],
+            [
+              "Grouped 5-fold Route-AUC",
+              `${R.logistic.grouped.routeAuc} (high-variance, not headlined)`,
+            ],
+          ]}
+        />
         <p>
-          If GitHub issue text is a sufficient routing feature, a cheap frozen
-          encoder should clear a usable ranking bar. We treat two claims as
-          jointly required for a text-only router to stay open.
-        </p>
-        <PaperCallout label="H1 — text ranking">
-          <p>
-            Logistic on frozen CLS meets Route-AUC ≥ {R.target.routeAuc.toFixed(2)}{" "}
-            and AUROC ≥ {R.target.auroc.toFixed(2)} on django holdout. Grouped
-            5-fold must not be the only number that looks alive.
-          </p>
-        </PaperCallout>
-        <PaperCallout label="H2 — extra capacity">
-          <p>
-            MLP on the same frozen vectors beats logistic on django holdout. If
-            H2 fails, there is no nonlinear pattern in CLS space worth fitting.
-          </p>
-        </PaperCallout>
-      </PaperSection>
-
-      <PaperSection id="setup" number="4" title="Setup">
-        <p>
-          500 Verified tasks, labels from matched-scaffold mini-SWE-agent
-          v1.0.0 (2025-08-02).<PaperCite n={[1, 2, 3]} /> Target is{" "}
-          <code>small_model_resolved</code>. Frozen CLS (768-d), 2048-token
-          truncation ({(R.truncation * 100).toFixed(1)}% of examples). Two
-          heads, same recipe (4 epochs, batch 8, AdamW, lr 2e-5, BCE): logistic
-          768→1 and MLP 768→128→GELU→dropout 0.2→1. Primary metric is
-          normalized Route-AUC; AUROC, accuracy, and Brier (mean squared error
-          of predicted probabilities; lower is better) are secondary. F1 at
-          0.5 is a threshold trap and is not confirmatory.
+          Logistic and MLP heads landed at the same chance-level Route-AUC
+          (MLP {R.mlp.django.routeAuc}) — the failure is in the frozen
+          embedding, not the head’s capacity.
         </p>
         <p>
-          Headline CV is grouped by repo (12 repos, greedy pack). Label-stratified
-          5-fold is leaky. Leave-django-out trains on 11 repos and evaluates on
-          django; reverse (train on django, hold n={R.restN}) is reported
-          separately and not averaged.
-        </p>
-      </PaperSection>
-
-      <PaperSection id="results" number="5" title="Results">
-        <p>
-          We answer RQ1 by testing H1 and H2. Neither is supported. Nothing
-          here is a working router.
-        </p>
-        <PaperCallout label="H1 rejected">
-          <p>
-            Django holdout logistic is {R.logistic.django.routeAuc} Route-AUC
-            and {R.logistic.django.auroc} AUROC — chance, and below ≥{" "}
-            {R.target.routeAuc.toFixed(2)} / ≥ {R.target.auroc.toFixed(2)}.
-            Accuracy {R.logistic.django.acc} is under django always-Qwen (
-            {(R.djangoAlwaysSmall * 100).toFixed(1)}%). Grouped{" "}
-            {R.logistic.grouped.routeAuc} is not confirmatory: seed-0 django is
-            0.45 on 231 tasks.
-          </p>
-        </PaperCallout>
-        <PaperCallout label="H2 rejected">
-          <p>
-            MLP grouped Route-AUC is {R.mlp.grouped.routeAuc}, below logistic
-            and below chance. Django MLP {R.mlp.django.routeAuc} /{" "}
-            {R.mlp.django.auroc} does not beat logistic. Extra capacity fitted
-            fold noise.
-          </p>
-        </PaperCallout>
-        <p>
-          <strong>RQ1.</strong> No. Frozen issue text does not rank Qwen-success
-          above chance on a held-out repo. Leaky stratified Route-AUC{" "}
-          {R.logistic.grouped.leakyRouteAuc} is still chance, so grouped CV did
-          not hide a real text effect.
+          Route-AUC endpoints, django holdout (n={R.djangoN}): always-Opus 70.6%
+          (163/231), always-Qwen 58.0% (134/231), oracle (either model
+          resolves) 74.5% (172/231). Same trio on the full 500-task set: 67.6%
+          / 55.4% / 71.4%, with 258 both-win tasks (~52% of the dataset — the
+          “free savings” a working router would capture at zero quality cost).
         </p>
 
-        <PaperSubsection id="figures" number="5.1" title="Figures">
+        <RouterV1RouteAucCurve />
+        <p>
+          The reconstructed curve (seed 0, full 101-point sweep) wobbles above
+          and below the no-signal diagonal — the straight line between the
+          always-Qwen and always-Opus endpoints — rather than consistently
+          bowing above it. Visually, this is what a chance-or-slightly-below
+          Route-AUC should look like as an actual curve, not just a headline
+          number. Separately: the oracle ceiling (74.5%) sits above the
+          always-Opus endpoint (70.6%, left of the chart), because a slice of
+          django tasks are resolved only by Qwen. Routing everything to the
+          strong model still cannot reach the theoretical ceiling.
+        </p>
+
+        <PaperSubsection id="figures" number="3.1" title="More figures">
           <RouterV1Figures />
         </PaperSubsection>
 
-        <PaperSubsection id="tables" number="5.2" title="Tables">
-          <PaperTable
-            id="tab-v1-hypotheses"
-            caption="Table 1: Decisions against H1 and H2. Confirmatory split is django holdout (n=231)."
-            headers={["Claim", "Test", "Observed", "Decision"]}
-            rows={[
-              [
-                "H1 text ranking",
-                `django Route-AUC ≥ ${R.target.routeAuc.toFixed(2)}, AUROC ≥ ${R.target.auroc.toFixed(2)}`,
-                `${R.logistic.django.routeAuc} / ${R.logistic.django.auroc}`,
-                "Rejected",
-              ],
-              [
-                "H2 MLP beats logistic",
-                "django MLP > logistic",
-                `MLP ${R.mlp.django.routeAuc} vs logistic ${R.logistic.django.routeAuc}`,
-                "Rejected",
-              ],
-              [
-                "RQ1 issue text is enough",
-                "H1 accepted",
-                "Grouped 0.589 is the trap; leaky still chance",
-                "No",
-              ],
-            ]}
-          />
+        <PaperSubsection id="tables" number="3.2" title="Tables">
           <PaperTable
             id="tab-v1-ceiling"
-            caption="Table 2: Label ceiling before any model. Headroom vs always-Opus is only the 19 small-only wins."
+            caption="Table 2: Label ceiling on the full 500-task set, before any router. Headroom vs always-Opus is only the 19 Qwen-only wins."
             headers={["Policy", "Resolved", "Note"]}
             rows={[
               ["Always Qwen", `${(R.alwaysSmall * 100).toFixed(1)}% (277/500)`, "Cheap default"],
@@ -273,13 +216,13 @@ export async function RouterV1Paper() {
               [
                 "Complementarity",
                 `${R.complementarity.smallOnly} / ${R.complementarity.both} / ${R.complementarity.opusOnly} / ${R.complementarity.neither}`,
-                "small-only / both / Opus-only / neither",
+                "Qwen-only / both / Opus-only / neither",
               ],
             ]}
           />
           <PaperTable
             id="tab-v1-headline"
-            caption="Table 3: Frozen-head means over 15 runs (5 folds × 3 seeds). Highlighted rows are django holdout."
+            caption="Table 3: Frozen-head means. Highlighted row is the confirmatory django holdout."
             highlight={(row) => row[1].includes("leave-django-out")}
             headers={["Head", "Split", "Route-AUC", "AUROC", "Accuracy"]}
             rows={[
@@ -293,7 +236,7 @@ export async function RouterV1Paper() {
           />
           <PaperTable
             id="tab-v1-folds"
-            caption="Table 4: Logistic grouped, seed 0. Django is one test fold every seed."
+            caption="Table 4: Logistic grouped, seed 0. Django is one test fold every seed — 46% of the data, sitting at chance."
             highlight={(row) => row[0].includes("django")}
             headers={["Test fold", "n", "Route-AUC", "AUROC"]}
             rows={[
@@ -307,43 +250,62 @@ export async function RouterV1Paper() {
         </PaperSubsection>
       </PaperSection>
 
-      <PaperSection id="discussion" number="6" title="Discussion">
+      <PaperSection id="interpretation" number="4" title="Interpretation">
         <p>
-          RQ1 is answered in the negative. AUROC ~0.53 is a coin with a tiny
-          dent, consistent with SWE-Router prompt-only embedding
-          baselines.<PaperCite n={6} /> Accuracy below the 55.4% always-Qwen
-          base rate means the head does not even match the majority. F1 ~0.63
-          is the threshold trap of saying yes often. Brier ~0.251 is an
-          uninformative 0.5 guess.
+          Route-AUC ≈ 0.48 (and the reconstructed curve visibly hugging or
+          dipping under the no-signal line) means a frozen general-purpose
+          text embedding of the issue alone carries no usable pre-execution
+          routing signal under a genuine repository shift, regardless of head
+          capacity (logistic and MLP agree). Accuracy {R.logistic.django.acc}{" "}
+          sits under django always-Qwen (58.0%). Brier {R.logistic.django.brier}{" "}
+          is an uninformative 0.5 guess.
         </p>
         <p>
           This is not a join bug: labels matched published 55.4% / 67.6% at
-          500/500. Truncation at 2048 tokens ({(R.truncation * 100).toFixed(1)}%)
-          is not the failure mode. The remaining question is whether the router
-          needs structure or a short look at the agent’s own attempt — v2 and
-          v3.
+          500/500. Truncation at 2048 tokens is not the failure mode. This
+          closed static, unstructured pre-execution signal as a direction and
+          motivated{" "}
+          <a href="/journal/2026-08-26-oracle-metrics-fusion-v2">
+            v2 (oracle AST structural fusion — also chance)
+          </a>{" "}
+          and, after that also failed,{" "}
+          <a href="/journal/2026-08-26-v3-trajectory-router-spec">
+            v3’s shift to execution-grounded trajectory signal
+          </a>
+          .
         </p>
       </PaperSection>
 
-      <PaperSection id="next" number="7" title="Future work">
-        <ol className="list-decimal space-y-2 pl-6">
+      <PaperSection id="next" number="5" title="Next">
+        <p>
+          Already superseded — v2 and v3 are both later, separate experiments.
+          No further work planned on v1 itself. Do not unfreeze BERT on issue
+          text. Do not treat grouped 0.589 as a working router.
+        </p>
+      </PaperSection>
+
+      <PaperSection id="notes" number="6" title="Notes">
+        <ul className="list-disc space-y-2 pl-6">
           <li>
-            Oracle-file metrics fusion v2 is done: django 0.482 / 0.518 vs v1
-            0.477 / 0.516. Did not beat this floor. See{" "}
-            <a href="/journal/2026-08-26-oracle-metrics-fusion-v2">
-              structural fusion v2
-            </a>
-            .
+            Curve reconstruction (added 2026-08-27). The original
+            leave-django-out head was never checkpointed, so the λ-sweep was
+            refit from cached CLS embeddings on the 269 non-django tasks only
+            and evaluated on the 231-task django holdout. Per-seed Route-AUC
+            matched the archived figures bit-for-bit (seed 0 = 0.445, seed 1
+            = 0.484, seed 2 = 0.503; mean 0.477). The reconstruction did not
+            reuse the all-500 grouped head, which would have leaked django
+            into training.
           </li>
           <li>
-            Do not unfreeze BERT on issue text. Do not treat grouped 0.589 as a
-            working router.
+            The curve figure shows seed 0 only (Route-AUC 0.445), not the
+            3-seed mean (0.477) — worth remembering when reading it, since
+            seed 0 sits slightly below the mean.
           </li>
           <li>
-            v3: K-turn trajectory-conditioned value head, same django-holdout
-            target.<PaperCite n={6} />
+            v1 is CPU-only. It was never run on the execution or trajectory
+            GPU boxes.
           </li>
-        </ol>
+        </ul>
       </PaperSection>
 
       <PaperReferences items={[...references]} />

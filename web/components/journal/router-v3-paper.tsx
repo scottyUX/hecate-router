@@ -1,7 +1,6 @@
 import { RouterV3Figures } from "@/components/experiments/router-v3-figures";
 import {
   PaperAbstract,
-  PaperCallout,
   PaperCite,
   PaperReferences,
   PaperSection,
@@ -9,6 +8,7 @@ import {
   PaperSubsection,
   type PaperTocItem,
 } from "@/components/paper/paper-shell";
+import { RouterArchitectureV3 } from "@/components/paper/router-architecture";
 import { PaperTable } from "@/components/paper/paper-table";
 import { requireJournalPage } from "@/lib/auth";
 import { ROUTER_V3 as R } from "@/lib/experiments/router-v3";
@@ -17,20 +17,24 @@ import { glossaryEntries } from "@/lib/paper-glossary";
 const SLUG = "2026-08-26-v3-trajectory-router-spec";
 
 const toc: PaperTocItem[] = [
-  { href: "#introduction", label: "Introduction" },
-  { href: "#rq", label: "Research question" },
-  { href: "#hypothesis", label: "Hypothesis" },
-  { href: "#setup", label: "Setup" },
+  { href: "#context", label: "Context" },
   {
-    href: "#results",
-    label: "Results",
+    href: "#method",
+    label: "Method",
+    children: [{ href: "#fig-arch", label: "Architecture" }],
+  },
+  {
+    href: "#result",
+    label: "Result",
     children: [
-      { href: "#prior", label: "Prior numbers" },
-      { href: "#k0", label: "K=0 result" },
-      { href: "#k3", label: "K=3 training" },
+      { href: "#k0", label: "K=0" },
+      { href: "#k3", label: "K=3" },
+      { href: "#figures", label: "Figures" },
     ],
   },
-  { href: "#next", label: "Future work" },
+  { href: "#interpretation", label: "Interpretation" },
+  { href: "#next", label: "Next" },
+  { href: "#notes", label: "Notes" },
   { href: "#references", label: "References" },
 ];
 
@@ -60,17 +64,17 @@ const references = [
 export async function RouterV3Paper() {
   await requireJournalPage(`/journal/${SLUG}`);
   const k0 = R.k0.routeAuc.toFixed(3);
-  const k3pct = ((R.k3.stepsDone / R.k3.stepsTotal) * 100).toFixed(0);
+  const k3 = R.k3.routeAuc.toFixed(3);
 
   return (
     <PaperShell
-      title="K-turn trajectory-conditioned router (LoRA value head)"
+      title="K-turn trajectory router v3 (LoRA value head)"
       authors={
         <>
           <a href="/">Hecate Lab</a>
         </>
       }
-      affiliations={`SWE-bench Verified (${R.n}) · rev ${R.rev} · IN PROGRESS — K=0 done, K=3 training`}
+      affiliations={`SWE-bench Verified (${R.n}) · closed — K=3 missed the K=0 gate`}
       date="August 27, 2026"
       subjects={[
         "Software Engineering (cs.SE)",
@@ -78,14 +82,13 @@ export async function RouterV3Paper() {
         "Artificial Intelligence (cs.AI)",
       ]}
       updated="2026-08-27"
-      tags="router · trajectory-conditioning · lora · k-turn · in-progress"
+      tags="router · trajectory-conditioning · lora · k-turn · missed-target"
       toc={toc}
       glossary={glossaryEntries(
         "Route-AUC",
         "AUROC",
         "LoRA",
         "value head",
-        "AST",
         "Brier",
         "K-turn",
         "QLoRA"
@@ -93,39 +96,25 @@ export async function RouterV3Paper() {
     >
       <PaperAbstract>
         <p>
-          v1 frozen issue text and v2 oracle AST fusion (code-structure
-          metrics from an abstract syntax tree) are chance on django holdout
-          (n={R.djangoN}): Route-AUC {R.v1v2.djangoRouteAuc.text} /{" "}
-          {R.v1v2.djangoRouteAuc.fusion} — routing quality as the
-          cheap/expensive threshold is swept; 0.5 is chance. Static
-          pre-execution signal is closed. The remaining candidate is what the
+          v1 frozen issue text and v2 oracle AST fusion are both chance on
+          django holdout (n={R.djangoN}): Route-AUC{" "}
+          {R.v1v2.djangoRouteAuc.text} / {R.v1v2.djangoRouteAuc.fusion}. Static
+          pre-execution signal is closed. The remaining candidate was what the
           cheap model discovers in its first few turns.
         </p>
         <p>
-          K=0 — a separately trained 7B LoRA value head (Low-Rank Adaptation
-          classifier on the last token that scores P(Qwen resolves); K=0 means
-          issue text only, no agent turns) — is now measured: django Route-AUC{" "}
-          {k0} (one seed, no CI), AUROC {R.k0.auroc.toFixed(3)} (pairwise
-          ranking of successes vs failures; 0.5 is a coin flip). That is a
-          large jump over the frozen-encoder floor on Route-AUC specifically,
-          but AUROC barely moves, Brier is worse than v1/v2 (
-          {R.k0.brier.toFixed(3)} vs 0.250; mean squared error of the raw
-          probabilities, lower is better), and accuracy (
-          {R.k0.accuracy.toFixed(2)}) sits below the always-Qwen baseline (
-          {(R.djangoAlwaysSmall * 100).toFixed(1)}%). Treat {k0} as a
-          promising, unconfirmed control value, not a settled number — Results
-          discusses why those metrics can diverge and why one seed on a
-          231-task holdout is not enough to trust it yet.
-        </p>
-        <p>
-          K=3 (packed trajectory, same architecture) has not finished training.
-          H1 and H2 are untested until its django-holdout eval runs. The
-          practical effect of the K=0 result: the bar K=3 has to clear is no
-          longer the old ~0.48 floor, it is {k0}.
+          K=0 — a 7B LoRA value head on issue text only — scores django
+          Route-AUC {k0} (one seed). Packed K=3, same architecture, scores{" "}
+          {k3}. H1 is rejected: extra turns lost to the trajectory-blind
+          control (Δ = {(R.k3.routeAuc - R.k0.routeAuc).toFixed(3)}). The old
+          stretch bar of {R.stretch.djangoRouteAuc.toFixed(2)} would have been
+          a trap — K=3 clears it and still fails the real gate. AUROC barely
+          moves; calibration gets worse. One seed, no CI. Do not scale this
+          smoke to 5-fold.
         </p>
       </PaperAbstract>
 
-      <PaperSection id="introduction" number="1" title="Introduction">
+      <PaperSection id="context" number="1" title="Context">
         <p>
           Related:{" "}
           <a href={R.related[0]}>text-only v1</a>
@@ -133,265 +122,175 @@ export async function RouterV3Paper() {
           <a href={R.related[1]}>oracle fusion v2</a>
           . Both failed the django ship bar. SWE-Router argues that the missing
           signal is in the partial trajectory, not the prompt.<PaperCite n={4} />
+          This experiment tests that claim on the same Qwen3-Coder-480B vs
+          Claude 4 Opus pair.
         </p>
-      </PaperSection>
-
-      <PaperSection id="rq" number="2" title="Research question">
-        <PaperCallout label="RQ1">
-          <p>
-            On the same 500-task Qwen3-Coder vs Claude 4 Opus pair, does a LoRA
-            value head reading K=3 turns of Qwen’s own mini-SWE-agent trace
-            improve django-holdout Route-AUC over a K=0 LoRA that sees only
-            issue text?
-          </p>
-        </PaperCallout>
         <p>
-          The control is a separately trained 7B LoRA on issue text, not frozen
-          ModernBERT. Route-AUC is the only gate; AUROC is diagnostic. Grouped
-          5-fold is reported after a django smoke, not instead of it.
+          Question: does a LoRA value head reading K=3 turns of Qwen’s own
+          mini-SWE-agent trace improve django-holdout Route-AUC over a matched
+          K=0 LoRA that sees only issue text? The control is a separately
+          trained 7B LoRA, not frozen ModernBERT.
         </p>
       </PaperSection>
 
-      <PaperSection id="hypothesis" number="3" title="Hypothesis">
-        <PaperCallout label="H1 — trajectory lift">
-          <p>
-            Packed K=3 django Route-AUC is clearly above the matched K=0 LoRA
-            on the same split. With K=0 now measured at {k0}, this is the
-            concrete bar — “clearly above” means outside K=0’s eventual seed
-            variance, not a tick above a single point estimate. A null of
-            “grouped looks alive, django still chance relative to K=0” would
-            replicate SWE-Router’s repository-shift finding, not bury a
-            failure.<PaperCite n={4} />
-          </p>
-        </PaperCallout>
-        <PaperCallout label="H2 — stretch bar">
-          <p>
-            K=3 django Route-AUC ≥ {R.stretch.djangoRouteAuc.toFixed(2)}. This
-            was written as a stretch goal before K=0 was measured. It is now a
-            lower bar than K=0 itself ({k0}) — worth flagging explicitly: H2
-            could be satisfied by K=3 while H1 is rejected, if K=3 clears{" "}
-            {R.stretch.djangoRouteAuc.toFixed(2)} but sits below K=0’s {k0}.
-            That outcome would mean trajectory conditioning still underperforms
-            a trajectory-blind control, and should be reported as an H1
-            rejection regardless of H2.
-          </p>
-        </PaperCallout>
-      </PaperSection>
-
-      <PaperSection id="setup" number="4" title="Setup">
+      <PaperSection id="method" number="2" title="Method">
+        <RouterArchitectureV3 />
         <p>
           Weak/strong pair unchanged: Qwen3-Coder-480B vs Claude 4 Opus,
-          mini-SWE-agent v1.0.0, same 500 labels.<PaperCite n={[2, 3]} /> Value
-          head: Qwen2.5-Coder-7B-Instruct, LoRA r=32 α=64, last-token logits,
-          8192 context, QLoRA (4-bit LoRA) on L4. A turn is a user/observation
-          boundary.
-          Packing is only inside the K=3 arm. {R.paperDeviation} Trained on{" "}
-          <code>{R.gpu.instance}</code>, not <code>hecate-exec</code>.
+          mini-SWE-agent v1.0.0, same 500 labels.<PaperCite n={[1, 2, 3]} />{" "}
+          Value head: Qwen2.5-Coder-7B-Instruct, LoRA r=32 α=64, last-token
+          logits scoring P(Qwen resolves), 8192 context, QLoRA (4-bit LoRA) on
+          one L4. A turn is a user/observation boundary. Packing is only inside
+          the K=3 arm. {R.paperDeviation} Trained on{" "}
+          <code>{R.gpu.instance}</code>, not the execution box.
+        </p>
+        <p>
+          Primary split is still leave-django-out. Route-AUC is the only gate;
+          AUROC, accuracy, and Brier are diagnostic. This write-up is the
+          one-seed django smoke, not a 5-fold claim.
+        </p>
+        <p>
+          H1: packed K=3 django Route-AUC is clearly above the matched K=0 LoRA
+          on the same split. The bar is {k0}. H2 (stretch, written before K=0
+          was measured): K=3 ≥ {R.stretch.djangoRouteAuc.toFixed(2)}. H2 can
+          pass while H1 fails.
         </p>
       </PaperSection>
 
-      <PaperSection id="results" number="5" title="Results">
-        <PaperCallout label="H1 / H2: K=0 measured, K=3 untested">
-          <p>
-            RQ1 cannot be answered yet — one arm of the comparison is missing.
-          </p>
-        </PaperCallout>
+      <PaperSection id="result" number="3" title="Result">
+        <p>Django holdout (n={R.djangoN}), one seed each, no CI:</p>
+        <PaperTable
+          id="tab-v3-gate"
+          caption="Table 1: Leave-django-out smoke. Highlighted row is the gate. K=0 and K=3 are one seed; v1/v2 are 3-seed means."
+          highlight={(row) => row[0].includes("Route-AUC")}
+          headers={[
+            "Metric",
+            "v1 text",
+            "v2 fusion",
+            "K=0 LoRA",
+            "K=3 LoRA",
+          ]}
+          rows={[
+            [
+              "Django Route-AUC",
+              R.v1v2.djangoRouteAuc.text,
+              R.v1v2.djangoRouteAuc.fusion,
+              k0,
+              k3,
+            ],
+            [
+              "Django AUROC",
+              R.v1v2.djangoAuroc.text,
+              R.v1v2.djangoAuroc.fusion,
+              R.k0.auroc.toFixed(3),
+              R.k3.auroc.toFixed(3),
+            ],
+            [
+              "Django accuracy",
+              R.v1v2.djangoAcc.text,
+              R.v1v2.djangoAcc.fusion,
+              R.k0.accuracy.toFixed(3),
+              R.k3.accuracy.toFixed(3),
+            ],
+            [
+              "Django Brier",
+              R.v1v2.djangoBrier.text,
+              R.v1v2.djangoBrier.fusion,
+              R.k0.brier.toFixed(3),
+              R.k3.brier.toFixed(3),
+            ],
+          ]}
+        />
 
-        <PaperSubsection id="prior" number="5.1" title="Prior numbers">
-          <PaperTable
-            id="tab-v3-hypotheses"
-            caption="Table 1: Pre-registered claims. Confirmatory split is django holdout."
-            headers={["Claim", "Test", "Observed", "Decision"]}
-            rows={[
-              [
-                "H1 — K=3 beats K=0 LoRA",
-                "django Route-AUC, one seed then 5-fold",
-                `K=0 done (${k0}); K=3 not yet scored`,
-                "Untested",
-              ],
-              [
-                "H2 — stretch bar",
-                `django Route-AUC ≥ ${R.stretch.djangoRouteAuc.toFixed(2)}`,
-                "K=0 already clears this on its own; K=3 unmeasured",
-                "Untested",
-              ],
-              [
-                "RQ1 — traces beat issue text",
-                "H1 accepted",
-                "Cannot evaluate without K=3",
-                "Open",
-              ],
-            ]}
-          />
-          <PaperTable
-            id="tab-v3-swerouter-k"
-            caption="Table 2: SWE-Router Route-AUC by K, both pairs, SWE-Bench Verified mix-1 (Son et al., 2026, Table 2). Mix-1 is not a repo holdout — shown for calibration, not as the expected transfer number."
-            headers={["Pair", "K=0", "K=1", "K=2", "K=3", "K=4"]}
-            rows={[
-              [
-                "gpt-5-mini → gemini-3-pro",
-                R.sweRouter.mix1.gpt5mini.k0.toFixed(3),
-                R.sweRouter.mix1.gpt5mini.k1.toFixed(3),
-                R.sweRouter.mix1.gpt5mini.k2.toFixed(3),
-                R.sweRouter.mix1.gpt5mini.k3.toFixed(3),
-                R.sweRouter.mix1.gpt5mini.k4.toFixed(3),
-              ],
-              [
-                "deepseek-v3.2 → gemini-3-pro",
-                R.sweRouter.mix1.deepseek.k0.toFixed(3),
-                R.sweRouter.mix1.deepseek.k1.toFixed(3),
-                R.sweRouter.mix1.deepseek.k2.toFixed(3),
-                R.sweRouter.mix1.deepseek.k3.toFixed(3),
-                R.sweRouter.mix1.deepseek.k4.toFixed(3),
-              ],
-            ]}
-          />
-          <PaperTable
-            id="tab-v3-smith"
-            caption="Table 3: SWE-Router Route-AUC, SWE-Smith repo-disjoint test — the closer analogue to django holdout, on a different dataset."
-            headers={["Pair", "K=0", "K=3"]}
-            rows={[
-              [
-                "gpt-5-mini → gemini-3-pro",
-                R.sweRouter.smithRepoDisjoint.gpt5mini.k0.toFixed(3),
-                R.sweRouter.smithRepoDisjoint.gpt5mini.k3.toFixed(3),
-              ],
-              [
-                "deepseek-v3.2 → gemini-3-pro",
-                R.sweRouter.smithRepoDisjoint.deepseek.k0.toFixed(3),
-                R.sweRouter.smithRepoDisjoint.deepseek.k3.toFixed(3),
-              ],
-            ]}
-          />
-          <PaperTable
-            id="tab-v3-floor"
-            caption="Table 4: Hecate v1/v2 floor on this pair, plus K=0. Grouped 5-fold is the django-weighted trap; do not headline it."
-            highlight={(row) => row[0].includes("Route-AUC") && row[0].includes("Django")}
-            headers={[
-              "Metric",
-              "v1 text",
-              "v2 fusion",
-              "K=0 LoRA (1 seed, no CI)",
-              "Role",
-            ]}
-            rows={[
-              [
-                "Django holdout Route-AUC",
-                R.v1v2.djangoRouteAuc.text,
-                R.v1v2.djangoRouteAuc.fusion,
-                k0,
-                "Primary gate for H1/H2",
-              ],
-              [
-                "Django holdout AUROC",
-                R.v1v2.djangoAuroc.text,
-                R.v1v2.djangoAuroc.fusion,
-                R.k0.auroc.toFixed(3),
-                "Diagnostic only — do not gate",
-              ],
-              [
-                "Django holdout accuracy",
-                R.v1v2.djangoAcc.text,
-                R.v1v2.djangoAcc.fusion,
-                R.k0.accuracy.toFixed(3),
-                `Below always-Qwen (${R.djangoAlwaysSmall.toFixed(3)})`,
-              ],
-              [
-                "Django holdout Brier",
-                R.v1v2.djangoBrier.text,
-                R.v1v2.djangoBrier.fusion,
-                R.k0.brier.toFixed(3),
-                "Lower is better — K=0 is worse than either prior arm",
-              ],
-              [
-                "Grouped 5-fold Route-AUC",
-                R.v1v2.groupedRouteAuc.text,
-                R.v1v2.groupedRouteAuc.fusion,
-                "not yet run",
-                "Report, do not headline",
-              ],
-            ]}
-          />
+        <PaperSubsection id="k0" number="3.1" title="K=0 (issue text, 7B LoRA)">
+          <p>
+            Route-AUC jumped over the frozen floor; AUROC barely moved (
+            {R.k0.auroc.toFixed(3)}); accuracy ({R.k0.accuracy.toFixed(2)}) sits
+            below always-Qwen ({(R.djangoAlwaysSmall * 100).toFixed(1)}%); Brier
+            got worse ({R.k0.brier.toFixed(3)} vs 0.250). That combination can
+            be internally consistent: Route-AUC cares about ordering the
+            extremes, while AUROC averages every pair. It is also the
+            fingerprint of a statistic that can swing between seeds on a
+            231-task holdout. Treat {k0} as a control value for this smoke, not
+            a settled number.
+          </p>
         </PaperSubsection>
 
-        <PaperSubsection
-          id="k0"
-          number="5.2"
-          title="K=0 result — read carefully before trusting it"
-        >
+        <PaperSubsection id="k3" number="3.2" title="K=3 (packed trajectory)">
           <p>
-            K=0’s Route-AUC ({k0}) moved far more than its AUROC (
-            {R.k0.auroc.toFixed(3)}), and its Brier and accuracy both got worse
-            relative to v1/v2 rather than better. This is not necessarily
-            contradictory. Route-AUC integrates a threshold-swept
-            cost-vs-resolved-rate curve and is disproportionately sensitive to
-            whether the model correctly orders the extremes of the distribution
-            — the clearly Opus-only tasks versus the clearly safe-to-route-cheap
-            ones — while AUROC averages ranking quality uniformly across every
-            pair, muddled middle included. Both metrics are threshold-free, so
-            neither depends on the raw calibrated probability being right, which
-            is why a model can have a low F1 ({R.k0.f1.toFixed(2)}) and
-            below-base-rate accuracy at the 0.5 cutoff while still producing a
-            Route-AUC-relevant ordering. That combination is a plausible,
-            internally consistent story — a model that reliably identifies a
-            distinctive subset of pivotal tasks while being poorly calibrated
-            everywhere else — but it is also exactly the fingerprint of a
-            statistic that can swing a lot between seeds on a 231-task holdout,
-            since a curve-integral metric this sensitive to a handful of
-            pivotal cases has real variance that has not been measured yet. K=0
-            is one seed. No std is reported because none exists yet.
+            Packed K=3 uses the same architecture on the first three
+            user/observation turns. Truncation at 8192 tokens is{" "}
+            {(R.traces.k3TruncationRate * 100).toFixed(1)}% ({R.traces.k3TruncatedN}{" "}
+            of 500) — not a plausible confound. Django Route-AUC is {k3} versus
+            K=0’s {k0}. H1 rejected. H2’s stretch bar of{" "}
+            {R.stretch.djangoRouteAuc.toFixed(2)} is cleared and is not
+            confirmatory — that is the outcome this protocol said to report as
+            an H1 failure. AUROC {R.k3.auroc.toFixed(3)} is a tick above K=0;
+            Brier {R.k3.brier.toFixed(3)} is worse than either prior arm. At the
+            selected λ the routed resolved rate matches always-Opus (
+            {(R.k3.bestRouteRate * 100).toFixed(1)}%), so the head is not
+            finding cheap wins above the expensive default.
           </p>
+        </PaperSubsection>
+
+        <PaperSubsection id="figures" number="3.3" title="Figures">
           <RouterV3Figures />
-        </PaperSubsection>
-
-        <PaperSubsection id="k3" number="5.3" title="K=3 — training, not yet scored">
-          <p>
-            Epoch 0 complete (mean loss {R.k3.epoch0MeanLoss.toFixed(2)}, above
-            the ln(2) ≈ {R.k3.ln2.toFixed(3)} trivial-classifier baseline — not
-            unusual for a fresh LoRA at epoch 0, but worth confirming it drops
-            below that baseline by the final epoch rather than assuming it
-            does). Currently in epoch 1 of {R.k3.epochs}, roughly {k3pct}% of
-            total steps ({R.k3.stepsDone.toLocaleString()} of{" "}
-            {R.k3.stepsTotal.toLocaleString()}). K=3 truncation at 8192 tokens
-            measured at {(R.traces.k3TruncationRate * 100).toFixed(1)}% (
-            {R.traces.k3TruncatedN} of 500; median{" "}
-            {R.traces.medianTokens.toLocaleString()} tokens, max{" "}
-            {R.traces.maxTokens.toLocaleString()}) — low enough that truncation
-            is not expected to be a confound. No django-holdout Route-AUC yet;
-            the gate has not run.
-          </p>
         </PaperSubsection>
       </PaperSection>
 
-      <PaperSection id="next" number="6" title="Future work">
+      <PaperSection id="interpretation" number="4" title="Interpretation">
+        <p>
+          RQ1: no. On this pair, three turns of Qwen’s own trace do not improve
+          django-holdout routing over a LoRA that sees only the issue. The
+          drop vs K=0 is large enough that a 5-fold × 3-seed protocol is not
+          justified. Extra turns also failed in SWE-Router when the test repo
+          was held out, and helped only when train and test shared the same
+          mix.<PaperCite n={4} /> Django holdout is the second kind of test.
+        </p>
+        <p>
+          K=0 still sits well above the frozen v1/v2 floor on Route-AUC. That
+          is a different claim — “a 7B LoRA on issue text ranks better than
+          frozen ModernBERT” — and it is still one seed. It is not evidence
+          that trajectory conditioning works.
+        </p>
+      </PaperSection>
+
+      <PaperSection id="next" number="5" title="Next">
         <ol className="list-decimal space-y-2 pl-6">
           <li>
-            Let K=3 finish training and run the django-holdout eval — nothing
-            in Table 1 changes until that number exists.
+            Do not run 5-fold × 3-seed or the{" "}
+            <code>{R.secondHoldout}</code> holdout on this K=3 recipe. The
+            smoke already failed the gate.
           </li>
           <li>
-            Apply the gate as specified in H1: compare K=3’s django Route-AUC
-            against K=0’s {k0}, not against the old v1/v2 floor.
+            <code>{R.gpu.instance}</code> is stopped. Leave it stopped unless a
+            new hypothesis needs GPU time.
           </li>
           <li>
-            If K=3 clearly beats K=0: proceed to the 5-fold × 3-seed protocol
-            plus the second holdout (<code>{R.secondHoldout}</code>, n=75)
-            before any external claim, per the original protocol. K=0 also
-            needs re-running across seeds at that point — a single-seed {k0}{" "}
-            is not the number that goes in a final table.
-          </li>
-          <li>
-            If K=3 does not clearly beat K=0: write that up as a genuine
-            finding, not a failure — it would replicate SWE-Router’s own
-            repository-shift result (Table 3) on an independent dataset and
-            model pair, which is itself worth reporting.
-          </li>
-          <li>
-            Stop <code>{R.gpu.instance}</code> once the gate decision is logged
-            — idle L4 time is the one way this experiment’s cost stops being
-            small.
+            If anything is next, it is diagnosing K=0’s {k0} across seeds — not
+            packing more turns on a recipe that lost to that control.
           </li>
         </ol>
+      </PaperSection>
+
+      <PaperSection id="notes" number="6" title="Notes">
+        <ul className="list-disc space-y-2 pl-6">
+          <li>
+            Both arms are one seed. No std is reported because none exists
+            yet. The gate was “clearly above K=0,” and {k3} vs {k0} is not a
+            close call.
+          </li>
+          <li>
+            Endpoints on django are the same labels-only trio as v1/v2:
+            always-Opus {(R.k0.alwaysLarge * 100).toFixed(1)}%, always-Qwen{" "}
+            {(R.k0.alwaysSmall * 100).toFixed(1)}%, oracle{" "}
+            {(R.k0.oracle * 100).toFixed(1)}%.
+          </li>
+          <li>
+            SWE-Router mix-1 and SWE-Smith tables in Figure 3 are calibration
+            from related work, not expected transfer numbers for this pair.
+          </li>
+        </ul>
       </PaperSection>
 
       <PaperReferences items={[...references]} />

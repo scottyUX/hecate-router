@@ -23,8 +23,8 @@ import { ROUTER_V3 as R } from "@/lib/experiments/router-v3"
 const config = {
   text: { label: "v1 text", color: "var(--chart-1)" },
   fusion: { label: "v2 fusion", color: "#7a8494" },
-  metrics: { label: "v2 metrics-only", color: "var(--chart-5)" },
   k0: { label: "K=0 LoRA", color: "#128f8b" },
+  k3: { label: "K=3 LoRA", color: "var(--chart-2)" },
 } satisfies ChartConfig
 
 type GroupedRow = {
@@ -33,9 +33,8 @@ type GroupedRow = {
   textCi: number
   fusion: number
   fusionCi: number
-  metrics: number
-  metricsCi: number
   k0: number
+  k3: number
 }
 
 function FigureFrame({
@@ -71,6 +70,7 @@ function DjangoCluster({
   ticks,
   refs,
   labelK0,
+  labelK3,
 }: {
   title: string
   subtitle: string
@@ -79,6 +79,7 @@ function DjangoCluster({
   ticks: number[]
   refs: { y: number; label: string }[]
   labelK0?: boolean
+  labelK3?: boolean
 }) {
   return (
     <div>
@@ -127,13 +128,20 @@ function DjangoCluster({
           <Bar dataKey="fusion" fill="var(--color-fusion)" radius={2}>
             <ErrorBar dataKey="fusionCi" width={6} stroke="#c4c9d1" />
           </Bar>
-          <Bar dataKey="metrics" fill="var(--color-metrics)" radius={2}>
-            <ErrorBar dataKey="metricsCi" width={6} stroke="#c4c9d1" />
-          </Bar>
           <Bar dataKey="k0" fill="var(--color-k0)" radius={2}>
             {labelK0 ? (
               <LabelList
                 dataKey="k0"
+                position="top"
+                formatter={fmt3}
+                className="fill-[var(--paper-ink)] text-[10px] font-medium"
+              />
+            ) : null}
+          </Bar>
+          <Bar dataKey="k3" fill="var(--color-k3)" radius={2}>
+            {labelK3 ? (
+              <LabelList
+                dataKey="k3"
                 position="top"
                 formatter={fmt3}
                 className="fill-[var(--paper-ink)] text-[10px] font-medium"
@@ -221,12 +229,12 @@ export function RouterV3Figures() {
         id="fig-k0-django"
         title={
           <>
-            Figure 1: <strong>K=0 LoRA vs v1/v2, django holdout.</strong>{" "}
-            Compact grouped columns (v1 / v2 / metrics-only / K=0 LoRA). The
+            Figure 2: <strong>K=0 vs K=3 vs the frozen floor, django holdout.</strong>{" "}
+            Compact grouped columns (v1 / v2 fusion / K=0 LoRA / K=3 LoRA). The
             three higher-is-better panels share y ∈ [0.40, 0.75] so Route-AUC’s
-            jump is readable against AUROC and accuracy. Teal is K=0 LoRA (one
-            seed, no CI); gray/tan are established 3-seed arms with error bars.
-            K=3 is not plotted.
+            K=0 jump and K=3 drop are readable against AUROC and accuracy. Teal
+            is K=0, blue is K=3 (one seed each, no CI); gray bars are
+            established 3-seed arms with error bars.
           </>
         }
       >
@@ -240,12 +248,12 @@ export function RouterV3Figures() {
             v2 fusion
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-3 rounded-sm bg-[var(--chart-5)]" />
-            v2 metrics-only
-          </span>
-          <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-3 rounded-sm bg-[#128f8b]" />
             K=0 LoRA (1 seed)
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-3 rounded-sm bg-[var(--chart-2)]" />
+            K=3 LoRA (1 seed)
           </span>
         </div>
         <div className="grid gap-6 sm:grid-cols-2">
@@ -260,6 +268,7 @@ export function RouterV3Figures() {
               { y: R.stretch.djangoRouteAuc, label: "H2 0.55" },
             ]}
             labelK0
+            labelK3
           />
           <DjangoCluster
             title="AUROC"
@@ -271,7 +280,6 @@ export function RouterV3Figures() {
               { y: 0.5, label: "chance" },
               { y: R.stretch.djangoAuroc, label: "v1 target" },
             ]}
-            labelK0
           />
           <DjangoCluster
             title="Accuracy"
@@ -280,16 +288,15 @@ export function RouterV3Figures() {
             domain={[0.4, 0.75]}
             ticks={yTicks}
             refs={[{ y: R.djangoAlwaysSmall, label: "always-Qwen" }]}
-            labelK0
           />
           <DjangoCluster
             title="Brier score"
             subtitle="lower is better"
             data={R.chart.brier}
-            domain={[0.22, 0.32]}
-            ticks={[0.22, 0.24, 0.26, 0.28, 0.3, 0.32]}
+            domain={[0.22, 0.45]}
+            ticks={[0.22, 0.26, 0.3, 0.34, 0.38, 0.42]}
             refs={[{ y: 0.25, label: "const-0.5" }]}
-            labelK0
+            labelK3
           />
         </div>
       </FigureFrame>
@@ -298,10 +305,10 @@ export function RouterV3Figures() {
         id="fig-swe-router"
         title={
           <>
-            Figure 2: <strong>Does extra trajectory help?</strong> Route-AUC
+            Figure 3: <strong>Does extra trajectory help?</strong> Route-AUC
             from K=0 (issue text only) to a later K. Same LoRA value-head
             idea, different model pairs and datasets — a reference, not a
-            replication. Hecate K=3 is still training.
+            replication. Hecate K=3 falls 0.099 vs K=0 on django holdout.
           </>
         }
       >
@@ -319,8 +326,8 @@ export function RouterV3Figures() {
                 {
                   run: "Hecate django (this pair)",
                   k0: R.k0.routeAuc,
-                  later: null,
-                  laterLabel: "K=3 training",
+                  later: R.k3.routeAuc,
+                  laterLabel: "K=3",
                 },
                 {
                   run: "SWE-Router gpt-5-mini, SWE-Smith",
