@@ -270,7 +270,7 @@ export async function RouterV1Paper() {
           </a>{" "}
           and, after that also failed,{" "}
           <a href="/journal/2026-08-26-v3-trajectory-router-spec">
-            v3’s shift to execution-grounded trajectory signal
+            v3’s shift to execution-grounded trajectory signal (H1 rejected)
           </a>
           .
         </p>

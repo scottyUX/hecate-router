@@ -12,9 +12,9 @@ export const EXPERIMENT_REPORTS: ExperimentReport[] = [
     href: "/journal/2026-08-26-v3-trajectory-router-spec",
     title: "K-turn trajectory router v3",
     date: "2026-08-27",
-    status: "missed target",
+    status: "H1 rejected",
     summary:
-      "K=3 django Route-AUC 0.587 lost to K=0 LoRA 0.686 (1 seed). Extra turns did not help on repo holdout.",
+      "K=3 django Route-AUC 0.587 lost to K=0 LoRA 0.686 (1 seed). Trajectory conditioning did not beat a text-only control on repo holdout.",
     archiveEntryId: "2026-08-26-v3-trajectory-router-spec",
   },
   {

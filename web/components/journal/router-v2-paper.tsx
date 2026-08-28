@@ -359,19 +359,21 @@ export async function RouterV2Paper() {
         <p>
           That matches the prompt-only floor in SWE-Router: embedding fusions
           stay near chance, and the lift — when it exists — is in K-turn
-          trajectories.<PaperCite n={6} /> Remaining signal is that class. See{" "}
+          trajectories.<PaperCite n={6} /> That class is now also measured:{" "}
           <a href="/journal/2026-08-26-v3-trajectory-router-spec">
             v3 trajectory router
-          </a>
-          .
+          </a>{" "}
+          rejected H1 on django holdout (K=3 Route-AUC 0.587 vs K=0 LoRA 0.686,
+          one seed).
         </p>
       </PaperSection>
 
       <PaperSection id="next" number="5" title="Next">
         <p>
-          Already superseded by v3. Do not pursue static structural fusion. On
-          escalation, restart the strong model from the original issue text
-          rather than the weak model’s partial attempt.<PaperCite n={6} />
+          Already superseded by v3, which itself rejected H1. Do not pursue
+          static structural fusion. On escalation, restart the strong model
+          from the original issue text rather than the weak model’s partial
+          attempt.<PaperCite n={6} />
         </p>
       </PaperSection>
 

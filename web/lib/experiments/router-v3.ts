@@ -1,9 +1,9 @@
-/** v3 trajectory router. K=0 and K=3 django smokes scored (1 seed each). */
+/** v3 trajectory router. Django smoke complete: H1 rejected. */
 
 export const ROUTER_V3 = {
-  status: "missed-target",
+  status: "h1-rejected",
   date: "2026-08-27",
-  rev: 3,
+  rev: 4,
   n: 500,
   djangoN: 231,
   restN: 269,
@@ -12,6 +12,7 @@ export const ROUTER_V3 = {
     djangoRouteAuc: 0.55,
     djangoAuroc: 0.6,
   },
+  ln2: 0.693,
   v1v2: {
     djangoRouteAuc: { text: "0.477 ± 0.030", fusion: "0.482 ± 0.020" },
     djangoAuroc: { text: "0.516 ± 0.015", fusion: "0.518 ± 0.021" },
@@ -93,6 +94,14 @@ export const ROUTER_V3 = {
     oracle: 0.745,
     bestLambda: 0.67,
     bestRouteRate: 0.706,
+    nTrainRows: 1345,
+    steps: 6725,
+    epochs: 5,
+    trainHours: 18,
+    epochMeanLoss: [0.825, 0.723, 0.67, 0.62, 0.444],
+    trainTruncatedRows: 14,
+    trainSeqP50: 2886,
+    trainSeqMax: 8192,
   },
   sweRouter: {
     mix1: {
@@ -110,15 +119,18 @@ export const ROUTER_V3 = {
     provenance: "hf",
     nMatched: 500,
     resolveBitsInDump: false,
-    k3TruncationRate: 0.006,
-    k3TruncatedN: 3,
-    medianTokens: 3495,
-    maxTokens: 11008,
+    hfAuditTruncationRate: 0.006,
+    hfAuditTruncatedN: 3,
+    hfAuditMedianTokens: 3495,
+    hfAuditMaxTokens: 11008,
+    whitespaceTruncationRate: 0,
+    whitespaceMedianTokens: 1627,
+    whitespaceMaxTokens: 3553,
   },
   gpu: {
     blocked: false,
     instance: "hecate-traj-l4",
-    reason: "K=3 scored; instance stopped 2026-08-27.",
+    reason: "K=3 scored; instance stopped 2026-08-27. Disk retained.",
   },
   secondHoldout: "sympy/sympy",
   related: [
