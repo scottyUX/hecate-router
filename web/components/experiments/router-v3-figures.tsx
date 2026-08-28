@@ -12,12 +12,15 @@ import {
   YAxis,
 } from "recharts"
 
+import { RouteAucSweepChart } from "@/components/experiments/route-auc-curve"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { ROUTER_V1 } from "@/lib/experiments/router-v1"
+import { ROUTER_V2 } from "@/lib/experiments/router-v2"
 import { ROUTER_V3 as R } from "@/lib/experiments/router-v3"
 
 const config = {
@@ -221,6 +224,58 @@ function SlopeTable({
   )
 }
 
+export function RouterV3RouteAucCurve() {
+  const curve = ROUTER_V1.chart.routeCurve
+  return (
+    <RouteAucSweepChart
+      id="fig-route-auc-curve"
+      heading="How Route-AUC works"
+      intro={
+        <>
+          Same django holdout as v1/v2 (n={R.djangoN}). Left is “send everything
+          to Opus.” Right is “send everything to Qwen.” Frozen v1/v2 hug the
+          dashed chance line. K=0 LoRA ({R.k0.routeAuc.toFixed(3)}) and K=3 (
+          {R.k3.routeAuc.toFixed(3)}) are one-seed integrals on this same plot;
+          their λ-paths were never written (adapters and holdout scores died
+          with the training process), so they are not drawn.
+        </>
+      }
+      n={R.djangoN}
+      alwaysOpus={R.k0.alwaysLarge}
+      alwaysQwen={curve.router[curve.router.length - 1].rate}
+      oracleCeiling={R.k0.oracle}
+      both={curve.both}
+      smallOnly={curve.smallOnly}
+      oracle={curve.oracle}
+      series={[
+        {
+          key: "v1",
+          label: "v1 text, seed 0",
+          color: "#7a8494",
+          strokeDasharray: "4 3",
+          points: ROUTER_V1.chart.routeCurve.router,
+        },
+        {
+          key: "fusion",
+          label: "v2 fusion, seed 0",
+          color: "var(--chart-1)",
+          points: ROUTER_V2.chart.routeCurve.router,
+        },
+      ]}
+      caption={
+        <>
+          Figure 2: <strong>Django holdout Route-AUC curve.</strong> Endpoints
+          are labels-only and identical across v1/v2/v3. Frozen text and oracle
+          fusion stay on the no-signal diagonal (seed 0 = 0.445 / 0.469). K=0’s{" "}
+          {R.k0.routeAuc.toFixed(3)} would bow well above that band; K=3’s{" "}
+          {R.k3.routeAuc.toFixed(3)} sits between chance and K=0. Reconstructing
+          those two paths needs the holdout score vectors, which were not saved.
+        </>
+      }
+    />
+  )
+}
+
 export function RouterV3Figures() {
   const yTicks = [0.4, 0.5, 0.6, 0.7]
   return (
@@ -229,7 +284,7 @@ export function RouterV3Figures() {
         id="fig-k0-django"
         title={
           <>
-            Figure 2: <strong>K=0 vs K=3 vs the frozen floor, django holdout.</strong>{" "}
+            Figure 3: <strong>K=0 vs K=3 vs the frozen floor, django holdout.</strong>{" "}
             Compact grouped columns (v1 / v2 fusion / K=0 LoRA / K=3 LoRA). The
             three higher-is-better panels share y ∈ [0.40, 0.75] so Route-AUC’s
             K=0 jump and K=3 drop are readable against AUROC and accuracy. Teal
@@ -305,7 +360,7 @@ export function RouterV3Figures() {
         id="fig-swe-router"
         title={
           <>
-            Figure 3: <strong>Does extra trajectory help?</strong> Route-AUC
+            Figure 4: <strong>Does extra trajectory help?</strong> Route-AUC
             from K=0 (issue text only) to a later K. Same LoRA value-head
             idea, different model pairs and datasets — a reference, not a
             replication. Hecate K=3 falls 0.099 vs K=0 on django holdout.

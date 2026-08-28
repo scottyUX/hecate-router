@@ -1,4 +1,7 @@
-import { RouterV3Figures } from "@/components/experiments/router-v3-figures";
+import {
+  RouterV3Figures,
+  RouterV3RouteAucCurve,
+} from "@/components/experiments/router-v3-figures";
 import {
   PaperAbstract,
   PaperCite,
@@ -30,7 +33,8 @@ const toc: PaperTocItem[] = [
       { href: "#tab-decisions", label: "Decisions" },
       { href: "#k0", label: "K=0" },
       { href: "#k3", label: "K=3" },
-      { href: "#figures", label: "Figures" },
+      { href: "#fig-route-auc-curve", label: "Route-AUC curve" },
+      { href: "#figures", label: "More figures" },
     ],
   },
   { href: "#interpretation", label: "Interpretation" },
@@ -343,6 +347,7 @@ export async function RouterV3Paper() {
         </PaperSubsection>
 
         <PaperSubsection id="figures" number="3.3" title="Figures">
+          <RouterV3RouteAucCurve />
           <RouterV3Figures />
         </PaperSubsection>
       </PaperSection>
