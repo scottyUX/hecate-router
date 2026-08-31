@@ -359,12 +359,13 @@ export async function RouterV2Paper() {
         <p>
           That matches the prompt-only floor in SWE-Router: embedding fusions
           stay near chance, and the lift — when it exists — is in K-turn
-          trajectories.<PaperCite n={6} /> That class is now also measured:{" "}
+          trajectories.<PaperCite n={6} />{" "}
           <a href="/journal/2026-08-26-v3-trajectory-router-spec">
-            v3 trajectory router
+            v3
           </a>{" "}
-          rejected H1 on django holdout (K=3 Route-AUC 0.587 vs K=0 LoRA 0.686,
-          one seed).
+          rejected that trajectory claim on django holdout (RQ1: K=3 0.587 vs
+          K=0 LoRA 0.686) and found a different lift: a 7B LoRA on issue text
+          beats this frozen floor on Route-AUC (RQ2).
         </p>
       </PaperSection>
 

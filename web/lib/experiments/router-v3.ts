@@ -1,9 +1,9 @@
-/** v3 trajectory router. Django smoke complete: H1 rejected. */
+/** v3 trajectory router. Django smoke complete: H1 rejected; RQ2 yes on Route-AUC. */
 
 export const ROUTER_V3 = {
   status: "h1-rejected",
-  date: "2026-08-27",
-  rev: 4,
+  date: "2026-08-31",
+  rev: 5,
   n: 500,
   djangoN: 231,
   restN: 269,

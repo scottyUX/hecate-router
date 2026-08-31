@@ -85,15 +85,15 @@ export async function RouterV3Paper() {
           <a href="/">Hecate Lab</a>
         </>
       }
-      affiliations={`SWE-bench Verified (${R.n}) · rev ${R.rev} · COMPLETE — H1 rejected`}
-      date="August 27, 2026"
+      affiliations={`SWE-bench Verified (${R.n}) · rev ${R.rev} · COMPLETE — H1 rejected, RQ2 yes`}
+      date="August 31, 2026"
       subjects={[
         "Software Engineering (cs.SE)",
         "Machine Learning (cs.LG)",
         "Artificial Intelligence (cs.AI)",
       ]}
-      updated="2026-08-27"
-      tags="router · trajectory-conditioning · lora · k-turn · h1-rejected"
+      updated="2026-08-31"
+      tags="router · trajectory-conditioning · lora · k-turn · h1-rejected · rq2"
       toc={toc}
       glossary={glossaryEntries(
         "Route-AUC",
@@ -107,28 +107,26 @@ export async function RouterV3Paper() {
     >
       <PaperAbstract>
         <p>
-          v1 frozen issue text and v2 oracle AST fusion are chance on django
-          holdout (n={R.djangoN}): Route-AUC {R.v1v2.djangoRouteAuc.text} /{" "}
-          {R.v1v2.djangoRouteAuc.fusion}. Static pre-execution signal is closed.
+          Two questions on the same leave-django-out smoke (train {R.restN}{" "}
+          non-django / test {R.djangoN} django). RQ1 is whether extra turns
+          help. RQ2 is whether a trained 7B LoRA beats the frozen v1/v2 floor
+          at all.
         </p>
         <p>
-          K=0 — a separately trained 7B LoRA value head reading issue text
-          alone — measures django Route-AUC {k0} (one seed), a large jump over
-          the frozen-encoder floor, though AUROC barely moved (
-          {R.k0.auroc.toFixed(3)}) and calibration was worse than v1/v2 (Brier{" "}
-          {R.k0.brier.toFixed(3)} vs 0.250).
+          RQ1: no. Packed K=3 django Route-AUC {k3} sits {drop} below a
+          matched K=0 LoRA that sees only issue text ({k0}, one seed). H1 is
+          rejected. H2’s stretch bar (≥{R.stretch.djangoRouteAuc.toFixed(2)}) is
+          nominally cleared and was pre-registered as a non-outcome. Trajectory
+          conditioning does not beat a trajectory-blind control on this
+          repository-shift holdout.
         </p>
         <p>
-          K=3 — the same architecture packed with three turns of Qwen’s own
-          mini-SWE-agent trajectory — is {k3} Route-AUC, AUROC{" "}
-          {R.k3.auroc.toFixed(3)}, accuracy {R.k3.accuracy.toFixed(3)}, Brier{" "}
-          {R.k3.brier.toFixed(3)}. H1 is rejected: K=3 sits {drop}{" "}
-          below K=0, not above it. H2’s stretch bar (≥
-          {R.stretch.djangoRouteAuc.toFixed(2)}) is nominally cleared but was
-          pre-registered as a non-outcome: clearing it while losing to K=0 is
-          still an H1 rejection. Trajectory conditioning, at least at K=3 with
-          this recipe and one seed, does not beat a trajectory-blind control on
-          this repository-shift holdout.
+          RQ2: yes, on Route-AUC. v1 frozen issue text and v2 oracle AST fusion
+          are chance ({R.v1v2.djangoRouteAuc.text} /{" "}
+          {R.v1v2.djangoRouteAuc.fusion}). Both LoRA arms clear that floor: K=0{" "}
+          {k0}, K=3 {k3}. The lift is the fine-tune, not the traces. K=0 is the
+          clean version of that result. AUROC barely moved; calibration got
+          worse. One seed, no CI.
         </p>
       </PaperAbstract>
 
@@ -144,12 +142,18 @@ export async function RouterV3Paper() {
           Claude 4 Opus pair.
         </p>
         <p>
-          RQ1: does a LoRA value head reading K=3 turns of Qwen’s own
-          mini-SWE-agent trace improve django-holdout Route-AUC over a K=0 LoRA
-          that sees only issue text? Answered: no. The control is a separately
-          trained 7B LoRA, not frozen ModernBERT — a rejection against a
-          matched-architecture control, not merely against the v1/v2 floor.
-          Route-AUC is the only gate; AUROC is diagnostic.
+          RQ1 (pre-registered gate): does a LoRA value head reading K=3 turns
+          of Qwen’s own mini-SWE-agent trace improve django-holdout Route-AUC
+          over a K=0 LoRA that sees only issue text? Answered: no. The control
+          is a separately trained 7B LoRA, not frozen ModernBERT.
+        </p>
+        <p>
+          RQ2 (scored on the same run; not the gate): does that 7B LoRA beat
+          frozen v1/v2 on django-holdout Route-AUC? Answered: yes. K=0 {k0} and
+          K=3 {k3} both sit well above {R.v1v2.djangoRouteAuc.text} /{" "}
+          {R.v1v2.djangoRouteAuc.fusion}. This split is a generalist test —
+          train on other repos, route django. Route-AUC is the only gate for
+          RQ1; AUROC is diagnostic for both.
         </p>
       </PaperSection>
 
@@ -165,24 +169,30 @@ export async function RouterV3Paper() {
           the execution box. The instance is now stopped.
         </p>
         <p>
-          H1 (trajectory lift): packed K=3 django Route-AUC is clearly above
-          the matched K=0 LoRA on the same split. With K=0 measured at {k0},
-          that is the bar. H2 (stretch, written before K=0 was measured): K=3 ≥{" "}
+          Leave-django-out is the generalist protocol: fit on {R.restN}{" "}
+          non-django tasks, evaluate on {R.djangoN} django tasks. H1
+          (trajectory lift): packed K=3 django Route-AUC is clearly above the
+          matched K=0 LoRA on that split. With K=0 measured at {k0}, that is
+          the bar. H2 (stretch, written before K=0 was measured): K=3 ≥{" "}
           {R.stretch.djangoRouteAuc.toFixed(2)}. H2 can pass while H1 fails;
-          that combination is reported as an H1 rejection. Both hypotheses are
-          left as originally pre-registered.
+          that combination is reported as an H1 rejection. H1 and H2 are left
+          as originally pre-registered. RQ2 uses the same numbers against the
+          frozen floor; it was not a pre-registered pass/fail gate.
         </p>
       </PaperSection>
 
       <PaperSection id="result" number="3" title="Result">
         <p>
-          H1 rejected. H2 nominally cleared but reported as a rejection per the
-          pre-registered decision rule. RQ1 answered: no.
+          H1 rejected. RQ1 answered: no. RQ2 answered: yes on Route-AUC (one
+          seed). H2 nominally cleared but reported as an H1 rejection per the
+          pre-registered decision rule.
         </p>
         <PaperTable
           id="tab-decisions"
-          caption="Table 1: Pre-registered claims. Confirmatory split is django holdout."
-          highlight={(row) => row[0].startsWith("H1")}
+          caption="Table 1: Claims. H1, H2, and RQ1 were pre-registered. RQ2 is scored on the same smoke; it was not the gate. Confirmatory split is django holdout."
+          highlight={(row) =>
+            row[0].startsWith("H1") || row[0].startsWith("RQ2")
+          }
           headers={["Claim", "Test", "Observed", "Decision"]}
           rows={[
             [
@@ -202,6 +212,12 @@ export async function RouterV3Paper() {
               "H1 accepted",
               "H1 rejected",
               "No — packed K=3 underperforms the trajectory-blind K=0 control",
+            ],
+            [
+              "RQ2 — 7B LoRA beats frozen v1/v2",
+              "django Route-AUC vs v1/v2 ~0.48",
+              `K=0 = ${k0}; K=3 = ${k3}`,
+              "Yes on Route-AUC — the fine-tune lifts; extra turns do not",
             ],
           ]}
         />
@@ -247,7 +263,7 @@ export async function RouterV3Paper() {
         />
         <PaperTable
           id="tab-v3-gate"
-          caption="Table 4: Hecate v1/v2/K=0/K=3 on this pair. Grouped 5-fold is the django-weighted trap; do not headline it. Highlighted row is the gate. K=0 and K=3 are one seed; v1/v2 are 3-seed means."
+          caption="Table 4: Hecate v1/v2/K=0/K=3 on this pair. Highlighted row is the RQ1 gate and the RQ2 comparison. Grouped 5-fold is the django-weighted trap; do not headline it. K=0 and K=3 are one seed; v1/v2 are 3-seed means."
           highlight={(row) => row[0].includes("Route-AUC") && row[0].includes("Django")}
           headers={[
             "Metric",
@@ -304,9 +320,9 @@ export async function RouterV3Paper() {
             be internally consistent: Route-AUC cares about ordering the
             extremes, while AUROC averages every pair. It is also the
             fingerprint of a statistic that can swing between seeds on a
-            231-task holdout. Treat {k0} as a control value for this smoke, not
-            a settled number — and not as evidence that trajectory conditioning
-            works.
+            231-task holdout. Treat {k0} as the RQ2 estimate for this smoke,
+            not a settled number — and not as evidence that trajectory
+            conditioning works.
           </p>
         </PaperSubsection>
 
@@ -336,7 +352,8 @@ export async function RouterV3Paper() {
             confound for the gate.
           </p>
           <p>
-            Django Route-AUC is {k3} versus K=0’s {k0}. H1 rejected. AUROC{" "}
+            Django Route-AUC is {k3} versus K=0’s {k0}. H1 / RQ1 rejected.
+            Against the frozen floor, {k3} still clears RQ2. AUROC{" "}
             {R.k3.auroc.toFixed(3)} vs {R.k0.auroc.toFixed(3)} is a 0.010 tick
             on one seed — not a ranking rescue. Brier {R.k3.brier.toFixed(3)} is
             worse than a constant-0.5 classifier (0.250). At the selected λ the
@@ -356,12 +373,23 @@ export async function RouterV3Paper() {
         <p>
           RQ1: no. On this pair, three turns of Qwen’s own trace do not improve
           django-holdout routing over a LoRA that sees only the issue. The
-          drop vs K=0 is large enough that a 5-fold × 3-seed protocol is not
-          justified. Extra turns also failed in SWE-Router when the test repo
-          was held out, and helped only when train and test shared the same
-          mix.<PaperCite n={4} /> Django holdout is the second kind of test.
-          That cross-study pattern — K=3 failing to beat K=0 under a genuine
-          repo holdout — is the finding, not a failure to bury.
+          drop vs K=0 is large enough that a 5-fold × 3-seed protocol on this
+          K=3 recipe is not justified. Extra turns also failed in SWE-Router
+          when the test repo was held out, and helped only when train and test
+          shared the same mix.<PaperCite n={4} /> Django holdout is the second
+          kind of test. That cross-study pattern is the RQ1 finding, not a
+          failure to bury.
+        </p>
+        <p>
+          RQ2: yes, on Route-AUC. A trained 7B LoRA ranks django holdout tasks
+          well above frozen ModernBERT (v1) and oracle AST fusion (v2). K=0 is
+          the clean measurement: same architecture as K=3, no trajectory
+          tokens, {k0} vs ~0.48. K=3 ({k3}) also clears that floor and still
+          loses the gate. The positive outcome is “fine-tune the 7B head,” not
+          “pack traces.” AUROC barely moved ({R.k0.auroc.toFixed(3)} /{" "}
+          {R.k3.auroc.toFixed(3)} vs v1/v2 ~0.52); accuracy sits below
+          always-Qwen; K=3 Brier {R.k3.brier.toFixed(3)} is worse than guessing
+          0.5. One seed.
         </p>
         <p>
           Route-AUC dropped ({k0} → {k3}) while AUROC ticked {R.k0.auroc.toFixed(3)}{" "}
@@ -369,46 +397,48 @@ export async function RouterV3Paper() {
           {R.k0.brier.toFixed(3)} → {R.k3.brier.toFixed(3)}). A small AUROC
           movement on one seed does not mean pairwise ranking is better; the
           routing decision depends on the extremes that Route-AUC actually
-          measures. Brier {R.k3.brier.toFixed(3)} is worse than always guessing
-          0.5. That is consistent with a last-epoch loss drop that did not
-          transfer to django.
+          measures.
         </p>
         <p>
-          K=0 still sits well above the frozen v1/v2 floor on Route-AUC. That
-          is a different claim — “a 7B LoRA on issue text ranks better than
-          frozen ModernBERT” — and it is still one seed. It is not evidence
-          that trajectory conditioning works. All three approaches tried on
-          this pair under a genuine repository holdout — static text, oracle
-          structure, and trajectory conditioning — failed to clear their own
-          control.
+          This smoke tested a generalist router (train off django, test on
+          django). RQ2 says that generalist LoRA has ranking lift the frozen
+          encoder did not. It does not say a specialist — train and test on
+          the same task type / similar repos — would look the same, and it
+          does not revive H1.
         </p>
       </PaperSection>
 
       <PaperSection id="next" number="5" title="Next">
         <ol className="list-decimal space-y-2 pl-6">
           <li>
-            Do not run 5-fold × 3-seed or the{" "}
-            <code>{R.secondHoldout}</code> holdout on this K=3 recipe. The
-            smoke already failed the gate.
+            Do not scale this K=3 recipe to 5-fold × 3-seed or{" "}
+            <code>{R.secondHoldout}</code> as a generalist. RQ1 already failed
+            that gate.
           </li>
           <li>
-            Treat this as a genuine finding: it replicates SWE-Router’s
-            repository-shift result (Table 3) on an independent dataset and
-            model pair.
+            Next experiment is the opposite split: a specialist router. Train
+            and test on the same task type in similar repos, not leave-django-out.
+            Concrete first split: hold out a slice of the {R.djangoN} django
+            tasks and train K=0 LoRA on the remaining django issues (in-repo,
+            in-distribution). Same 7B recipe. Checkpoint the adapter and write
+            holdout scores. Gate: django-in-distribution Route-AUC vs the
+            frozen v1 floor on that split (does RQ2 hold when the router is a
+            specialist?). Secondary: K=0 vs K=3 on the same specialist split —
+            the mix-1 analogue, not a retry of H1 on repo-shift.
           </li>
           <li>
-            Extra seeds on K=0 and K=3 would tighten variance. They are not
-            required to close H1 for the notebook; {k3} vs {k0} is not a close
-            call.
+            Extra seeds on the existing generalist K=0 ({k0}) would tighten
+            RQ2’s variance. They are optional for closing H1; {k3} vs {k0} is
+            not a close call.
           </li>
           <li>
-            If a preprint is next, the supported title direction is repository
-            shift limiting trajectory-conditioned routing — not a positive K=3
-            result.
+            If a preprint is next, two claims, not one: repository shift
+            limits trajectory-conditioned routing (RQ1), and a 7B LoRA on
+            issue text can beat a frozen encoder on that same shift (RQ2).
           </li>
           <li>
-            <code>{R.gpu.instance}</code> is stopped. Leave it stopped unless a
-            new hypothesis needs GPU time.
+            <code>{R.gpu.instance}</code> is stopped. Leave it stopped unless
+            the specialist split needs GPU time.
           </li>
         </ol>
       </PaperSection>
@@ -417,8 +447,9 @@ export async function RouterV3Paper() {
         <ul className="list-disc space-y-2 pl-6">
           <li>
             Both arms are one seed. No std is reported because none exists
-            yet. The gate was “clearly above K=0,” and {k3} vs {k0} is not a
-            close call.
+            yet. RQ1’s gate was “clearly above K=0,” and {k3} vs {k0} is not a
+            close call. RQ2’s {k0} vs ~0.48 is also not a close call on this
+            seed, but it has no seed variance yet.
           </li>
           <li>
             Endpoints on django are the same labels-only trio as v1/v2:

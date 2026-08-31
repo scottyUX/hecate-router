@@ -214,9 +214,9 @@ export function RouterArchitectureV3() {
           Figure 1: <strong>K=0 control vs K=3.</strong> K=0 is a
           trajectory-blind control (separately trained, django Route-AUC {k0},
           one seed). K=3 is the same architecture reading three real turns of
-          Qwen’s own attempt. The gate was whether it clearly beats K=0, not
-          whether it beats v1’s old floor — it did not (
-          {ROUTER_V3.k3.routeAuc.toFixed(3)} vs {k0}, one seed).
+          Qwen’s own attempt. RQ1’s gate was whether K=3 clearly beats K=0 — it
+          did not ({ROUTER_V3.k3.routeAuc.toFixed(3)} vs {k0}). RQ2 is whether
+          that LoRA beats frozen v1/v2 (~0.48) — both arms do.
         </>
       }
     >
