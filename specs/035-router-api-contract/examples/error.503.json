@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "router_unavailable",
+    "message": "router checkpoint is not loaded",
+    "request_id": "2f9b6d84-c503-41ea-97b8-6d0a35e1c729"
+  }
+}
