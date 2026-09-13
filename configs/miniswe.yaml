@@ -1,0 +1,28 @@
+# Optional mini-SWE-agent scaffold (parallel to Stage-1 single-shot).
+# Do not merge resolve labels with Lite single-shot generations.jsonl.
+#
+# Install: pip install -e ".[agent]"
+# Smoke:   python scripts/run_miniswe.py --dry-run
+# Live:    python scripts/run_miniswe.py --instance django__django-10914
+
+scaffold:
+  name: mini-swe-agent
+  # Pin notes for manifests / lab write-ups; install resolves the PyPI range.
+  package: mini-swe-agent
+  version_range: ">=2,<3"
+  subset: lite
+  split: test
+
+defaults:
+  # Litellm OpenRouter form; requires OPENROUTER_API_KEY in the environment.
+  model: openrouter/qwen/qwen-2.5-7b-instruct
+  instance: "0"
+  cost_limit: 3.0
+  environment_class: docker
+  exit_immediately: true
+  # Trajectory path; null lets mini-SWE use its default output location.
+  output: null
+
+output:
+  # Suggested root for Hecate-side artifacts when you pass --output-dir.
+  runs_root: data/outputs/runs

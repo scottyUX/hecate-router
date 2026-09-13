@@ -77,6 +77,17 @@ cp .env.example .env
 pytest   # verify install and .env loading
 ```
 
+### Optional mini-SWE-agent scaffold
+
+Parallel to Stage-1 single-shot (bash agent loop; **no** Hecate diff parser).
+Do not mix its resolve labels with Lite single-shot generations — see
+[`docs/mini-swe-agent.md`](docs/mini-swe-agent.md).
+
+```bash
+pip install -e ".[agent]"
+python scripts/run_miniswe.py --dry-run
+```
+
 ### Run the pilot (once implemented)
 
 ```bash
