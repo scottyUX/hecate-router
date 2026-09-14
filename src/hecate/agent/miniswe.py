@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 from types import ModuleType
 
 
@@ -79,6 +81,12 @@ def build_swebench_single_argv(
 def _resolve_mini_extra(explicit: str | None = None) -> str:
     if explicit:
         return explicit
+    # Prefer the console script installed alongside the running interpreter.
+    # PATH may well lead to a mini-extra from a different virtualenv, which
+    # would run the agent under a different Python than the caller's.
+    sibling = Path(sys.executable).parent / "mini-extra"
+    if sibling.is_file():
+        return str(sibling)
     found = shutil.which("mini-extra")
     if found:
         return found

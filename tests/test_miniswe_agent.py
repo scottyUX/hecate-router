@@ -79,7 +79,10 @@ def test_run_swebench_single_dry_run_with_fake_module() -> None:
 
     fake = types.ModuleType("minisweagent")
     with patch.dict("sys.modules", {"minisweagent": fake}):
-        with patch("hecate.agent.miniswe.shutil.which", return_value="/usr/bin/mini-extra"):
+        # No console script beside the interpreter, so PATH lookup is used.
+        with patch("hecate.agent.miniswe.sys.executable", "/nowhere/bin/python"), patch(
+            "hecate.agent.miniswe.shutil.which", return_value="/usr/bin/mini-extra"
+        ):
             result = run_swebench_single(
                 instance="django__django-10914",
                 model="openrouter/qwen/qwen-2.5-7b-instruct",
@@ -92,3 +95,25 @@ def test_run_swebench_single_dry_run_with_fake_module() -> None:
     assert result.argv[0] == "/usr/bin/mini-extra"
     assert "swebench-single" in result.argv
     assert "django__django-10914" in result.argv
+
+
+def test_mini_extra_prefers_interpreter_sibling_over_path(tmp_path: Path) -> None:
+    """PATH may hold a mini-extra from another venv, which would run the agent
+    under a different Python than the caller's."""
+    from hecate.agent.miniswe import _resolve_mini_extra
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    sibling = bin_dir / "mini-extra"
+    sibling.write_text("#!/bin/sh\n", encoding="utf-8")
+
+    with patch("hecate.agent.miniswe.sys.executable", str(bin_dir / "python")), patch(
+        "hecate.agent.miniswe.shutil.which", return_value="/other/venv/bin/mini-extra"
+    ):
+        assert _resolve_mini_extra() == str(sibling)
+
+
+def test_explicit_mini_extra_wins_over_sibling(tmp_path: Path) -> None:
+    from hecate.agent.miniswe import _resolve_mini_extra
+
+    assert _resolve_mini_extra("/custom/mini-extra") == "/custom/mini-extra"
