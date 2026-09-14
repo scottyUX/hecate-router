@@ -1,0 +1,16 @@
+---
+description: Lab notebook layout, run IDs, and artifact durability
+alwaysApply: true
+---
+
+# Experiment layout
+
+Slate table: `experiments/README.md`. Do not copy it here.
+
+- Pre-registration lives in `experiments/e0N-<short-name>/spec.md`. Headline numbers and GCS pointers go in `results.md`. Product specs stay in `specs/001`–`015`.
+- Next experiment is `e06-…` with questions `Q6.1`. Do not use spec-kit numbers (`016-…`) or dated `docs/2026-…-exp*.md` as the canonical spec.
+- Amend `spec.md` in place. Do not create `e02-rev2/` folders.
+- Questions are `Q<n>.<k>` only (Q1.1, Q2.3). Not RQ-E1, not 017.1.
+- Run IDs: `exp-02_arm-k1_split-specialist_seed-0` via `hecate.utils.run_ids.make_run_id`. No extra hyphens in values (`leave-repo` → `leaverepo`). Reruns get `_run-2`; never overwrite.
+- Training code stays in `src/hecate/`. Do not add `experiments/e04/train.py`.
+- Weights are not git. Local: `data/outputs/runs/<run_id>/`. Durable: `gs://hecate-506120-artifacts/runs/<run_id>/`. `--backend lora` requires `HECATE_ARTIFACTS_URI`. A Route-AUC with no adapter copy is not a completed run.
