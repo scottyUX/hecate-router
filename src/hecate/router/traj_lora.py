@@ -352,6 +352,7 @@ class TrajLoraBackend:
         return probs
 
     def save(self, path: Path) -> None:
+        """Write adapter + score head. Call after fit; weights are otherwise process-local."""
         if self._model is None or self._score is None:
             raise RuntimeError("TrajLoraBackend.fit must be called first")
         target = Path(path)

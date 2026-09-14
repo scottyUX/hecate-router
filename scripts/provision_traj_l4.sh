@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Short-lived L4 VM for v3 LoRA smoke. Do not use hecate-exec.
 # Stop when idle: gcloud compute instances stop hecate-traj-l4 --zone us-central1-a
+# Before any --backend lora run: export HECATE_ARTIFACTS_URI=gs://hecate-506120-artifacts
 #
 # Requires GPUS_ALL_REGIONS >= 1 on hecate-506120 (regional NVIDIA_L4_GPUS=1 is
 # not enough; create fails when the global GPU quota is 0).

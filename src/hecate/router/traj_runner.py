@@ -33,13 +33,20 @@ from hecate.router.splits import (
 from hecate.router.traj import (
     K_EVAL,
     K_MAX,
+    TRAJ_ARMS,
     TrajError,
     TrajExample,
     build_traj_examples,
     eval_examples,
+    parse_arm,
     parse_traj_dir,
     second_holdout_repo,
     truncation_report,
+)
+from hecate.utils.artifacts import (
+    finalize_run_artifacts,
+    resolve_artifacts_uri,
+    run_dest_uri,
 )
 from hecate.utils.manifest import git_commit_sha, write_run_manifest
 
@@ -65,7 +72,7 @@ _METRIC_KEYS = (
     "oracle",
     "headroom",
 )
-ARMS = ("k0", "k3")
+ARMS = tuple(TRAJ_ARMS)
 PAPER_DEVIATION = (
     "No 3-way LLM paraphrases of q (SWE-Router §A.2); skipped for cost."
 )
@@ -97,6 +104,7 @@ class TrajTrainConfig:
     hold_repo: str
     provenance: str
     hold_only: bool
+    allow_unsynced: bool
     cli_overrides: dict[str, Any]
 
 
@@ -111,6 +119,7 @@ class TrajTrainResult:
     split_strategy: str
     truncation_rate: float
     arm: str
+    artifacts_uri: str | None
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -134,6 +143,7 @@ def load_traj_train_config(
     provenance: str = "unknown",
     seeds: tuple[int, ...] | None = None,
     hold_only: bool = False,
+    allow_unsynced: bool = False,
 ) -> TrajTrainConfig:
     root = _repo_root()
     resolved = (
@@ -167,9 +177,7 @@ def load_traj_train_config(
             f"unknown split {split_strategy!r}; expected {_SPLIT_GROUPED} or {_SPLIT_LEAVE_REPO}"
         )
     held = (hold_repo or _DJANGO_REPO).strip()
-    kind = (arm or "k3").strip().lower()
-    if kind not in ARMS:
-        raise ValueError(f"unknown arm {kind!r}; expected {ARMS}")
+    kind, _spec = parse_arm(arm or "k3")
     return TrajTrainConfig(
         config_path=resolved,
         csv_path=csv,
@@ -195,6 +203,7 @@ def load_traj_train_config(
         hold_repo=held,
         provenance=str(provenance or data.get("provenance") or "unknown"),
         hold_only=bool(hold_only),
+        allow_unsynced=bool(allow_unsynced),
         cli_overrides={
             "csv_path": str(csv),
             "traj_dir": str(traj),
@@ -206,6 +215,7 @@ def load_traj_train_config(
             "provenance": str(provenance or "unknown"),
             "seeds": [int(s) for s in seeds_raw],
             "hold_only": bool(hold_only),
+            "allow_unsynced": bool(allow_unsynced),
         },
     )
 
@@ -272,7 +282,65 @@ def _fmt_mean_std(stat: dict[str, Any] | None) -> str:
 
 
 def _eval_k(config: TrajTrainConfig) -> int:
-    return 0 if config.arm == "k0" else config.k_eval
+    _kind, spec = parse_arm(config.arm)
+    if spec.eval_k is None:
+        return config.k_eval
+    return spec.eval_k
+
+
+def holdout_scores_path(output_dir: Path) -> Path:
+    return Path(output_dir) / "holdout_scores.jsonl"
+
+
+def lora_checkpoint_dir(output_dir: Path, *, arm: str, seed: int, fold: int) -> Path:
+    return Path(output_dir) / "checkpoints" / f"{arm}-seed{seed}-fold{fold}"
+
+
+def write_holdout_scores(
+    path: Path,
+    *,
+    examples: list[Any],
+    scores: list[float],
+    seed: int,
+    fold: int,
+    arm: str,
+    k_eval: int,
+) -> Path:
+    """Append per-task holdout scores so a λ-curve can be rebuilt without the model."""
+    if len(examples) != len(scores):
+        raise ValueError("examples and scores must be the same length")
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("a", encoding="utf-8") as handle:
+        for example, score in zip(examples, scores, strict=True):
+            handle.write(
+                json.dumps(
+                    {
+                        "instance_id": example.instance_id,
+                        "seed": seed,
+                        "fold": fold,
+                        "arm": arm,
+                        "k_eval": k_eval,
+                        "score": float(score),
+                        "m1_resolves": bool(example.m1_resolves),
+                        "m2_resolves": bool(example.m2_resolves),
+                    },
+                    sort_keys=True,
+                )
+                + "\n"
+            )
+    return target
+
+
+def require_lora_checkpoint(path: Path) -> Path:
+    target = Path(path)
+    adapter = target / "adapter"
+    score = target / "score.pt"
+    if not score.is_file():
+        raise RuntimeError(f"missing LoRA score head at {score}")
+    if not adapter.is_dir() or not any(adapter.iterdir()):
+        raise RuntimeError(f"missing LoRA adapter at {adapter}")
+    return target
 
 
 def _score_hold(
@@ -281,34 +349,54 @@ def _score_hold(
     *,
     config: TrajTrainConfig,
     seed: int,
+    fold: int,
     scripted: ScriptedBackend | None,
 ) -> dict[str, Any]:
     k = _eval_k(config)
     hold_router = eval_examples(hold, k=k)
+    checkpoint: str | None = None
     if scripted is not None:
         scores = scripted.predict_proba(
             [ex.text for ex in hold_router],
             instance_ids=[ex.instance_id for ex in hold_router],
         )
-        return dict(text_route_metrics(hold_router, scores))
-    from hecate.router.traj_lora import TrajLoraBackend
+    else:
+        from hecate.router.traj_lora import TrajLoraBackend
 
-    backend = TrajLoraBackend(
-        config.backbone,
-        max_tokens=config.max_tokens,
-        epochs=config.epochs,
-        batch_size=config.batch_size,
-        grad_accum=config.grad_accum,
-        learning_rate=config.learning_rate,
-        lora_r=config.lora_r,
-        lora_alpha=config.lora_alpha,
-        lora_dropout=config.lora_dropout,
-        qlora=config.qlora,
-        log_dir=config.output_dir,
+        backend = TrajLoraBackend(
+            config.backbone,
+            max_tokens=config.max_tokens,
+            epochs=config.epochs,
+            batch_size=config.batch_size,
+            grad_accum=config.grad_accum,
+            learning_rate=config.learning_rate,
+            lora_r=config.lora_r,
+            lora_alpha=config.lora_alpha,
+            lora_dropout=config.lora_dropout,
+            qlora=config.qlora,
+            log_dir=config.output_dir,
+        )
+        backend.fit(train, arm=config.arm, seed=seed, k_max=config.k_max)
+        ckpt = lora_checkpoint_dir(
+            config.output_dir, arm=config.arm, seed=seed, fold=fold
+        )
+        backend.save(ckpt)
+        require_lora_checkpoint(ckpt)
+        checkpoint = str(ckpt)
+        scores = backend.predict_proba([ex.text for ex in hold_router])
+    scores_path = write_holdout_scores(
+        holdout_scores_path(config.output_dir),
+        examples=hold_router,
+        scores=scores,
+        seed=seed,
+        fold=fold,
+        arm=config.arm,
+        k_eval=k,
     )
-    backend.fit(train, arm=config.arm, seed=seed, k_max=config.k_max)
-    scores = backend.predict_proba([ex.text for ex in hold_router])
-    return dict(text_route_metrics(hold_router, scores))
+    payload = dict(text_route_metrics(hold_router, scores))
+    payload["checkpoint"] = checkpoint
+    payload["scores_path"] = str(scores_path)
+    return payload
 
 
 def _cv_rows(
@@ -333,7 +421,12 @@ def _cv_rows(
         train_repos = sorted({ex.repo for ex in train})
         leak = sorted(set(hold_repos) & set(train_repos))
         metrics = _score_hold(
-            train, hold, config=config, seed=seed, scripted=scripted
+            train,
+            hold,
+            config=config,
+            seed=seed,
+            fold=fold,
+            scripted=scripted,
         )
         rows.append(
             {
@@ -374,6 +467,10 @@ def _write_readme(path: Path, payload: dict[str, Any]) -> Path:
         f"Trace provenance: `{payload.get('trace_provenance')}`.",
         "",
         f"K=3 truncation rate at {payload.get('max_tokens')} tokens: {trunc:.3f}.",
+        "",
+        "Artifacts: `checkpoints/` (LoRA adapter + score.pt) and "
+        "`holdout_scores.jsonl` (per-task P(Qwen resolves)). Both are required; "
+        "metrics-only is not a complete run.",
         "",
     ]
     if split_primary == "leave_repo":
@@ -470,6 +567,9 @@ def run_traj_train(
     scripted_scores: dict[str, float] | None = None,
     examples: list[TrajExample] | None = None,
 ) -> TrajTrainResult:
+    artifacts_base = resolve_artifacts_uri(
+        backend=backend, allow_unsynced=config.allow_unsynced
+    )
     examples, match_payload, counts = load_traj_examples(config, examples=examples)
     if not examples:
         raise ValueError("No trajectory examples after label match")
@@ -644,9 +744,28 @@ def run_traj_train(
             "label_match": match_payload,
             "gpu": gpu,
             "paper_deviation": PAPER_DEVIATION,
+            "checkpoints": [
+                row["checkpoint"]
+                for row in primary_rows
+                if row.get("checkpoint")
+            ],
+            "scores_path": str(holdout_scores_path(config.output_dir)),
         },
     )
     readme_path = _write_readme(config.output_dir / "README.md", results)
+    artifacts_uri = None
+    if artifacts_base:
+        planned = run_dest_uri(artifacts_base, config.run_id)
+        results["artifacts_uri"] = planned
+        results_path.write_text(
+            json.dumps(results, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        artifacts_uri = finalize_run_artifacts(
+            config.output_dir,
+            base_uri=artifacts_base,
+            run_id=config.run_id,
+        )
     return TrajTrainResult(
         run_id=config.run_id,
         output_dir=config.output_dir,
@@ -657,4 +776,5 @@ def run_traj_train(
         split_strategy=split_primary,
         truncation_rate=truncation_rate,
         arm=config.arm,
+        artifacts_uri=artifacts_uri,
     )

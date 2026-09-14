@@ -51,7 +51,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     from hecate.router.text_runner import load_text_train_config, run_text_train
+    from hecate.utils.env import load_env
 
+    load_env()
     config = load_text_train_config(
         config_path=args.config,
         csv_path=args.csv,
@@ -70,6 +72,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"results={result.results_path}")
     print(f"manifest={result.manifest_path}")
     print(f"readme={result.readme_path}")
+    if result.artifacts_uri:
+        print(f"artifacts={result.artifacts_uri}")
     return 0
 
 

@@ -40,6 +40,11 @@ from hecate.router.splits import (
     assign_leave_repo_out,
     repo_histogram,
 )
+from hecate.utils.artifacts import (
+    finalize_run_artifacts,
+    resolve_artifacts_uri,
+    run_dest_uri,
+)
 from hecate.utils.manifest import git_commit_sha, write_run_manifest
 
 
@@ -133,6 +138,7 @@ class TextTrainResult:
     mean_route_auc: float
     split_strategy: str
     truncation_rate: float
+    artifacts_uri: str | None
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -561,6 +567,7 @@ def run_text_train(
     examples: list[RouterExample] | None = None,
     metric_vectors: dict[str, list[float]] | None = None,
 ) -> TextTrainResult:
+    artifacts_base = resolve_artifacts_uri(backend=backend, allow_unsynced=False)
     if examples is None:
         rows = read_joined_text_csv(config.csv_path)
         examples, counts = build_examples_from_text(rows)
@@ -861,6 +868,19 @@ def run_text_train(
         },
     )
     readme_path = _write_readme(config.output_dir / "README.md", results)
+    artifacts_uri = None
+    if artifacts_base:
+        planned = run_dest_uri(artifacts_base, config.run_id)
+        results["artifacts_uri"] = planned
+        results_path.write_text(
+            json.dumps(results, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        artifacts_uri = finalize_run_artifacts(
+            config.output_dir,
+            base_uri=artifacts_base,
+            run_id=config.run_id,
+        )
     return TextTrainResult(
         run_id=config.run_id,
         output_dir=config.output_dir,
@@ -870,4 +890,5 @@ def run_text_train(
         mean_route_auc=float(mean_auc),
         split_strategy=split_primary,
         truncation_rate=truncation_rate,
+        artifacts_uri=artifacts_uri,
     )

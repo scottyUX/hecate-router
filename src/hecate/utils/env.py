@@ -8,6 +8,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 OPENROUTER_API_KEY_ENV = "OPENROUTER_API_KEY"
+HECATE_ARTIFACTS_URI_ENV = "HECATE_ARTIFACTS_URI"
+HECATE_REQUIRE_ARTIFACTS_ENV = "HECATE_REQUIRE_ARTIFACTS"
 
 
 def find_dotenv(start: Path | None = None) -> Path | None:

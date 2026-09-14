@@ -5,6 +5,10 @@ Usage:
     python scripts/run_train_traj.py --backend scripted --arm k3
     python scripts/run_train_traj.py --backend lora --arm k0 --split leave-repo
     python scripts/run_train_traj.py --backend lora --arm k3 --split leave-repo
+    python scripts/run_train_traj.py --backend lora --arm k1 --split leave-repo
+
+LoRA runs require HECATE_ARTIFACTS_URI (gs://... or file://...) so adapters
+are copied off the training disk. Pass --allow-unsynced only to debug locally.
 """
 
 from __future__ import annotations
@@ -28,7 +32,12 @@ def main(argv: list[str] | None = None) -> int:
         default="grouped",
     )
     parser.add_argument("--hold-repo", default="django/django")
-    parser.add_argument("--arm", choices=("k0", "k3"), default="k3")
+    parser.add_argument(
+        "--allow-unsynced",
+        action="store_true",
+        help="Permit --backend lora without HECATE_ARTIFACTS_URI. Weights may be lost.",
+    )
+    parser.add_argument("--arm", choices=("k0", "k1", "k3"), default="k3")
     parser.add_argument(
         "--backend",
         choices=("scripted", "lora"),
@@ -52,7 +61,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    from hecate.router.traj import TRAJ_ARMS
     from hecate.router.traj_runner import load_traj_train_config, run_traj_train
+    from hecate.utils.env import load_env
+
+    load_env()
+    if args.arm not in TRAJ_ARMS:
+        parser.error(f"unknown arm {args.arm!r}; expected {tuple(TRAJ_ARMS)}")
 
     seeds = None
     if args.seeds:
@@ -69,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
         provenance=args.provenance,
         seeds=seeds,
         hold_only=args.hold_only,
+        allow_unsynced=args.allow_unsynced,
     )
     result = run_traj_train(config, backend=args.backend)
     print(
@@ -79,6 +95,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"results={result.results_path}")
     print(f"manifest={result.manifest_path}")
     print(f"readme={result.readme_path}")
+    if result.artifacts_uri:
+        print(f"artifacts={result.artifacts_uri}")
     return 0
 
 

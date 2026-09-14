@@ -20,6 +20,34 @@ K_EVAL = 3
 SUBMIT_MARKERS = ("submit",)
 
 
+@dataclass(frozen=True)
+class ArmSpec:
+    """How an arm packs training prefixes and which K it evaluates at.
+
+    ``pack_last`` is inclusive: k0 packs K=0 only, k1 packs K=0..1, k3 packs
+    K=0..4 (capped by the caller ``k_max``). ``eval_k`` is None when the arm
+    uses ``config.k_eval`` (k3).
+    """
+
+    pack_last: int
+    eval_k: int | None = None
+
+
+TRAJ_ARMS: dict[str, ArmSpec] = {
+    "k0": ArmSpec(pack_last=0, eval_k=0),
+    "k1": ArmSpec(pack_last=1, eval_k=1),
+    "k3": ArmSpec(pack_last=K_MAX, eval_k=None),
+}
+
+
+def parse_arm(arm: str) -> tuple[str, ArmSpec]:
+    kind = (arm or "").strip().lower()
+    spec = TRAJ_ARMS.get(kind)
+    if spec is None:
+        raise TrajError(f"unknown arm {arm!r}; expected {tuple(TRAJ_ARMS)}")
+    return kind, spec
+
+
 class TrajError(ValueError):
     """Fail-closed trajectory parse or label-match failure."""
 
@@ -428,16 +456,15 @@ def train_rows_for_arm(
     arm: str,
     k_max: int = K_MAX,
 ) -> list[tuple[str, bool, str]]:
-    """(text, label, instance_id) rows. k0 is query-only; k3 packs K=0..k_max."""
-    kind = (arm or "").strip().lower()
+    """(text, label, instance_id) rows packed per ``TRAJ_ARMS``."""
+    _kind, spec = parse_arm(arm)
     rows: list[tuple[str, bool, str]] = []
     for ex in examples:
-        if kind == "k0":
-            rows.append((ex.prefix_at(0), ex.m1_resolves, ex.instance_id))
+        if not ex.prefixes:
+            if spec.pack_last == 0:
+                rows.append((ex.prefix_at(0), ex.m1_resolves, ex.instance_id))
             continue
-        if kind != "k3":
-            raise TrajError(f"unknown arm {arm!r}; expected k0 or k3")
-        last = min(k_max, len(ex.prefixes) - 1)
+        last = min(spec.pack_last, k_max, len(ex.prefixes) - 1)
         for k in range(0, last + 1):
             rows.append((ex.prefixes[k], ex.m1_resolves, ex.instance_id))
     return rows

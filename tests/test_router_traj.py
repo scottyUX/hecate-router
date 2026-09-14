@@ -9,7 +9,7 @@ import pytest
 import yaml
 
 from hecate.data.external_miniswe import JoinedLabel
-from hecate.router.dataset import WhitespaceTokenizer
+from hecate.router.dataset import RouterExample, WhitespaceTokenizer
 from hecate.router.splits import LEAVE_REPO
 from hecate.router.traj import (
     TrajError,
@@ -24,7 +24,14 @@ from hecate.router.traj import (
     train_rows_for_arm,
     truncation_report,
 )
-from hecate.router.traj_runner import load_traj_train_config, run_traj_train
+from hecate.router.traj_runner import (
+    holdout_scores_path,
+    load_traj_train_config,
+    lora_checkpoint_dir,
+    require_lora_checkpoint,
+    run_traj_train,
+    write_holdout_scores,
+)
 
 
 def _label(instance_id: str, *, small: bool, large: bool = True, repo: str | None = None) -> JoinedLabel:
@@ -287,10 +294,22 @@ def test_run_traj_train_leave_repo_scripted(tmp_path: Path) -> None:
     assert manifest["paper_deviation"].startswith("No 3-way")
     assert "K=0 is a separately trained" in result.readme_path.read_text(encoding="utf-8")
     assert result.split_strategy == "leave_repo"
+    scores_file = holdout_scores_path(tmp_path / "ldo")
+    assert scores_file.is_file()
+    score_rows = [
+        json.loads(line)
+        for line in scores_file.read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    assert {row["instance_id"] for row in score_rows} == set(scores)
+    assert manifest["scores_path"] == str(scores_file)
+    assert manifest["checkpoints"] == []
     for row in payload["primary_folds"]["scripted"]:
         if row["direction"] == "hold_django":
             assert row["hold_repos"] == ["django/django"]
             assert row["split"] == LEAVE_REPO
+            assert row["checkpoint"] is None
+            assert row["scores_path"] == str(scores_file)
 
 
 def test_run_traj_train_k0_grouped_scripted(tmp_path: Path) -> None:
@@ -324,6 +343,42 @@ def test_run_traj_train_k0_grouped_scripted(tmp_path: Path) -> None:
     assert payload["arm_key"] == "k0"
     assert "scripted" in payload["primary"]
     assert (tmp_path / "grp" / "truncation.json").is_file()
+    assert holdout_scores_path(tmp_path / "grp").is_file()
+
+
+def test_lora_checkpoint_is_required_on_disk(tmp_path: Path) -> None:
+    ckpt = lora_checkpoint_dir(tmp_path, arm="k3", seed=0, fold=0)
+    with pytest.raises(RuntimeError, match="missing LoRA score head"):
+        require_lora_checkpoint(ckpt)
+    ckpt.mkdir(parents=True)
+    (ckpt / "score.pt").write_bytes(b"x")
+    (ckpt / "adapter").mkdir()
+    with pytest.raises(RuntimeError, match="missing LoRA adapter"):
+        require_lora_checkpoint(ckpt)
+    (ckpt / "adapter" / "adapter_config.json").write_text("{}\n", encoding="utf-8")
+    assert require_lora_checkpoint(ckpt) == ckpt
+    examples = [
+        RouterExample(
+            instance_id="django/django-1",
+            repo="django/django",
+            text="q",
+            truncated=False,
+            m1_resolves=True,
+            m2_resolves=True,
+        )
+    ]
+    path = write_holdout_scores(
+        holdout_scores_path(tmp_path),
+        examples=examples,
+        scores=[0.42],
+        seed=0,
+        fold=0,
+        arm="k3",
+        k_eval=3,
+    )
+    row = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+    assert row["instance_id"] == "django/django-1"
+    assert row["score"] == pytest.approx(0.42)
 
 
 def test_parse_traj_dir_jsonl_and_duplicate_ids(tmp_path: Path) -> None:
