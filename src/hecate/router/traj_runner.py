@@ -23,11 +23,13 @@ from hecate.data.external_miniswe import (
 )
 from hecate.router.backends import ScriptedBackend
 from hecate.router.dataset import WhitespaceTokenizer
+from hecate.router.holdout import holdout_scores_path, write_holdout_scores
 from hecate.router.metrics import text_route_metrics
 from hecate.router.splits import (
     FoldAssignment,
     assign_grouped_repo_folds,
     assign_leave_repo_out,
+    assign_specialist_split,
     repo_histogram,
 )
 from hecate.router.traj import (
@@ -57,9 +59,12 @@ def _repo_root() -> Path:
 
 _SPLIT_GROUPED = "grouped"
 _SPLIT_LEAVE_REPO = "leave-repo"
+_SPLIT_SPECIALIST = "specialist"
 _DJANGO_REPO = "django/django"
 _DJANGO_HOLD_N = 231
 _DJANGO_REST_N = 269
+_DJANGO_SPECIALIST_TRAIN_N = 185
+_DJANGO_SPECIALIST_HOLD_N = 46
 _METRIC_KEYS = (
     "route_auc",
     "lift_vs_large_auc",
@@ -172,11 +177,14 @@ def load_traj_train_config(
         traj = root / traj
     seeds_raw = list(seeds) if seeds is not None else (data.get("seeds") or [0, 1, 2])
     split_strategy = (split or _SPLIT_GROUPED).strip()
-    if split_strategy not in {_SPLIT_GROUPED, _SPLIT_LEAVE_REPO}:
+    if split_strategy not in {_SPLIT_GROUPED, _SPLIT_LEAVE_REPO, _SPLIT_SPECIALIST}:
         raise ValueError(
-            f"unknown split {split_strategy!r}; expected {_SPLIT_GROUPED} or {_SPLIT_LEAVE_REPO}"
+            f"unknown split {split_strategy!r}; expected "
+            f"{_SPLIT_GROUPED}, {_SPLIT_LEAVE_REPO}, or {_SPLIT_SPECIALIST}"
         )
     held = (hold_repo or _DJANGO_REPO).strip()
+    if split_strategy in {_SPLIT_LEAVE_REPO, _SPLIT_SPECIALIST} and not held:
+        raise ValueError("--hold-repo must be set for leave-repo and specialist splits")
     kind, _spec = parse_arm(arm or "k3")
     return TrajTrainConfig(
         config_path=resolved,
@@ -288,48 +296,8 @@ def _eval_k(config: TrajTrainConfig) -> int:
     return spec.eval_k
 
 
-def holdout_scores_path(output_dir: Path) -> Path:
-    return Path(output_dir) / "holdout_scores.jsonl"
-
-
 def lora_checkpoint_dir(output_dir: Path, *, arm: str, seed: int, fold: int) -> Path:
     return Path(output_dir) / "checkpoints" / f"{arm}-seed{seed}-fold{fold}"
-
-
-def write_holdout_scores(
-    path: Path,
-    *,
-    examples: list[Any],
-    scores: list[float],
-    seed: int,
-    fold: int,
-    arm: str,
-    k_eval: int,
-) -> Path:
-    """Append per-task holdout scores so a λ-curve can be rebuilt without the model."""
-    if len(examples) != len(scores):
-        raise ValueError("examples and scores must be the same length")
-    target = Path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    with target.open("a", encoding="utf-8") as handle:
-        for example, score in zip(examples, scores, strict=True):
-            handle.write(
-                json.dumps(
-                    {
-                        "instance_id": example.instance_id,
-                        "seed": seed,
-                        "fold": fold,
-                        "arm": arm,
-                        "k_eval": k_eval,
-                        "score": float(score),
-                        "m1_resolves": bool(example.m1_resolves),
-                        "m2_resolves": bool(example.m2_resolves),
-                    },
-                    sort_keys=True,
-                )
-                + "\n"
-            )
-    return target
 
 
 def require_lora_checkpoint(path: Path) -> Path:
@@ -396,6 +364,19 @@ def _score_hold(
     payload = dict(text_route_metrics(hold_router, scores))
     payload["checkpoint"] = checkpoint
     payload["scores_path"] = str(scores_path)
+    informative = [
+        (ex, score)
+        for ex, score in zip(hold_router, scores, strict=True)
+        if ex.m1_resolves or ex.m2_resolves
+    ]
+    if informative:
+        inf_ex, inf_scores = zip(*informative, strict=True)
+        payload["informative_subset"] = {
+            "n": len(inf_ex),
+            **text_route_metrics(list(inf_ex), list(inf_scores)),
+        }
+    else:
+        payload["informative_subset"] = {"n": 0}
     return payload
 
 
@@ -411,7 +392,7 @@ def _cv_rows(
     rows: list[dict[str, Any]] = []
     k = _eval_k(config)
     for fold in range(assignment.n_folds):
-        if config.hold_only and fold != 0:
+        if (config.hold_only or assignment.strategy == "specialist") and fold != 0:
             continue
         train, hold = _fold_traj(examples, assignment, fold)
         if not train or not hold:
@@ -428,6 +409,13 @@ def _cv_rows(
             fold=fold,
             scripted=scripted,
         )
+        direction: str | None
+        if assignment.strategy == "specialist":
+            direction = "specialist"
+        elif hold_repo:
+            direction = _leave_direction(hold_repos, hold_repo)
+        else:
+            direction = None
         rows.append(
             {
                 "seed": seed,
@@ -435,9 +423,7 @@ def _cv_rows(
                 "arm": config.arm,
                 "k_eval": k,
                 "split": assignment.strategy,
-                "direction": (
-                    _leave_direction(hold_repos, hold_repo) if hold_repo else None
-                ),
+                "direction": direction,
                 "n_train": len(train),
                 "n_hold": len(hold),
                 "hold_repos": hold_repos,
@@ -488,6 +474,19 @@ def _write_readme(path: Path, payload: dict[str, Any]) -> Path:
                 f"{_fmt_mean_std(item.get('auroc'))}"
             )
         lines.append("")
+    elif split_primary == "specialist":
+        primary = payload.get("primary") or {}
+        block = primary.get("lora") or primary.get("scripted") or {}
+        lines.extend(
+            [
+                "## Specialist holdout (single 80/20, do not headline)",
+                "",
+                f"- Repo `{payload.get('hold_repo')}`",
+                f"- Route-AUC {_fmt_mean_std(block.get('route_auc'))}",
+                f"- AUROC {_fmt_mean_std(block.get('auroc'))}",
+                "",
+            ]
+        )
     else:
         primary = payload.get("primary") or {}
         block = primary.get("lora") or primary.get("scripted") or {}
@@ -573,9 +572,23 @@ def run_traj_train(
     examples, match_payload, counts = load_traj_examples(config, examples=examples)
     if not examples:
         raise ValueError("No trajectory examples after label match")
+    specialist = config.split_strategy == _SPLIT_SPECIALIST
+    leave_repo = config.split_strategy == _SPLIT_LEAVE_REPO
+    if specialist:
+        examples = [ex for ex in examples if ex.repo == config.hold_repo]
+        if not examples:
+            raise ValueError(
+                f"no trajectory examples remain for specialist repo {config.hold_repo!r}"
+            )
+        counts = dict(counts)
+        counts["n_examples"] = len(examples)
     router_for_hist = eval_examples(examples, k=_eval_k(config))
     histogram = repo_histogram(router_for_hist)
-    second_repo = second_holdout_repo(router_for_hist, config.hold_repo)
+    second_repo = (
+        None
+        if specialist
+        else second_holdout_repo(router_for_hist, config.hold_repo)
+    )
     trunc = truncation_report(
         examples,
         k=config.k_eval,
@@ -604,7 +617,6 @@ def run_traj_train(
 
     config.output_dir.mkdir(parents=True, exist_ok=True)
 
-    leave_repo = config.split_strategy == _SPLIT_LEAVE_REPO
     if leave_repo and config.hold_repo == _DJANGO_REPO and len(examples) == 500:
         n_hold = sum(1 for ex in examples if ex.repo == _DJANGO_REPO)
         n_rest = len(examples) - n_hold
@@ -620,6 +632,36 @@ def run_traj_train(
             assignment = assign_leave_repo_out(
                 router_for_hist, config.hold_repo, seed=seed
             )
+            primary_rows.extend(
+                _cv_rows(
+                    examples,
+                    assignment,
+                    config=config,
+                    seed=seed,
+                    scripted=scripted,
+                    hold_repo=config.hold_repo,
+                )
+            )
+            continue
+        if specialist:
+            assignment = assign_specialist_split(
+                router_for_hist, config.hold_repo, seed=seed
+            )
+            n_hold = sum(1 for fold in assignment.fold_of.values() if fold == 0)
+            n_train = sum(1 for fold in assignment.fold_of.values() if fold == 1)
+            if (
+                config.hold_repo == _DJANGO_REPO
+                and len(examples) == _DJANGO_HOLD_N
+                and (
+                    n_train != _DJANGO_SPECIALIST_TRAIN_N
+                    or n_hold != _DJANGO_SPECIALIST_HOLD_N
+                )
+            ):
+                raise ValueError(
+                    f"specialist django split expected "
+                    f"n_train={_DJANGO_SPECIALIST_TRAIN_N} n_hold={_DJANGO_SPECIALIST_HOLD_N}, "
+                    f"got {n_train}/{n_hold}"
+                )
             primary_rows.extend(
                 _cv_rows(
                     examples,
@@ -658,6 +700,13 @@ def run_traj_train(
             if config.hold_repo == _DJANGO_REPO
             else f"trajectory v3 {config.arm} leave-repo"
         )
+    elif specialist:
+        directions = {}
+        primary_summary = {head_name: _summarize(primary_rows)}
+        mean_auc = (primary_summary[head_name].get("route_auc") or {}).get("mean")
+        split_primary = "specialist"
+        n_folds_out = 1
+        arm_label = f"trajectory v3 {config.arm} specialist"
     else:
         directions = {}
         primary_summary = {head_name: _summarize(primary_rows)}
@@ -697,7 +746,7 @@ def run_traj_train(
         "repo_histogram": histogram,
         "second_holdout_repo": second_repo,
         "split_primary": split_primary,
-        "hold_repo": config.hold_repo if leave_repo else None,
+        "hold_repo": config.hold_repo if leave_repo or specialist else None,
         "seeds": list(config.seeds),
         "n_folds": n_folds_out,
         "primary": primary_summary,
@@ -731,7 +780,7 @@ def run_traj_train(
             "n_folds": n_folds_out,
             "seeds": list(config.seeds),
             "split_strategy": split_primary,
-            "hold_repo": config.hold_repo if leave_repo else None,
+            "hold_repo": config.hold_repo if leave_repo or specialist else None,
             "truncation_rate": truncation_rate,
             "k3_truncation_rate": truncation_rate,
             "mean_route_auc": mean_auc,

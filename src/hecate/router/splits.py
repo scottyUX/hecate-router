@@ -15,6 +15,7 @@ ROUND_ROBIN = "round_robin"
 GROUPED_REPO = "grouped_repo"
 LABEL_STRATIFIED = "label_stratified"
 LEAVE_REPO = "leave_repo"
+SPECIALIST = "specialist"
 
 
 @dataclass(frozen=True)
@@ -188,4 +189,54 @@ def assign_leave_repo_out(
     fold_of.update({iid: 1 for iid in out_repo})
     return FoldAssignment(
         seed=seed, strategy=LEAVE_REPO, n_folds=2, fold_of=fold_of
+    )
+
+
+def assign_specialist_split(
+    examples: list[RouterExample],
+    repo: str,
+    *,
+    hold_fraction: float = 0.2,
+    seed: int = 0,
+) -> FoldAssignment:
+    """Single-repo 80/20 split, label-stratified on ``m1_resolves``.
+
+    Fold 0 is the holdout; fold 1 is train. Other repos are ignored.
+    Instance ids are sorted inside each stratum, and strata are walked in
+    sorted key order, so the holdout is independent of caller list order.
+    """
+    hold_repo = (repo or "").strip()
+    if not hold_repo:
+        raise ValueError("specialist repo must be a non-empty string")
+    if not 0.0 < hold_fraction < 1.0:
+        raise ValueError(f"hold_fraction must be in (0, 1), got {hold_fraction}")
+    in_repo = [ex for ex in examples if ex.repo == hold_repo]
+    if not in_repo:
+        present = sorted({ex.repo for ex in examples})
+        raise ValueError(
+            f"specialist repo {hold_repo!r} is missing from examples; have {present}"
+        )
+    by_label: dict[bool, list[str]] = defaultdict(list)
+    for ex in in_repo:
+        by_label[ex.m1_resolves].append(ex.instance_id)
+    rng = random.Random(seed)
+    fold_of: dict[str, int] = {}
+    n_hold = 0
+    for key in sorted(by_label):
+        ids = sorted(by_label[key])
+        rng.shuffle(ids)
+        n_stratum_hold = int(len(ids) * hold_fraction + 0.5)
+        if n_stratum_hold >= len(ids) and len(ids) > 1:
+            n_stratum_hold = len(ids) - 1
+        for index, instance_id in enumerate(ids):
+            fold_of[instance_id] = 0 if index < n_stratum_hold else 1
+        n_hold += min(n_stratum_hold, len(ids))
+    n_train = len(fold_of) - n_hold
+    if n_hold == 0 or n_train == 0:
+        raise ValueError(
+            f"specialist split for {hold_repo!r} is empty "
+            f"(n_train={n_train}, n_hold={n_hold}, n={len(fold_of)})"
+        )
+    return FoldAssignment(
+        seed=seed, strategy=SPECIALIST, n_folds=2, fold_of=fold_of
     )

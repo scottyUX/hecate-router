@@ -19,9 +19,11 @@ from hecate.router.splits import (
     GROUPED_REPO,
     LABEL_STRATIFIED,
     LEAVE_REPO,
+    SPECIALIST,
     assign_grouped_repo_folds,
     assign_label_stratified_folds,
     assign_leave_repo_out,
+    assign_specialist_split,
     repo_histogram,
 )
 from hecate.router.text_runner import load_text_train_config, run_text_train
@@ -180,6 +182,198 @@ def test_leave_repo_out_is_exact_and_fails_closed() -> None:
     only_django = [ex for ex in examples if ex.repo == "django/django"]
     with pytest.raises(ValueError, match="covers every example"):
         assign_leave_repo_out(only_django, "django/django")
+
+
+def _django_label_mix(n_pos: int = 134, n_neg: int = 97) -> list[RouterExample]:
+    examples = [
+        _example(f"django-pos-{i:03d}", m1=True, m2=True, repo="django/django")
+        for i in range(n_pos)
+    ] + [
+        _example(f"django-neg-{i:03d}", m1=False, m2=True, repo="django/django")
+        for i in range(n_neg)
+    ]
+    examples += [
+        _example(f"sympy-{i}", m1=True, m2=True, repo="sympy/sympy") for i in range(5)
+    ]
+    return examples
+
+
+def test_specialist_split_pins_185_46_and_ignores_other_repos() -> None:
+    examples = _django_label_mix()
+    assignment = assign_specialist_split(examples, "django/django", seed=0)
+    assert assignment.strategy == SPECIALIST
+    assert assignment.n_folds == 2
+    n_hold = sum(1 for fold in assignment.fold_of.values() if fold == 0)
+    n_train = sum(1 for fold in assignment.fold_of.values() if fold == 1)
+    assert n_hold == 46
+    assert n_train == 185
+    assert len(assignment.fold_of) == 231
+    assert all(not iid.startswith("sympy-") for iid in assignment.fold_of)
+    hold_ids = [iid for iid, fold in assignment.fold_of.items() if fold == 0]
+    by_id = {ex.instance_id: ex for ex in examples}
+    hold_labels = {by_id[iid].m1_resolves for iid in hold_ids}
+    assert hold_labels == {True, False}
+    for seed in (0, 1, 2, 99):
+        other = assign_specialist_split(examples, "django/django", seed=seed)
+        n_hold_s = sum(1 for fold in other.fold_of.values() if fold == 0)
+        n_train_s = sum(1 for fold in other.fold_of.values() if fold == 1)
+        assert (n_train_s, n_hold_s) == (185, 46)
+
+
+def test_specialist_split_is_independent_of_caller_order() -> None:
+    examples = _django_label_mix()
+    base = assign_specialist_split(examples, "django/django", seed=0)
+    reversed_ids = assign_specialist_split(list(reversed(examples)), "django/django", seed=0)
+    pos_first = assign_specialist_split(
+        sorted(examples, key=lambda ex: (not ex.m1_resolves, ex.instance_id)),
+        "django/django",
+        seed=0,
+    )
+    neg_first = assign_specialist_split(
+        sorted(examples, key=lambda ex: (ex.m1_resolves, ex.instance_id)),
+        "django/django",
+        seed=0,
+    )
+    hold = {iid for iid, fold in base.fold_of.items() if fold == 0}
+    assert hold == {iid for iid, fold in reversed_ids.fold_of.items() if fold == 0}
+    assert hold == {iid for iid, fold in pos_first.fold_of.items() if fold == 0}
+    assert hold == {iid for iid, fold in neg_first.fold_of.items() if fold == 0}
+
+
+def test_specialist_split_fails_closed() -> None:
+    examples = _django_label_mix()
+    with pytest.raises(ValueError, match="missing"):
+        assign_specialist_split(examples, "missing/repo")
+    with pytest.raises(ValueError, match="non-empty"):
+        assign_specialist_split(examples, "  ")
+    only_django = [ex for ex in examples if ex.repo == "django/django"]
+    assignment = assign_specialist_split(only_django, "django/django", seed=0)
+    assert len(assignment.fold_of) == 231
+
+
+def test_run_text_train_specialist_writes_one_fold_and_scores(tmp_path: Path) -> None:
+    examples = []
+    scores: dict[str, float] = {}
+    for i in range(8):
+        iid = f"django/django-{i}"
+        examples.append(
+            _example(
+                iid,
+                m1=bool(i < 5),
+                m2=True,
+                repo="django/django",
+                text=f"text {iid}",
+            )
+        )
+        scores[iid] = 0.9 if i < 5 else 0.1
+    for i in range(4):
+        iid = f"sympy/sympy-{i}"
+        examples.append(
+            _example(iid, m1=False, m2=True, repo="sympy/sympy", text=f"text {iid}")
+        )
+        scores[iid] = 0.1
+    config = load_text_train_config(
+        csv_path=tmp_path / "unused.csv",
+        output_dir=tmp_path / "spec",
+        run_id="spec-text",
+        split="specialist",
+        hold_repo="django/django",
+        seeds=(0,),
+    )
+    result = run_text_train(
+        config, backend="scripted", scripted_scores=scores, examples=examples
+    )
+    payload = json.loads(result.results_path.read_text(encoding="utf-8"))
+    assert payload["split_primary"] == "specialist"
+    assert payload["n_folds"] == 1
+    assert payload["hold_repo"] == "django/django"
+    assert payload["n_examples"] == 8
+    folds = payload["primary_folds"]["scripted"]
+    assert len(folds) == 1
+    assert folds[0]["fold"] == 0
+    assert folds[0]["n_train"] + folds[0]["n_hold"] == 8
+    scores_path = tmp_path / "spec" / "holdout_scores.jsonl"
+    assert scores_path.is_file()
+    score_rows = [
+        json.loads(line)
+        for line in scores_path.read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    assert {row["instance_id"] for row in score_rows} <= {f"django/django-{i}" for i in range(8)}
+    assert all(not row["instance_id"].startswith("sympy") for row in score_rows)
+    assert "informative_subset" in folds[0]
+
+
+def test_run_text_train_specialist_holdout_scores_are_46_not_231(tmp_path: Path) -> None:
+    examples = _django_label_mix()
+    scores = {ex.instance_id: (0.9 if ex.m1_resolves else 0.1) for ex in examples}
+    config = load_text_train_config(
+        csv_path=tmp_path / "unused.csv",
+        output_dir=tmp_path / "spec-46",
+        run_id="spec-46",
+        split="specialist",
+        hold_repo="django/django",
+        seeds=(0,),
+    )
+    result = run_text_train(
+        config, backend="scripted", scripted_scores=scores, examples=examples
+    )
+    payload = json.loads(result.results_path.read_text(encoding="utf-8"))
+    folds = payload["primary_folds"]["scripted"]
+    assert payload["n_examples"] == 231
+    assert payload["n_folds"] == 1
+    assert len(folds) == 1
+    assert folds[0]["n_train"] == 185
+    assert folds[0]["n_hold"] == 46
+    score_rows = [
+        json.loads(line)
+        for line in (tmp_path / "spec-46" / "holdout_scores.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if line
+    ]
+    assert len(score_rows) == 46
+    assert len({row["instance_id"] for row in score_rows}) == 46
+    assert all(row["fold"] == 0 for row in score_rows)
+    assert {row["instance_id"] for row in score_rows}.isdisjoint(
+        {f"sympy-{i}" for i in range(5)}
+    )
+
+
+def test_run_text_train_specialist_holdout_scores_are_46_not_231(tmp_path: Path) -> None:
+    examples = _django_label_mix()
+    scores = {ex.instance_id: (0.9 if ex.m1_resolves else 0.1) for ex in examples}
+    config = load_text_train_config(
+        csv_path=tmp_path / "unused.csv",
+        output_dir=tmp_path / "spec-46",
+        run_id="spec-46",
+        split="specialist",
+        hold_repo="django/django",
+        seeds=(0,),
+    )
+    result = run_text_train(
+        config, backend="scripted", scripted_scores=scores, examples=examples
+    )
+    payload = json.loads(result.results_path.read_text(encoding="utf-8"))
+    folds = payload["primary_folds"]["scripted"]
+    assert payload["n_examples"] == 231
+    assert payload["n_folds"] == 1
+    assert len(folds) == 1
+    assert folds[0]["n_train"] == 185
+    assert folds[0]["n_hold"] == 46
+    score_rows = [
+        json.loads(line)
+        for line in (tmp_path / "spec-46" / "holdout_scores.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if line
+    ]
+    assert len(score_rows) == 46
+    assert len({row["instance_id"] for row in score_rows}) == 46
+    assert all(row["fold"] == 0 for row in score_rows)
+    assert {row["instance_id"] for row in score_rows}.isdisjoint(
+        {f"sympy-{i}" for i in range(5)}
+    )
 
 
 def test_run_text_train_leave_repo_writes_two_directions(tmp_path: Path) -> None:

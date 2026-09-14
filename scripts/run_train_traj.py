@@ -5,7 +5,7 @@ Usage:
     python scripts/run_train_traj.py --backend scripted --arm k3
     python scripts/run_train_traj.py --backend lora --arm k0 --split leave-repo
     python scripts/run_train_traj.py --backend lora --arm k3 --split leave-repo
-    python scripts/run_train_traj.py --backend lora --arm k1 --split leave-repo
+    python scripts/run_train_traj.py --backend lora --arm k1 --split specialist
 
 LoRA runs require HECATE_ARTIFACTS_URI (gs://... or file://...) so adapters
 are copied off the training disk. Pass --allow-unsynced only to debug locally.
@@ -28,10 +28,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-id", default=None)
     parser.add_argument(
         "--split",
-        choices=("grouped", "leave-repo"),
+        choices=("grouped", "leave-repo", "specialist"),
         default="grouped",
+        help="grouped = 5-fold pack-by-repo. leave-repo = hold --hold-repo then reverse. "
+        "specialist = train and test on --hold-repo (80/20, fold 0 holdout).",
     )
-    parser.add_argument("--hold-repo", default="django/django")
+    parser.add_argument(
+        "--hold-repo",
+        default="django/django",
+        help="leave-repo: repo to hold out. specialist: repo to train AND test on.",
+    )
     parser.add_argument(
         "--allow-unsynced",
         action="store_true",

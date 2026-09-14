@@ -25,6 +25,7 @@ from hecate.router.dataset import (
     WhitespaceTokenizer,
     build_examples_from_text,
 )
+from hecate.router.holdout import holdout_scores_path, write_holdout_scores
 from hecate.router.metrics import text_route_metrics
 from hecate.router.struct_metrics import (
     FEATURE_ARMS,
@@ -38,6 +39,7 @@ from hecate.router.splits import (
     assign_grouped_repo_folds,
     assign_label_stratified_folds,
     assign_leave_repo_out,
+    assign_specialist_split,
     repo_histogram,
 )
 from hecate.utils.artifacts import (
@@ -56,9 +58,12 @@ _BALANCE_LOW = 0.40
 _BALANCE_HIGH = 0.60
 _SPLIT_GROUPED = "grouped"
 _SPLIT_LEAVE_REPO = "leave-repo"
+_SPLIT_SPECIALIST = "specialist"
 _DJANGO_REPO = "django/django"
 _DJANGO_HOLD_N = 231
 _DJANGO_REST_N = 269
+_DJANGO_SPECIALIST_TRAIN_N = 185
+_DJANGO_SPECIALIST_HOLD_N = 46
 _METRIC_KEYS = (
     "route_auc",
     "lift_vs_large_auc",
@@ -158,6 +163,7 @@ def load_text_train_config(
     split: str = _SPLIT_GROUPED,
     hold_repo: str = _DJANGO_REPO,
     features: str = "text",
+    seeds: tuple[int, ...] | None = None,
 ) -> TextTrainConfig:
     root = _repo_root()
     resolved = (
@@ -178,16 +184,17 @@ def load_text_train_config(
     )
     if not csv.is_absolute():
         csv = root / csv
-    seeds_raw = data.get("seeds") or [0, 1, 2]
+    seeds_raw = list(seeds) if seeds is not None else (data.get("seeds") or [0, 1, 2])
     heads_raw = data.get("heads") or ["logreg", "mlp"]
     split_strategy = (split or _SPLIT_GROUPED).strip()
-    if split_strategy not in {_SPLIT_GROUPED, _SPLIT_LEAVE_REPO}:
+    if split_strategy not in {_SPLIT_GROUPED, _SPLIT_LEAVE_REPO, _SPLIT_SPECIALIST}:
         raise ValueError(
-            f"unknown split {split_strategy!r}; expected {_SPLIT_GROUPED} or {_SPLIT_LEAVE_REPO}"
+            f"unknown split {split_strategy!r}; expected "
+            f"{_SPLIT_GROUPED}, {_SPLIT_LEAVE_REPO}, or {_SPLIT_SPECIALIST}"
         )
     held = (hold_repo or _DJANGO_REPO).strip()
-    if split_strategy == _SPLIT_LEAVE_REPO and not held:
-        raise ValueError("--hold-repo must be set for leave-repo split")
+    if split_strategy in {_SPLIT_LEAVE_REPO, _SPLIT_SPECIALIST} and not held:
+        raise ValueError("--hold-repo must be set for leave-repo and specialist splits")
     feature_arm = (features or "text").strip()
     if feature_arm not in FEATURE_ARMS:
         raise ValueError(f"unknown features {feature_arm!r}; expected {FEATURE_ARMS}")
@@ -217,6 +224,7 @@ def load_text_train_config(
             "split": split_strategy,
             "hold_repo": held,
             "features": feature_arm,
+            "seeds": [int(s) for s in seeds_raw],
         },
     )
 
@@ -301,7 +309,9 @@ def _scripted_fold_metrics(
         [ex.text for ex in hold],
         instance_ids=[ex.instance_id for ex in hold],
     )
-    return dict(text_route_metrics(hold, scores))
+    payload = dict(text_route_metrics(hold, scores))
+    payload["holdout_scores"] = scores
+    return payload
 
 
 def _head_fold_metrics(
@@ -359,6 +369,7 @@ def _head_fold_metrics(
     payload["train_pos_rate"] = _pos_rate(train)
     payload["hold_pos_rate"] = _pos_rate(hold)
     payload["in_dim"] = len(x_train[0])
+    payload["holdout_scores"] = scores
     return payload
 
 
@@ -376,6 +387,8 @@ def _cv_rows(
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for fold in range(assignment.n_folds):
+        if assignment.strategy == "specialist" and fold != 0:
+            continue
         train, hold = _fold_examples(examples, assignment, fold)
         if not train or not hold:
             continue
@@ -400,15 +413,43 @@ def _cv_rows(
                 seed=seed,
                 metric_vectors=metric_vectors,
             )
+        scores = metrics.pop("holdout_scores", None)
+        if scores is not None and head in {"scripted", "logreg"}:
+            write_holdout_scores(
+                holdout_scores_path(config.output_dir),
+                examples=hold,
+                scores=scores,
+                seed=seed,
+                fold=fold,
+                arm=head,
+                k_eval=0,
+            )
+            informative = [
+                (ex, score)
+                for ex, score in zip(hold, scores, strict=True)
+                if ex.m1_resolves or ex.m2_resolves
+            ]
+            if informative:
+                inf_ex, inf_scores = zip(*informative, strict=True)
+                metrics["informative_subset"] = {
+                    "n": len(inf_ex),
+                    **text_route_metrics(list(inf_ex), list(inf_scores)),
+                }
+            else:
+                metrics["informative_subset"] = {"n": 0}
+        if assignment.strategy == "specialist":
+            direction: str | None = "specialist"
+        elif hold_repo:
+            direction = _leave_direction(hold_repos, hold_repo)
+        else:
+            direction = None
         rows.append(
             {
                 "seed": seed,
                 "fold": fold,
                 "head": head,
                 "split": assignment.strategy,
-                "direction": (
-                    _leave_direction(hold_repos, hold_repo) if hold_repo else None
-                ),
+                "direction": direction,
                 "n_train": len(train),
                 "n_hold": len(hold),
                 "hold_repos": hold_repos,
@@ -497,6 +538,23 @@ def _write_readme(path: Path, payload: dict[str, Any]) -> Path:
         path.write_text("\n".join(lines), encoding="utf-8")
         return path
 
+    if split_primary == "specialist":
+        grouped = payload.get("primary", {})
+        logreg = grouped.get("logreg") or grouped.get("scripted") or {}
+        hold_repo = payload.get("hold_repo") or _DJANGO_REPO
+        lines = [
+            "# Text-only router v1 — specialist holdout",
+            "",
+            f"Train and test on `{hold_repo}` (80/20, fold 0 holdout). "
+            "Do not headline a single-seed number.",
+            "",
+            f"- Route-AUC {_fmt_mean_std(logreg.get('route_auc'))}",
+            f"- AUROC {_fmt_mean_std(logreg.get('auroc'))}",
+            "",
+        ]
+        path.write_text("\n".join(lines), encoding="utf-8")
+        return path
+
     grouped = payload.get("primary", {})
     logreg = grouped.get("logreg") or grouped.get("scripted") or {}
     mlp = grouped.get("mlp") or {}
@@ -580,6 +638,16 @@ def run_text_train(
         }
     if not examples:
         raise ValueError("No router examples after loading the text join")
+    specialist = config.split_strategy == _SPLIT_SPECIALIST
+    if specialist:
+        examples = [ex for ex in examples if ex.repo == config.hold_repo]
+        if not examples:
+            raise ValueError(
+                f"no text examples remain for specialist repo {config.hold_repo!r}"
+            )
+        counts = dict(counts)
+        counts["n_examples"] = len(examples)
+        counts["truncated"] = sum(1 for ex in examples if ex.truncated)
 
     histogram = repo_histogram(examples)
     comp = complementarity(
@@ -696,6 +764,40 @@ def run_text_train(
                     )
                 )
             continue
+        if specialist:
+            assignment = assign_specialist_split(
+                examples, config.hold_repo, seed=seed
+            )
+            n_hold = sum(1 for fold in assignment.fold_of.values() if fold == 0)
+            n_train = sum(1 for fold in assignment.fold_of.values() if fold == 1)
+            if (
+                config.hold_repo == _DJANGO_REPO
+                and len(examples) == _DJANGO_HOLD_N
+                and (
+                    n_train != _DJANGO_SPECIALIST_TRAIN_N
+                    or n_hold != _DJANGO_SPECIALIST_HOLD_N
+                )
+            ):
+                raise ValueError(
+                    f"specialist django split expected "
+                    f"n_train={_DJANGO_SPECIALIST_TRAIN_N} n_hold={_DJANGO_SPECIALIST_HOLD_N}, "
+                    f"got {n_train}/{n_hold}"
+                )
+            for head in heads:
+                primary_rows[head].extend(
+                    _cv_rows(
+                        examples,
+                        assignment,
+                        config=config,
+                        seed=seed,
+                        head=head,
+                        embeddings=embeddings,
+                        scripted=scripted,
+                        hold_repo=config.hold_repo,
+                        metric_vectors=metric_vectors,
+                    )
+                )
+            continue
         grouped = assign_grouped_repo_folds(
             examples, n_folds=config.n_folds, seed=seed
         )
@@ -729,7 +831,12 @@ def run_text_train(
             )
 
     checkpoints: dict[str, str] = {}
-    if embeddings is not None and not leave_repo and config.features == "text":
+    if (
+        embeddings is not None
+        and not leave_repo
+        and not specialist
+        and config.features == "text"
+    ):
         import torch
 
         for kind in config.heads:
@@ -787,6 +894,20 @@ def run_text_train(
         split_primary = "leave_repo"
         split_sensitivity = None
         n_folds_out = 2
+    elif specialist:
+        primary_summary = {head: _summarize(rows) for head, rows in primary_rows.items()}
+        sensitivity_summary = {}
+        headline = primary_summary.get("logreg") or primary_summary.get("scripted") or {}
+        mean_auc = headline.get("route_auc", {}).get("mean")
+        if config.features == "fusion":
+            arm = "oracle-metrics fusion v2 specialist"
+        elif config.features == "metrics":
+            arm = "oracle-metrics only v2 specialist"
+        else:
+            arm = "text-only v1 specialist"
+        split_primary = "specialist"
+        split_sensitivity = None
+        n_folds_out = 1
     else:
         primary_summary = {head: _summarize(rows) for head, rows in primary_rows.items()}
         sensitivity_summary = {
@@ -824,7 +945,7 @@ def run_text_train(
         "repo_histogram": histogram,
         "split_primary": split_primary,
         "split_sensitivity": split_sensitivity,
-        "hold_repo": config.hold_repo if leave_repo else None,
+        "hold_repo": config.hold_repo if leave_repo or specialist else None,
         "seeds": list(config.seeds),
         "n_folds": n_folds_out,
         "primary": primary_summary,
@@ -835,6 +956,7 @@ def run_text_train(
         "checkpoints": checkpoints,
         "backbone": config.backbone,
         "freeze_encoder": config.freeze_encoder,
+        "scores_path": str(holdout_scores_path(config.output_dir)),
     }
     results_path = config.output_dir / "results.json"
     results_path.write_text(
@@ -856,7 +978,7 @@ def run_text_train(
             "n_folds": n_folds_out,
             "seeds": list(config.seeds),
             "split_strategy": split_primary,
-            "hold_repo": config.hold_repo if leave_repo else None,
+            "hold_repo": config.hold_repo if leave_repo or specialist else None,
             "truncation_rate": truncation_rate,
             "mean_route_auc": mean_auc,
             "headroom_pp": HEADROOM_PP,
@@ -865,6 +987,7 @@ def run_text_train(
             "arm": arm,
             "features": config.features,
             "oracle_leak": oracle_leak_for(config.features),
+            "scores_path": str(holdout_scores_path(config.output_dir)),
         },
     )
     readme_path = _write_readme(config.output_dir / "README.md", results)

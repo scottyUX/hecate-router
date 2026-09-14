@@ -27,6 +27,7 @@ from hecate.router.splits import (
     assign_grouped_repo_folds,
     assign_label_stratified_folds,
     assign_leave_repo_out,
+    assign_specialist_split,
 )
 from hecate.router.text_runner import (
     TextTrainConfig,
@@ -76,6 +77,7 @@ __all__ = [
     "assign_grouped_repo_folds",
     "assign_label_stratified_folds",
     "assign_leave_repo_out",
+    "assign_specialist_split",
     "build_examples",
     "build_examples_from_text",
     "load_text_train_config",

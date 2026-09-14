@@ -211,11 +211,14 @@ def test_build_examples_and_k0_vs_packed_k3_rows() -> None:
     assert report.n_matched == 1
     assert counts["n_examples"] == 1
     k0 = train_rows_for_arm(examples, arm="k0")
+    k1 = train_rows_for_arm(examples, arm="k1")
     k3 = train_rows_for_arm(examples, arm="k3")
     assert len(k0) == 1
     assert k0[0][0] == "issue"
+    assert len(k1) == 2
     assert len(k3) == 4
     assert eval_examples(examples, k=0)[0].text == "issue"
+    assert "Turn 1" in eval_examples(examples, k=1)[0].text
     assert "Turn 3" in eval_examples(examples, k=3)[0].text
 
 
@@ -399,3 +402,166 @@ def test_parse_traj_dir_jsonl_and_duplicate_ids(tmp_path: Path) -> None:
     (stub / "full.jsonl").write_text(unique.read_text(encoding="utf-8"), encoding="utf-8")
     (stub / "provenance.json").write_text('{"provenance": "hf"}\n', encoding="utf-8")
     assert set(parse_traj_dir(stub)) == {"django__django-1"}
+
+
+def test_eval_k_is_1_for_k1_arm(tmp_path: Path) -> None:
+    from hecate.router.traj_runner import _eval_k
+
+    yaml_path = tmp_path / "router_traj.yaml"
+    yaml_path.write_text("backbone: x\n", encoding="utf-8")
+    config = load_traj_train_config(
+        config_path=yaml_path,
+        csv_path=tmp_path / "unused.csv",
+        traj_dir=tmp_path / "trajs",
+        output_dir=tmp_path / "k1",
+        arm="k1",
+    )
+    assert _eval_k(config) == 1
+
+
+def test_run_traj_train_specialist_one_fold(tmp_path: Path) -> None:
+    examples: list[TrajExample] = []
+    scores: dict[str, float] = {}
+    for i in range(8):
+        iid = f"django/django-{i}"
+        examples.append(
+            _example(
+                iid,
+                repo="django/django",
+                m1=bool(i < 5),
+                prefixes=(f"q {iid}", f"t {iid}"),
+            )
+        )
+        scores[iid] = 0.9 if i < 5 else 0.1
+    for i in range(4):
+        iid = f"sympy/sympy-{i}"
+        examples.append(
+            _example(
+                iid,
+                repo="sympy/sympy",
+                m1=False,
+                prefixes=(f"q {iid}", f"t {iid}"),
+            )
+        )
+        scores[iid] = 0.1
+    yaml_path = tmp_path / "router_traj.yaml"
+    yaml_path.write_text(
+        yaml.safe_dump({"backbone": "x", "seeds": [0]}),
+        encoding="utf-8",
+    )
+    config = load_traj_train_config(
+        config_path=yaml_path,
+        csv_path=tmp_path / "unused.csv",
+        traj_dir=tmp_path / "trajs",
+        output_dir=tmp_path / "spec-traj",
+        run_id="spec-traj",
+        split="specialist",
+        hold_repo="django/django",
+        arm="k1",
+        seeds=(0,),
+    )
+    result = run_traj_train(
+        config, backend="scripted", scripted_scores=scores, examples=examples
+    )
+    payload = json.loads(result.results_path.read_text(encoding="utf-8"))
+    assert payload["split_primary"] == "specialist"
+    assert payload["n_folds"] == 1
+    assert payload["k_eval"] == 1
+    assert payload["hold_repo"] == "django/django"
+    assert payload["n_examples"] == 8
+    assert payload["second_holdout_repo"] is None
+    folds = payload["primary_folds"]["scripted"]
+    assert len(folds) == 1
+    assert folds[0]["fold"] == 0
+    assert folds[0]["n_train"] + folds[0]["n_hold"] == 8
+    scores_file = holdout_scores_path(tmp_path / "spec-traj")
+    assert scores_file.is_file()
+    assert "informative_subset" in folds[0]
+
+
+def test_specialist_holdout_ids_match_across_text_and_traj_runners(tmp_path: Path) -> None:
+    from hecate.router.dataset import RouterExample
+    from hecate.router.text_runner import load_text_train_config, run_text_train
+
+    n_pos, n_neg = 10, 8
+    text_examples: list[RouterExample] = []
+    traj_examples: list[TrajExample] = []
+    scores: dict[str, float] = {}
+    for i in range(n_pos):
+        iid = f"django/django-pos-{i:02d}"
+        text_examples.append(
+            RouterExample(
+                instance_id=iid,
+                repo="django/django",
+                text=f"text {iid}",
+                truncated=False,
+                m1_resolves=True,
+                m2_resolves=True,
+            )
+        )
+        traj_examples.append(
+            _example(iid, repo="django/django", m1=True, prefixes=(f"q {iid}",))
+        )
+        scores[iid] = 0.9
+    for i in range(n_neg):
+        iid = f"django/django-neg-{i:02d}"
+        text_examples.append(
+            RouterExample(
+                instance_id=iid,
+                repo="django/django",
+                text=f"text {iid}",
+                truncated=False,
+                m1_resolves=False,
+                m2_resolves=True,
+            )
+        )
+        traj_examples.append(
+            _example(iid, repo="django/django", m1=False, prefixes=(f"q {iid}",))
+        )
+        scores[iid] = 0.1
+
+    text_config = load_text_train_config(
+        csv_path=tmp_path / "unused.csv",
+        output_dir=tmp_path / "cross-text",
+        run_id="cross-text",
+        split="specialist",
+        hold_repo="django/django",
+        seeds=(0,),
+    )
+    run_text_train(
+        text_config,
+        backend="scripted",
+        scripted_scores=scores,
+        examples=list(reversed(text_examples)),
+    )
+    yaml_path = tmp_path / "router_traj.yaml"
+    yaml_path.write_text("backbone: x\n", encoding="utf-8")
+    traj_config = load_traj_train_config(
+        config_path=yaml_path,
+        csv_path=tmp_path / "unused.csv",
+        traj_dir=tmp_path / "trajs",
+        output_dir=tmp_path / "cross-traj",
+        run_id="cross-traj",
+        split="specialist",
+        hold_repo="django/django",
+        arm="k0",
+        seeds=(0,),
+    )
+    run_traj_train(
+        traj_config,
+        backend="scripted",
+        scripted_scores=scores,
+        examples=traj_examples,
+    )
+
+    def _ids(path: Path) -> set[str]:
+        return {
+            json.loads(line)["instance_id"]
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line
+        }
+
+    text_ids = _ids(tmp_path / "cross-text" / "holdout_scores.jsonl")
+    traj_ids = _ids(tmp_path / "cross-traj" / "holdout_scores.jsonl")
+    assert text_ids == traj_ids
+    assert text_ids
