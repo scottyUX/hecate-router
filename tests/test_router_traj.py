@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -12,15 +13,24 @@ from hecate.data.external_miniswe import JoinedLabel
 from hecate.router.dataset import RouterExample, WhitespaceTokenizer
 from hecate.router.splits import LEAVE_REPO
 from hecate.router.traj import (
+    EARLY_STOP_METRIC,
+    EARLY_STOP_MIN_DELTA,
+    EARLY_STOP_PATIENCE,
+    FIT_VAL_N,
+    GRAD_CLIP_NORM,
     TrajError,
     TrajExample,
+    binary_brier,
+    binary_log_loss,
     build_traj_examples,
+    carve_fit_val,
     eval_examples,
     format_prefix,
     match_traj_labels,
     packed_prefixes,
     parse_trajectory,
     second_holdout_repo,
+    shuffle_train_rows,
     train_rows_for_arm,
     truncation_report,
 )
@@ -565,3 +575,71 @@ def test_specialist_holdout_ids_match_across_text_and_traj_runners(tmp_path: Pat
     traj_ids = _ids(tmp_path / "cross-traj" / "holdout_scores.jsonl")
     assert text_ids == traj_ids
     assert text_ids
+
+
+def test_carve_fit_val_is_seeded_stratified_and_skips_tiny_pools() -> None:
+    pool = [
+        _example(
+            f"django/django-{i}",
+            repo="django/django",
+            m1=bool(i < 108),
+            prefixes=(f"q {i}", f"t {i}"),
+        )
+        for i in range(185)
+    ]
+    fit, val = carve_fit_val(pool, n_val=20, seed=0)
+    assert len(val) == 20
+    assert len(fit) == 165
+    assert {ex.instance_id for ex in fit}.isdisjoint({ex.instance_id for ex in val})
+    assert sum(ex.m1_resolves for ex in val) == 12
+    assert sum(not ex.m1_resolves for ex in val) == 8
+    again, _ = carve_fit_val(pool, n_val=20, seed=0)
+    assert [ex.instance_id for ex in again] == [ex.instance_id for ex in fit]
+    other, other_val = carve_fit_val(pool, n_val=20, seed=1)
+    assert [ex.instance_id for ex in other_val] != [ex.instance_id for ex in val]
+    tiny = pool[:10]
+    all_fit, empty = carve_fit_val(tiny, n_val=20, seed=0)
+    assert empty == []
+    assert len(all_fit) == 10
+
+
+def test_shuffle_train_rows_changes_order_across_epochs() -> None:
+    rows = [(f"t{i}", bool(i % 2), f"id-{i}") for i in range(12)]
+    e0 = shuffle_train_rows(rows, seed=0, epoch=0)
+    e1 = shuffle_train_rows(rows, seed=0, epoch=1)
+    assert e0 != rows or e1 != rows
+    assert e0 != e1
+    assert shuffle_train_rows(rows, seed=0, epoch=0) == e0
+    assert sorted(e0) == sorted(rows)
+
+
+def test_binary_log_loss_and_brier() -> None:
+    labels = [True, False]
+    assert binary_brier([1.0, 0.0], labels) == 0.0
+    assert abs(binary_brier([0.99945, 0.99945], labels) - 0.5) < 0.01
+    ce = binary_log_loss([0.5, 0.5], labels)
+    assert abs(ce - math.log(2)) < 1e-9
+
+
+def test_early_stop_rule_is_precommitted(tmp_path: Path) -> None:
+    yaml_path = tmp_path / "router_traj.yaml"
+    yaml_path.write_text("backbone: x\n", encoding="utf-8")
+    config = load_traj_train_config(
+        config_path=yaml_path,
+        csv_path=tmp_path / "unused.csv",
+        traj_dir=tmp_path / "trajs",
+        output_dir=tmp_path / "es",
+        arm="k0",
+    )
+    assert FIT_VAL_N == 20
+    assert GRAD_CLIP_NORM == 1.0
+    assert EARLY_STOP_METRIC == "val_ce"
+    assert EARLY_STOP_PATIENCE == 2
+    assert EARLY_STOP_MIN_DELTA == 0.01
+    assert config.val_size == 20
+    assert config.grad_clip_norm == 1.0
+    assert config.early_stopping is False
+    assert config.early_stopping_metric == "val_ce"
+    assert config.early_stopping_patience == 2
+    assert config.early_stopping_min_delta == 0.01
+

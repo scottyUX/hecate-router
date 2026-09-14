@@ -12,6 +12,14 @@ lora_r: 32
 lora_alpha: 64
 lora_dropout: 0.05
 qlora: true
+val_size: 20
+grad_clip_norm: 1.0
+# Pre-registered §6.2 rule. Off until a patched run's val CE dives; then
+# apply identically to B/C/D. Metric=val_ce, patience=2, min_delta=0.01.
+early_stopping: false
+early_stopping_metric: val_ce
+early_stopping_patience: 2
+early_stopping_min_delta: 0.01
 k_eval: 3
 k_max: 4
 csv_path: data/external/qwen3coder_vs_claude4opus_with_text.csv

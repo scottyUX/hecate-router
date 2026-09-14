@@ -411,6 +411,23 @@ v3's 269 cross-repo tasks, and v3 already showed overfitting signatures late in 
 fixed 5-epoch schedule. Watch and record validation loss. If early stopping is
 used it is a documented deviation from the v3 recipe and reported as one.
 
+The first patched LoRA loop (shuffle + monitor slice + grad clip + zero-init
+score head) does **not** invoke early stopping. The trigger is pre-registered
+here before any patched run, and stays off (`early_stopping: false` in
+`configs/router_traj.yaml`) unless a patched B/D validation curve still dives.
+If it is turned on, it applies identically to arms B, C, and D:
+
+  metric       mean validation cross-entropy (`val_ce`) on the monitor slice
+  patience     2 epochs
+  min_delta    0.01
+  slice        20 tasks, label-stratified on `m1_resolves`, seeded, carved from
+               the 185-task train pool — never from the 46-task holdout
+  keep         best checkpoint by `val_ce` (lower is better)
+
+`n_train` in `results.json` is the count that receives gradients (~165), not
+the 185-task split size. The split pin remains 185/46. The 46-task holdout is
+never used to choose a checkpoint.
+
 6.3 Low headroom. With small-only at 9 tasks, django admits almost no accuracy
 lift over always-large. A router can look poor on accuracy while being valuable on
 cost. Report cost-side metrics (§4) rather than treating Route-AUC as the whole

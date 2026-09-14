@@ -33,6 +33,11 @@ from hecate.router.splits import (
     repo_histogram,
 )
 from hecate.router.traj import (
+    EARLY_STOP_METRIC,
+    EARLY_STOP_MIN_DELTA,
+    EARLY_STOP_PATIENCE,
+    FIT_VAL_N,
+    GRAD_CLIP_NORM,
     K_EVAL,
     K_MAX,
     TRAJ_ARMS,
@@ -102,6 +107,12 @@ class TrajTrainConfig:
     lora_alpha: int
     lora_dropout: float
     qlora: bool
+    val_size: int
+    grad_clip_norm: float
+    early_stopping: bool
+    early_stopping_metric: str
+    early_stopping_patience: int
+    early_stopping_min_delta: float
     arm: str
     k_eval: int
     k_max: int
@@ -204,6 +215,22 @@ def load_traj_train_config(
         lora_alpha=int(data.get("lora_alpha") or 64),
         lora_dropout=float(data.get("lora_dropout") or 0.05),
         qlora=bool(data.get("qlora", True)),
+        val_size=int(data.get("val_size") if data.get("val_size") is not None else FIT_VAL_N),
+        grad_clip_norm=float(
+            data.get("grad_clip_norm") if data.get("grad_clip_norm") is not None else GRAD_CLIP_NORM
+        ),
+        early_stopping=bool(data.get("early_stopping", False)),
+        early_stopping_metric=str(data.get("early_stopping_metric") or EARLY_STOP_METRIC),
+        early_stopping_patience=int(
+            data.get("early_stopping_patience")
+            if data.get("early_stopping_patience") is not None
+            else EARLY_STOP_PATIENCE
+        ),
+        early_stopping_min_delta=float(
+            data.get("early_stopping_min_delta")
+            if data.get("early_stopping_min_delta") is not None
+            else EARLY_STOP_MIN_DELTA
+        ),
         arm=kind,
         k_eval=int(data.get("k_eval") or K_EVAL),
         k_max=int(data.get("k_max") or K_MAX),
@@ -323,6 +350,8 @@ def _score_hold(
     k = _eval_k(config)
     hold_router = eval_examples(hold, k=k)
     checkpoint: str | None = None
+    n_train_fit = len(train)
+    n_val_fit = 0
     if scripted is not None:
         scores = scripted.predict_proba(
             [ex.text for ex in hold_router],
@@ -343,6 +372,12 @@ def _score_hold(
             lora_dropout=config.lora_dropout,
             qlora=config.qlora,
             log_dir=config.output_dir,
+            val_size=config.val_size,
+            grad_clip_norm=config.grad_clip_norm,
+            early_stopping=config.early_stopping,
+            early_stopping_metric=config.early_stopping_metric,
+            early_stopping_patience=config.early_stopping_patience,
+            early_stopping_min_delta=config.early_stopping_min_delta,
         )
         backend.fit(train, arm=config.arm, seed=seed, k_max=config.k_max)
         ckpt = lora_checkpoint_dir(
@@ -352,6 +387,8 @@ def _score_hold(
         require_lora_checkpoint(ckpt)
         checkpoint = str(ckpt)
         scores = backend.predict_proba([ex.text for ex in hold_router])
+        n_train_fit = backend.n_train
+        n_val_fit = backend.n_val
     scores_path = write_holdout_scores(
         holdout_scores_path(config.output_dir),
         examples=hold_router,
@@ -364,6 +401,9 @@ def _score_hold(
     payload = dict(text_route_metrics(hold_router, scores))
     payload["checkpoint"] = checkpoint
     payload["scores_path"] = str(scores_path)
+    payload["n_train"] = n_train_fit
+    payload["n_val"] = n_val_fit
+    payload["n_split_train"] = len(train)
     informative = [
         (ex, score)
         for ex, score in zip(hold_router, scores, strict=True)
@@ -424,8 +464,10 @@ def _cv_rows(
                 "k_eval": k,
                 "split": assignment.strategy,
                 "direction": direction,
-                "n_train": len(train),
+                "n_train": metrics.get("n_train", len(train)),
                 "n_hold": len(hold),
+                "n_val": metrics.get("n_val", 0),
+                "n_split_train": metrics.get("n_split_train", len(train)),
                 "hold_repos": hold_repos,
                 "repo_leak": leak,
                 **metrics,

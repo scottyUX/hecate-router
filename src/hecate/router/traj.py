@@ -7,7 +7,9 @@ K=0 is issue text only. Early-submit trajectories keep their actual length.
 from __future__ import annotations
 
 import json
-from collections import Counter
+import math
+import random
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
@@ -18,6 +20,15 @@ from hecate.router.dataset import RouterExample, Tokenizer, WhitespaceTokenizer,
 K_MAX = 4
 K_EVAL = 3
 SUBMIT_MARKERS = ("submit",)
+# Monitor slice carved from the train pool (never the specialist holdout).
+FIT_VAL_N = 20
+# Skip the carve when the pool cannot spare n_val and still train.
+FIT_VAL_MIN_REMAINDER = 8
+# Pre-registered §6.2 early-stop rule. Off until a patched run's val CE dives.
+EARLY_STOP_METRIC = "val_ce"
+EARLY_STOP_PATIENCE = 2
+EARLY_STOP_MIN_DELTA = 0.01
+GRAD_CLIP_NORM = 1.0
 
 
 @dataclass(frozen=True)
@@ -468,6 +479,80 @@ def train_rows_for_arm(
         for k in range(0, last + 1):
             rows.append((ex.prefixes[k], ex.m1_resolves, ex.instance_id))
     return rows
+
+
+def carve_fit_val(
+    examples: list[TrajExample],
+    *,
+    n_val: int = FIT_VAL_N,
+    seed: int = 0,
+) -> tuple[list[TrajExample], list[TrajExample]]:
+    """Label-stratified monitor slice from the train pool. Never the holdout.
+
+    Returns ``(fit_examples, val_examples)``. If the pool cannot spare
+    ``n_val`` and still train, val is empty and every example is fit.
+    """
+    pool = list(examples)
+    if n_val <= 0 or len(pool) < n_val + FIT_VAL_MIN_REMAINDER:
+        return pool, []
+    by_label: dict[bool, list[TrajExample]] = defaultdict(list)
+    for ex in pool:
+        by_label[ex.m1_resolves].append(ex)
+    rng = random.Random(seed)
+    n = len(pool)
+    fit: list[TrajExample] = []
+    val: list[TrajExample] = []
+    keys = sorted(by_label)
+    remaining = n_val
+    for index, key in enumerate(keys):
+        group = sorted(by_label[key], key=lambda item: item.instance_id)
+        rng.shuffle(group)
+        if index == len(keys) - 1:
+            take = min(remaining, max(0, len(group) - 1) if len(group) > 1 else 0)
+        else:
+            take = int(len(group) * n_val / n + 0.5)
+            take = min(take, remaining, max(0, len(group) - 1) if len(group) > 1 else 0)
+        val.extend(group[:take])
+        fit.extend(group[take:])
+        remaining -= take
+    return fit, val
+
+
+def shuffle_train_rows(
+    rows: list[tuple[str, bool, str]],
+    *,
+    seed: int,
+    epoch: int,
+) -> list[tuple[str, bool, str]]:
+    """Seeded per-epoch shuffle of packed training rows."""
+    shuffled = list(rows)
+    random.Random(seed + epoch).shuffle(shuffled)
+    return shuffled
+
+
+def binary_log_loss(probs: list[float], labels: list[bool]) -> float:
+    """Mean binary cross-entropy. ``probs`` are P(label=True)."""
+    if not probs or len(probs) != len(labels):
+        raise TrajError("binary_log_loss requires aligned probs and labels")
+    total = 0.0
+    for prob, label in zip(probs, labels, strict=True):
+        clipped = min(1.0 - 1e-12, max(1e-12, float(prob)))
+        if label:
+            total += -math.log(clipped)
+        else:
+            total += -math.log(1.0 - clipped)
+    return total / len(probs)
+
+
+def binary_brier(probs: list[float], labels: list[bool]) -> float:
+    """Mean Brier score. ``probs`` are P(label=True)."""
+    if not probs or len(probs) != len(labels):
+        raise TrajError("binary_brier requires aligned probs and labels")
+    total = 0.0
+    for prob, label in zip(probs, labels, strict=True):
+        target = 1.0 if label else 0.0
+        total += (float(prob) - target) ** 2
+    return total / len(probs)
 
 
 def truncation_report(
