@@ -31,6 +31,7 @@ const toc: PaperTocItem[] = [
     label: "Result",
     children: [
       { href: "#tab-decisions", label: "Decisions" },
+      { href: "#tab-v3-gate", label: "Four methods" },
       { href: "#k0", label: "K=0" },
       { href: "#k3", label: "K=3" },
       { href: "#fig-route-auc-curve", label: "Route-AUC curve" },
@@ -92,7 +93,7 @@ export async function RouterV3Paper() {
         "Machine Learning (cs.LG)",
         "Artificial Intelligence (cs.AI)",
       ]}
-      updated="2026-08-31"
+      updated="2026-09-15"
       tags="router · trajectory-conditioning · lora · k-turn · h1-rejected · rq2"
       toc={toc}
       glossary={glossaryEntries(
@@ -202,44 +203,80 @@ export async function RouterV3Paper() {
 
       <PaperSection id="result" number="3" title="Result">
         <p>
-          H1 rejected. RQ1 answered: no. RQ2 answered: yes on Route-AUC (one
-          seed). H2 nominally cleared but reported as an H1 rejection per the
-          pre-registered decision rule.
+          <strong>Bottom line:</strong> giving the router three turns of
+          Qwen’s own attempt at the task (K=3) did not help it route better
+          than just reading the issue text alone (K=0) — Route-AUC dropped
+          from {k0} to {k3}, a real drop, not noise. So the central question
+          this experiment asked — does watching the weak model start the task
+          tell you more than just reading the issue? — comes back{" "}
+          <strong>no</strong>. Separately, both K=0 and K=3 clearly beat the
+          older, non-fine-tuned baselines (v1 and v2, both around 0.48), so
+          fine-tuning itself helps; it is specifically the extra turns that
+          don’t.
+        </p>
+        <p>
+          Four questions were locked in before this run, so nobody could pick
+          the flattering ones after seeing the results. H1, H2, and RQ1 were
+          pre-registered. RQ2 is scored on the same smoke; it was not the
+          gate. The confirmatory split is the django holdout ({R.djangoN}{" "}
+          tasks).
         </p>
         <PaperTable
           id="tab-decisions"
-          caption="Table 1: Claims. H1, H2, and RQ1 were pre-registered. RQ2 is scored on the same smoke; it was not the gate. Confirmatory split is django holdout."
+          caption="Table 1: What each locked question asked, what we saw, and the verdict."
           highlight={(row) =>
             row[0].startsWith("H1") || row[0].startsWith("RQ2")
           }
-          headers={["Claim", "Test", "Observed", "Decision"]}
+          headers={["Question", "What it asked", "What we saw", "Verdict"]}
           rows={[
             [
-              "H1 — K=3 beats K=0 LoRA",
-              "django Route-AUC, one seed",
-              `K=0 = ${k0}; K=3 = ${k3}`,
-              `Rejected — K=3 is ${drop} below K=0`,
+              "H1",
+              "Does K=3 beat K=0?",
+              `K=0 = ${k0}, K=3 = ${k3}`,
+              `No — K=3 came in ${drop} lower`,
             ],
             [
-              "H2 — stretch bar",
-              `django Route-AUC ≥ ${R.stretch.djangoRouteAuc.toFixed(2)}`,
+              "H2",
+              `Does K=3 at least clear a low bar (≥${R.stretch.djangoRouteAuc.toFixed(2)})?`,
               `K=3 = ${k3}`,
-              "Nominally met; reported as an H1 rejection, not a partial success",
+              "Technically cleared, but doesn’t count as a win — this was a pre-agreed fallback bar, not a substitute for beating K=0",
             ],
             [
-              "RQ1 — traces beat issue text",
-              "H1 accepted",
-              "H1 rejected",
-              "No — packed K=3 underperforms the trajectory-blind K=0 control",
+              "RQ1",
+              "Do trajectory turns carry real signal beyond the issue text?",
+              "K=3 underperformed K=0",
+              "No",
             ],
             [
-              "RQ2 — 7B LoRA beats frozen v1/v2",
-              "django Route-AUC vs v1/v2 ~0.48",
-              `K=0 = ${k0}; K=3 = ${k3}`,
-              "Yes on Route-AUC — the fine-tune lifts; extra turns do not",
+              "RQ2",
+              "Does a fine-tuned model beat the old frozen-embedding baselines (v1/v2)?",
+              `${k0} and ${k3} vs. ~0.48`,
+              "Yes — the fine-tuning is what helps, not the extra turns",
             ],
           ]}
         />
+        <p>
+          Route-AUC is the metric that actually matters here: it measures how
+          well a score ranks tasks for the “send this to Qwen vs. send it to
+          Opus” decision. Higher means better at telling which tasks are safe
+          to route cheaply. AUROC is a secondary pairwise-ranking number —
+          don’t over-read it. Brier score is calibration (lower is better).
+          Accuracy is just how often a 0.5 threshold would guess the Qwen-win
+          label, and it is easy to lose to a dumb default on this split.
+        </p>
+        <p>
+          <strong>How this stacks up against the paper we borrowed the
+          method from.</strong> SWE-Router reports two settings.
+          <PaperCite n={4} /> Table 2 is their easy one — train and test mixed
+          across repos, no holdout — where more turns clearly does help,
+          climbing from ~0.55–0.63 at K=0 up past 0.7 by K=2–4. That’s not
+          our comparison. Table 3 is their hard setting — testing on repos
+          the model never saw in training, exactly what our django holdout
+          also does — and there their own numbers show the same failure ours
+          does: K=3 doesn’t clearly beat K=0. That’s the real comparison, and
+          why this is being written up as a finding that replicates outside
+          our own project, not just a disappointing single run.
+        </p>
         <PaperTable
           id="tab-swe-mix1"
           caption="Table 2: SWE-Router Route-AUC by K on SWE-Bench Verified mix-1 (Son et al., 2026, Table 2). Mix-1 is not a repo holdout — calibration only, not the expected transfer number."
@@ -280,48 +317,54 @@ export async function RouterV3Paper() {
             ],
           ]}
         />
+        <p>
+          <strong>Our four methods, side by side.</strong> v1/v2 are averaged
+          over 3 seeds (the ± is that spread). K=0 and K=3 are each a single
+          run — treat their numbers as a first look, not a settled result.
+          The highlighted row is the one the experiment actually gates on.
+        </p>
         <PaperTable
           id="tab-v3-gate"
-          caption="Table 4: Hecate v1/v2/K=0/K=3 on this pair. Highlighted row is the RQ1 gate and the RQ2 comparison. Grouped 5-fold is the django-weighted trap; do not headline it. K=0 and K=3 are one seed; v1/v2 are 3-seed means."
-          highlight={(row) => row[0].includes("Route-AUC") && row[0].includes("Django")}
+          caption="Table 4: Hecate v1 / v2 / K=0 / K=3 on this pair. Route-AUC is the metric that matters. Grouped 5-fold is a django-weighted mix of all repos — leave it on the table so it isn’t mistaken for the django holdout result; do not headline it."
+          highlight={(row) => row[0].startsWith("Route-AUC")}
           headers={[
-            "Metric",
-            "v1 text",
-            "v2 fusion",
-            "K=0 LoRA",
-            "K=3 LoRA",
+            "",
+            "v1, frozen text",
+            "v2, oracle structure",
+            "K=0, fine-tuned text only",
+            "K=3, fine-tuned + 3 turns",
           ]}
           rows={[
             [
-              "Django holdout Route-AUC",
+              "Route-AUC (the metric that matters)",
               R.v1v2.djangoRouteAuc.text,
               R.v1v2.djangoRouteAuc.fusion,
               k0,
               k3,
             ],
             [
-              "Django holdout AUROC",
+              "AUROC (secondary — don’t over-read this)",
               R.v1v2.djangoAuroc.text,
               R.v1v2.djangoAuroc.fusion,
               R.k0.auroc.toFixed(3),
               R.k3.auroc.toFixed(3),
             ],
             [
-              "Django holdout accuracy",
+              "Accuracy",
               R.v1v2.djangoAcc.text,
               R.v1v2.djangoAcc.fusion,
               R.k0.accuracy.toFixed(3),
               R.k3.accuracy.toFixed(3),
             ],
             [
-              "Django holdout Brier",
+              "Brier score (lower = better-calibrated)",
               R.v1v2.djangoBrier.text,
               R.v1v2.djangoBrier.fusion,
               R.k0.brier.toFixed(3),
               R.k3.brier.toFixed(3),
             ],
             [
-              "Grouped 5-fold Route-AUC",
+              "Grouped 5-fold Route-AUC (not the gate)",
               R.v1v2.groupedRouteAuc.text,
               R.v1v2.groupedRouteAuc.fusion,
               "not run",
@@ -330,55 +373,79 @@ export async function RouterV3Paper() {
           ]}
         />
 
-        <PaperSubsection id="k0" number="3.1" title="K=0 (issue text, 7B LoRA)">
+        <PaperSubsection
+          id="k0"
+          number="3.1"
+          title="K=0 — what fine-tuning on issue text alone actually showed"
+        >
           <p>
-            Route-AUC jumped over the frozen floor; AUROC barely moved (
-            {R.k0.auroc.toFixed(3)}); accuracy ({R.k0.accuracy.toFixed(3)}) sits
-            below always-Qwen ({(R.djangoAlwaysSmall * 100).toFixed(1)}%); Brier
-            got worse ({R.k0.brier.toFixed(3)} vs 0.250). That combination can
-            be internally consistent: Route-AUC cares about ordering the
-            extremes, while AUROC averages every pair. It is also the
-            fingerprint of a statistic that can swing between seeds on a
-            231-task holdout. Treat {k0} as the RQ2 estimate for this smoke,
-            not a settled number — and not as evidence that trajectory
-            conditioning works.
+            Route-AUC jumped well above the old frozen-baseline floor ({k0} vs.
+            ~0.48). But two things temper that: AUROC barely moved (
+            {R.k0.auroc.toFixed(3)}), and accuracy ({R.k0.accuracy.toFixed(3)})
+            is actually worse than just always guessing “Qwen will succeed”
+            (right {(R.djangoAlwaysSmall * 100).toFixed(0)}% of the time here
+            on its own). The model’s confidence also got less trustworthy, not
+            more — Brier {R.k0.brier.toFixed(3)} vs. 0.250 for v1/v2.
+          </p>
+          <p>
+            That’s not a contradiction: Route-AUC mainly rewards correctly
+            ranking the clearest cases, while AUROC and Brier average over
+            everything, including the ambiguous middle. But it’s also exactly
+            the pattern you’d see from a lucky single-seed result on a{" "}
+            {R.djangoN}-task holdout, where one seed can swing a fair amount.
+            Read {k0} as “this experiment’s current best guess,” not proof
+            that fine-tuning is a settled win — and not as evidence that
+            trajectory conditioning works.
           </p>
         </PaperSubsection>
 
-        <PaperSubsection id="k3" number="3.2" title="K=3 (packed trajectory)">
+        <PaperSubsection
+          id="k3"
+          number="3.2"
+          title="K=3 — what happened when we added 3 turns of trajectory"
+        >
           <p>
-            Training finished at epoch {R.k3.epochs} of {R.k3.epochs} (
-            {R.k3.steps} steps), ~{R.k3.trainHours} hours on{" "}
-            <code>{R.gpu.instance}</code>. Packed rows: {R.k3.nTrainRows} ={" "}
-            {R.k3.nTrain} tasks × K∈{"{0..4}"}. Epoch-mean training loss:{" "}
-            {epochLoss}. That clears ln(2) ≈ {R.ln2.toFixed(3)} at epoch 2
-            (epoch 1 is still {R.k3.epochMeanLoss[1].toFixed(3)}), with the
-            steep drop in the last epoch (
+            <strong>Training:</strong> {R.k3.epochs} full passes over the data
+            ({R.k3.steps} steps, ~{R.k3.trainHours} hours on one L4 GPU,{" "}
+            <code>{R.gpu.instance}</code>). Each of the {R.k3.nTrain} training
+            tasks was expanded into 5 versions — one per amount of trajectory,
+            0 through 4 turns — giving {R.k3.nTrainRows} training rows per
+            pass. Training loss fell steadily ({epochLoss}), crossing “better
+            than a coin flip” (ln(2) ≈ {R.ln2.toFixed(3)}) partway through
+            pass 2 (pass 1 is still {R.k3.epochMeanLoss[1].toFixed(3)}). The
+            steep drop is in the last pass (
             {R.k3.epochMeanLoss[3].toFixed(3)} →{" "}
             {R.k3.epochMeanLoss[4].toFixed(3)}).
           </p>
           <p>
-            During the actual K=3 fit, the Qwen tokenizer hit 8192 on{" "}
-            {R.k3.trainTruncatedRows} of {R.k3.nTrainRows} packed rows every
-            epoch ({trainTruncPct}%; seq p50={R.k3.trainSeqP50}, max=
-            {R.k3.trainSeqMax}). That is the truncation figure that matters. The{" "}
-            <code>results.json</code> block of 0/{R.n} (median{" "}
-            {R.traces.whitespaceMedianTokens}) is a whitespace-split proxy and
-            undercounts code tokens. An earlier HF-tokenizer audit of the 500
-            traces was {(R.traces.hfAuditTruncationRate * 100).toFixed(1)}% (
-            {R.traces.hfAuditTruncatedN}/{R.n}, median{" "}
-            {R.traces.hfAuditMedianTokens}). None of these is a first-order
-            confound for the gate.
+            <strong>Did long trajectories get cut off?</strong> Barely —{" "}
+            {R.k3.trainTruncatedRows} of {R.k3.nTrainRows} rows per pass
+            (about {trainTruncPct}%) hit the {R.k3.trainSeqMax}-token limit
+            (median packed length {R.k3.trainSeqP50}). That is the truncation
+            figure that matters, because it is from the tokenizer the trainer
+            actually used. A cruder word-count check on the raw traces said
+            even fewer were cut (0/{R.n}, median {R.traces.whitespaceMedianTokens}{" "}
+            whitespace tokens — that proxy undercounts code). An earlier check
+            using the real tokenizer said slightly more (
+            {(R.traces.hfAuditTruncationRate * 100).toFixed(1)}% of the
+            original {R.n} raw trajectories, {R.traces.hfAuditTruncatedN}/
+            {R.n}, median {R.traces.hfAuditMedianTokens}). Either way, this is
+            too small to explain why K=3 underperformed.
           </p>
           <p>
-            Django Route-AUC is {k3} versus K=0’s {k0}. H1 / RQ1 rejected.
-            Against the frozen floor, {k3} still clears RQ2. AUROC{" "}
-            {R.k3.auroc.toFixed(3)} vs {R.k0.auroc.toFixed(3)} is a 0.010 tick
-            on one seed — not a ranking rescue. Brier {R.k3.brier.toFixed(3)} is
-            worse than a constant-0.5 classifier (0.250). At the selected λ the
-            routed resolved rate matches always-Opus (
-            {(R.k3.bestRouteRate * 100).toFixed(1)}%), so the head is not
-            finding cheap wins above the expensive default.
+            <strong>The result that matters:</strong> Route-AUC {k3}, below
+            K=0’s {k0} — the headline rejection. It still clears the old
+            frozen floor, so fine-tuning still helps even at K=3 (RQ2 stays
+            yes). AUROC ticked up slightly ({R.k3.auroc.toFixed(3)} vs.{" "}
+            {R.k0.auroc.toFixed(3)}, a 0.010 move on one seed) — not enough
+            to change the picture, and not a ranking rescue. Calibration got
+            worse: Brier {R.k3.brier.toFixed(3)} is worse than a constant-0.5
+            guess (0.250). In practical terms: at the threshold you’d actually
+            use to route tasks (λ={R.k3.bestLambda.toFixed(2)}), K=3 ends up
+            solving the same share of tasks as just sending everything to Opus
+            ({(R.k3.bestRouteRate * 100).toFixed(1)}%). Watching Qwen’s first
+            three turns didn’t uncover any tasks that were safe to route
+            cheaply beyond what doing nothing clever at all would get you.
           </p>
         </PaperSubsection>
 
@@ -488,6 +555,13 @@ export async function RouterV3Paper() {
             models themselves. H1’s answer is in the metrics; K=3{" "}
             <code>results.json</code> is local, K=0’s file is still only on the
             stopped L4 disk.
+          </li>
+          <li>
+            K=3 epoch-mean training loss is {R.k3.epochMeanLoss.map((x) => x.toFixed(3)).join(" → ")}{" "}
+            from <code>train_epochs.jsonl</code>. An in-run parse of logged
+            step losses while epoch 5 was still going (0.77 → 0.69 → 0.59 →
+            0.54 → 0.30) is not that series — it was a progress check, not the
+            epoch means.
           </li>
         </ul>
       </PaperSection>
