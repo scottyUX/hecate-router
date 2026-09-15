@@ -35,6 +35,7 @@ const toc: PaperTocItem[] = [
       { href: "#k0", label: "K=0" },
       { href: "#k3", label: "K=3" },
       { href: "#regime", label: "Specialist vs this holdout" },
+      { href: "#tab-dollars-regime", label: "Recorded $ ceilings" },
       { href: "#fig-route-auc-curve", label: "Route-AUC curve" },
       { href: "#figures", label: "More figures" },
     ],
@@ -530,7 +531,7 @@ export async function RouterV3Paper() {
               ],
               [
                 "K=3 at its operating point",
-                `same ${(100 * R.k3.bestRouteRate).toFixed(1)}% as always-Opus — no cheap wins found`,
+                `same ${(100 * R.k3.bestRouteRate).toFixed(1)}% as always-Opus — no cheap quality wins; Opus-call mix not scored`,
                 `${R.specialistE2.k3OpusCallsAtMax} calls, ${R.specialistE2.k3MaxHits} successes — misses 33`,
               ],
             ]}
@@ -541,10 +542,83 @@ export async function RouterV3Paper() {
             repository shift to +{R.specialistE2.k3MinusK0.toFixed(3)}{" "}
             in-distribution — the SWE-Router mix-1 vs repo-disjoint pattern —
             but specialist K=3 overfit, so that sign flip is not a confirmation.
-            The cost ceiling is the same shape on both splits: almost no
-            accuracy to buy (oracle is only a few tasks above always-Opus), and
-            the save is sending both-win tasks to Qwen. Neither trained K=3
-            reached that ceiling.
+          </p>
+          <p>
+            The routing opportunity itself does not shrink under repo shift —
+            only the router’s ability to find it does. Same recorded Aug 2025
+            API costs as E2 (not September 2026 list prices). Category counts
+            on the 231: {R.djangoHoldout.largeOnly} Opus-only,{" "}
+            {R.djangoHoldout.both} both-win, {R.djangoHoldout.smallOnly}{" "}
+            Qwen-only, {R.djangoHoldout.neither} neither. Oracle here means
+            Opus-only → Opus, everyone else → Qwen. The cheaper “just match
+            always-Opus” row uses Qwen-only wins as substitutes, so it can
+            send fewer than the Opus-only count to Opus (29 instead of 38;
+            6 instead of 10).
+          </p>
+          <PaperTable
+            id="tab-dollars-regime"
+            caption="Table 6: Recorded mini-SWE-agent API cost. Oracle is max quality. Matched-quality frontier is the cheapest label policy that still hits always-Opus’s own success count (cheapest incremental Opus-only tasks, all Qwen-only to Qwen). Generalist K=3 call mix was never scored — quality tied always-Opus, dollars unknown."
+            highlight={(row) => row[0].startsWith("Frontier")}
+            headers={[
+              "",
+              `Generalist (this paper, n=${R.djangoHoldout.n})`,
+              `Specialist (E2, n=${R.specialistE2.nHold})`,
+            ]}
+            rows={[
+              [
+                "Always-Opus cost",
+                `$${R.djangoHoldout.alwaysOpusUsd.toFixed(2)}`,
+                `$${R.specialistE2.alwaysOpusUsd.toFixed(2)}`,
+              ],
+              [
+                "Oracle ceiling (Opus-only → Opus only)",
+                `${R.djangoHoldout.oracleOpusCalls} calls, $${R.djangoHoldout.oracleUsd.toFixed(2)}, ${R.djangoHoldout.oracle}/${R.djangoHoldout.n} succ`,
+                `${R.specialistE2.oracleOpusCalls} calls, $${R.specialistE2.oracleUsd.toFixed(2)}, ${R.specialistE2.oracleHits}/${R.specialistE2.nHold} succ`,
+              ],
+              [
+                "% saved at oracle ceiling",
+                `$${R.djangoHoldout.oracleSaveUsd.toFixed(2)}, ${R.djangoHoldout.oracleSavePct.toFixed(1)}%`,
+                `$${R.specialistE2.oracleSaveUsd.toFixed(2)}, ${R.specialistE2.oracleSavePct.toFixed(1)}%`,
+              ],
+              [
+                "Frontier cost to just match always-Opus quality",
+                `${R.djangoHoldout.matchCalls} calls, $${R.djangoHoldout.matchUsd.toFixed(2)}, ${R.djangoHoldout.alwaysLarge} succ`,
+                `${R.specialistE2.matchCalls} calls, $${R.specialistE2.matchUsd.toFixed(2)}, ${R.specialistE2.alwaysLarge} succ`,
+              ],
+              [
+                "% saved at matched quality",
+                `$${R.djangoHoldout.matchSaveUsd.toFixed(2)}, ${R.djangoHoldout.matchSavePct.toFixed(1)}%`,
+                `$${R.specialistE2.matchSaveUsd.toFixed(2)}, ${R.specialistE2.matchSavePct.toFixed(1)}%`,
+              ],
+              [
+                "Trained K=3 (operating point)",
+                `${(100 * R.k3.bestRouteRate).toFixed(1)}% successes; call mix / $ not scored`,
+                `${R.specialistE2.k3OpusCallsAtMax} calls, ${R.specialistE2.k3MaxHits} succ — misses 33`,
+              ],
+              [
+                "Trained D K=1 (diagnostic)",
+                "no generalist K=1",
+                `${R.specialistE2.k1OpusCallsAt33} calls, $${R.specialistE2.dUsd.toFixed(2)}, save $${R.specialistE2.dSaveUsd.toFixed(2)} (${R.specialistE2.dSavePct.toFixed(1)}% vs a possible ${R.specialistE2.matchSavePct.toFixed(1)}%)`,
+              ],
+            ]}
+          />
+          <p>
+            Proportional savings at the ceiling are close, and if anything
+            slightly better for the generalist split (
+            {R.djangoHoldout.oracleSavePct.toFixed(1)}% vs{" "}
+            {R.specialistE2.oracleSavePct.toFixed(1)}% at oracle;{" "}
+            {R.djangoHoldout.matchSavePct.toFixed(1)}% vs{" "}
+            {R.specialistE2.matchSavePct.toFixed(1)}% to match always-Opus).
+            “How much money is theoretically on the table” is not a
+            specialist-vs-generalist effect — it is roughly the same shape
+            in-distribution and under repository shift. What fails is capture:
+            this paper’s K=3 never beat always-Opus quality, so it did not
+            take any of that{" "}
+            {R.djangoHoldout.matchSavePct.toFixed(0)}% in a way we can
+            credit, and we do not have its per-task routing to price it.
+            Specialist D takes some of it inefficiently (
+            {R.specialistE2.dSavePct.toFixed(1)}% against a possible{" "}
+            {R.specialistE2.matchSavePct.toFixed(1)}%) and cannot headline.
           </p>
         </PaperSubsection>
 
@@ -638,7 +712,10 @@ export async function RouterV3Paper() {
             Endpoints on django are the same labels-only trio as v1/v2:
             always-Opus {(R.k0.alwaysLarge * 100).toFixed(1)}%, always-Qwen{" "}
             {(R.k0.alwaysSmall * 100).toFixed(1)}%, oracle{" "}
-            {(R.k0.oracle * 100).toFixed(1)}%.
+            {(R.k0.oracle * 100).toFixed(1)}%. Table 6 dollars are recorded
+            2025-08-02 API cost, not current list prices. The 6-call / 29-call
+            matched-quality rows pick the cheapest incremental Opus-only
+            tasks (Opus $ minus Qwen $), not the cheapest Opus sticker.
           </li>
           <li>
             SWE-Router mix-1 and SWE-Smith tables are calibration from related
