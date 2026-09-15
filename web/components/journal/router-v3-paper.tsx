@@ -161,12 +161,31 @@ export async function RouterV3Paper() {
         <RouterArchitectureV3 />
         <p>
           Weak/strong pair unchanged: Qwen3-Coder-480B vs Claude 4 Opus,
-          mini-SWE-agent v1.0.0, same 500 labels.<PaperCite n={[1, 2, 3]} />{" "}
-          Value head: Qwen2.5-Coder-7B-Instruct, LoRA r=32 α=64, last-token
-          logits scoring P(Qwen resolves), 8192 context, QLoRA on one L4. A
-          turn is a user/observation boundary. Packing is only inside the K=3
-          arm. {R.paperDeviation} Trained on <code>{R.gpu.instance}</code>, not
-          the execution box. The instance is now stopped.
+          mini-SWE-agent v1.0.0, same 500 labels.
+          <PaperCite n={[1, 2, 3]} />
+        </p>
+        <p>
+          The value head is a QLoRA adapter (r=32, α=64) on
+          Qwen2.5-Coder-7B-Instruct, trained on a single L4 with up to 8192
+          tokens of context. It scores P(Qwen resolves) from the model’s
+          last-token logits. A turn is one user/observation boundary in the
+          agent’s trajectory; only the K=3 arm packs multiple turns into its
+          input — K=0 sees issue text alone, no trajectory at all.
+        </p>
+        <p>
+          One deviation from SWE-Router: their pipeline augments the issue
+          text with three LLM-generated paraphrases (§A.2) before scoring; we
+          skip that step here for cost.
+          <PaperCite n={4} />
+        </p>
+        <p>
+          Training ran on <code>{R.gpu.instance}</code>, kept separate from
+          the evaluation VM (<code>hecate-exec</code>).{" "}
+          <code>{R.gpu.instance}</code> is the L4 GPU used for LoRA training;{" "}
+          <code>hecate-exec</code> is CPU-only and cannot run this fit.{" "}
+          <code>{R.gpu.instance}</code> is now terminated — training for this
+          round is complete, and there is nothing left running to bill (disk
+          retained).
         </p>
         <p>
           Leave-django-out is the generalist protocol: fit on {R.restN}{" "}

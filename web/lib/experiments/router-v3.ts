@@ -114,7 +114,7 @@ export const ROUTER_V3 = {
     },
   },
   paperDeviation:
-    "No 3-way LLM paraphrases of q (SWE-Router §A.2); skipped for cost.",
+    "SWE-Router augments issue text with three LLM-generated paraphrases (§A.2) before scoring; skipped here for cost.",
   traces: {
     provenance: "hf",
     nMatched: 500,
