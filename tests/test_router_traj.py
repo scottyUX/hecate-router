@@ -643,3 +643,18 @@ def test_early_stop_rule_is_precommitted(tmp_path: Path) -> None:
     assert config.early_stopping_patience == 2
     assert config.early_stopping_min_delta == 0.01
 
+
+def test_committed_traj_yaml_enables_early_stopping(tmp_path: Path) -> None:
+    repo = Path(__file__).resolve().parents[1]
+    config = load_traj_train_config(
+        config_path=repo / "configs" / "router_traj.yaml",
+        csv_path=tmp_path / "unused.csv",
+        traj_dir=tmp_path / "trajs",
+        output_dir=tmp_path / "es_on",
+        arm="k0",
+    )
+    assert config.early_stopping is True
+    assert config.early_stopping_metric == "val_ce"
+    assert config.early_stopping_patience == 2
+    assert config.early_stopping_min_delta == 0.01
+

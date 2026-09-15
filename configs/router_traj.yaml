@@ -14,9 +14,9 @@ lora_dropout: 0.05
 qlora: true
 val_size: 20
 grad_clip_norm: 1.0
-# Pre-registered §6.2 rule. Off until a patched run's val CE dives; then
-# apply identically to B/C/D. Metric=val_ce, patience=2, min_delta=0.01.
-early_stopping: false
+# E2 §6.2: on for the ES B/C/D set after C's patched val CE dived.
+# Metric=val_ce, patience=2, min_delta=0.01. Applies identically to B/C/D.
+early_stopping: true
 early_stopping_metric: val_ce
 early_stopping_patience: 2
 early_stopping_min_delta: 0.01

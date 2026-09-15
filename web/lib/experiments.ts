@@ -9,6 +9,15 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-09-15-e02-specialist-django-smoke",
+    title: "Experiment 2: django in-distribution router, seed 0",
+    date: "2026-09-15",
+    status: "smoke · ES rerun pending",
+    summary:
+      "Q2.1: K=0 LoRA 0.482 vs frozen 0.373, not a pass at n=46. Q2.2: K=3 overfit and never matches Opus quality. Q2.3: K=1 hit 33 at 26 Opus calls ($31.88, 35.9%) — diagnostic only. Cost ceiling is the same shape as leave-django-out (~60–76%). Next: early-stopped B/C/D.",
+    archiveEntryId: "2026-09-15-e02-specialist-django-smoke",
+  },
+  {
     href: "/journal/2026-08-26-v3-trajectory-router-spec",
     title: "K-turn trajectory router v3",
     date: "2026-08-31",

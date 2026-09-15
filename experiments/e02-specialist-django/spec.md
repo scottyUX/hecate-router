@@ -1,9 +1,10 @@
 Experiment 2 — Specialist holdout: train on django, test on django
 Hecate Lab
-SWE-bench Verified (500) · django/django in-distribution (n=231) · rev 2 — PLANNED, not yet run
-September 13, 2026 (amended September 14, 2026)
+SWE-bench Verified (500) · django/django in-distribution (n=231) · rev 3 — seed-0 smoke complete; ES rerun pending
+September 13, 2026 (amended September 14 and 15, 2026)
 
-Status: specification only. No code written, no runs executed.
+Status: seed-0 smoke is in GCS (see `results.md`). Confirmatory set is the
+early-stopped B/C/D rerun on the same 185/46 split, not yet run.
 
 Supersedes: `claude/2026-09-13-specialist-django-router-spec.md` (rev 1, earlier
 today). That document's RQ3 and RQ4 are carried forward here as Q2.1 and Q2.2
@@ -23,6 +24,14 @@ only. It does not substitute for arm C and does not answer Q2.2, which remains
 pre-registered against the identical K=3 recipe used in v3 so that its result
 stays comparable to the −0.099 gap already measured under repository shift. See
 §2.2, §3.6, §3.6.1, §3.8, §5.4, §5.5, §6.7.
+
+Amendment (rev 3, September 15, 2026): seed-0 patched smoke is complete.
+Locked a confirmatory cost read (§4): minimum Opus-call count among λ that
+match always-large quality (33/46 successes), vs always-Opus (46) and oracle
+(10). This is secondary to Route-AUC on Q2.1/Q2.2; it is not a replacement
+primary. Arm C's val CE dived (0.637 → 2.902); early stopping is therefore
+**on** for the next B/C/D set, same rule already written in §6.2, new run IDs,
+never overwrite. D still cannot headline (§5.4). No extra D seed.
 
 Question labeling: this slate labels experiment questions Q<experiment>.<n>, so
 E2's questions are Q2.1, Q2.2, and (added in this amendment) Q2.3. Legacy labels
@@ -368,12 +377,20 @@ Secondary: CPT(50%) and CPT(80%), following RouteLLM's call-performance-threshol
 formulation [5], for comparability with the routing literature. Reported, not
 gated.
 
+Confirmatory cost read (locked 15 September 2026, before the ES rerun): among
+λ on the existing sweep with holdout successes ≥ always-large (33/46), the
+**minimum number of tasks routed to the large model**. Compare to always-Opus
+(46) and to the oracle that sends only large-only tasks to Opus (10). Same
+curve as Route-AUC; not a new fit. Reported for A/B/C. CPT remains uninformative
+on this split because always-small (27/46) already exceeds 80% of always-large.
+
 Diagnostic split-by-era: holdout Route-AUC broken down by issue `created_at`
 period. See §6.4.
 
 Arm D (diagnostic, added in this amendment): Route-AUC and the signed gap
 (D − B) only. No CPT, no era breakdown — those are reserved for the arms this
-experiment gates on (A/B/C).
+experiment gates on (A/B/C). The matched-quality Opus-call count may be shown
+for D as disclosure; it still cannot headline (§5.4).
 
 5 Decision rules (pre-registered)
 ---------------------------------
@@ -412,10 +429,12 @@ fixed 5-epoch schedule. Watch and record validation loss. If early stopping is
 used it is a documented deviation from the v3 recipe and reported as one.
 
 The first patched LoRA loop (shuffle + monitor slice + grad clip + zero-init
-score head) does **not** invoke early stopping. The trigger is pre-registered
-here before any patched run, and stays off (`early_stopping: false` in
-`configs/router_traj.yaml`) unless a patched B/D validation curve still dives.
-If it is turned on, it applies identically to arms B, C, and D:
+score head) ran with early stopping **off**. That smoke is complete: C's
+monitor val CE dived (epoch 1 = 0.637 → epoch 4 = 2.902), which meets the
+trigger. Early stopping is therefore **on** (`early_stopping: true` in
+`configs/router_traj.yaml`) for the next comparable set. It applies
+identically to arms B, C, and D — not C alone. New run IDs on the same
+seed-0 185/46 split (`k0`/`k1` `_run-3`, `k3` `_run-2`); never overwrite.
 
   metric       mean validation cross-entropy (`val_ce`) on the monitor slice
   patience     2 epochs

@@ -1,0 +1,4 @@
+{"run_id":"exp-02_arm-frozen_split-specialist_seed-0","exp":2,"arm":"frozen","split":"specialist","seed":0,"route_auc":0.3731884057971014,"artifacts_uri":"gs://hecate-506120-artifacts/runs/exp-02_arm-frozen_split-specialist_seed-0"}
+{"run_id":"exp-02_arm-k0_split-specialist_seed-0_run-2","exp":2,"arm":"k0","split":"specialist","seed":0,"run":2,"route_auc":0.4818840579710145,"artifacts_uri":"gs://hecate-506120-artifacts/runs/exp-02_arm-k0_split-specialist_seed-0_run-2"}
+{"run_id":"exp-02_arm-k1_split-specialist_seed-0_run-2","exp":2,"arm":"k1","split":"specialist","seed":0,"run":2,"route_auc":0.625,"artifacts_uri":"gs://hecate-506120-artifacts/runs/exp-02_arm-k1_split-specialist_seed-0_run-2"}
+{"run_id":"exp-02_arm-k3_split-specialist_seed-0","exp":2,"arm":"k3","split":"specialist","seed":0,"route_auc":0.5742753623188406,"artifacts_uri":"gs://hecate-506120-artifacts/runs/exp-02_arm-k3_split-specialist_seed-0"}
