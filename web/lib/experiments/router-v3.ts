@@ -127,6 +127,44 @@ export const ROUTER_V3 = {
     whitespaceMedianTokens: 1627,
     whitespaceMaxTokens: 3553,
   },
+  djangoHoldout: {
+    n: 231,
+    nTrain: 269,
+    frozen: 0.477,
+    both: 125,
+    largeOnly: 38,
+    smallOnly: 9,
+    neither: 59,
+    alwaysLarge: 163,
+    alwaysSmall: 134,
+    oracle: 172,
+    oracleOpusCalls: 38,
+  },
+  /**
+   * E2 seed-0 smoke (train and test on django). Compare signed gaps, not
+   * absolute Route-AUC — holdout n is 46 vs 231. K=3 is the overfit checkpoint.
+   */
+  specialistE2: {
+    journal: "/journal/2026-09-15-e02-specialist-django-smoke",
+    nTrainGrad: 165,
+    nHold: 46,
+    frozen: 0.373,
+    k0: 0.482,
+    k3: 0.574,
+    k0MinusFrozen: 0.109,
+    k3MinusK0: 0.092,
+    alwaysLarge: 33,
+    oracleHits: 37,
+    oracleOpusCalls: 10,
+    both: 23,
+    largeOnly: 10,
+    smallOnly: 4,
+    neither: 9,
+    k0OpusCallsAt33: 46,
+    k3OpusCallsAtMax: 45,
+    k3MaxHits: 32,
+    k1OpusCallsAt33: 26,
+  },
   gpu: {
     blocked: false,
     instance: "hecate-traj-l4",
@@ -136,5 +174,6 @@ export const ROUTER_V3 = {
   related: [
     "/journal/2026-08-25-text-only-router-v1",
     "/journal/2026-08-26-oracle-metrics-fusion-v2",
+    "/journal/2026-09-15-e02-specialist-django-smoke",
   ],
 } as const;

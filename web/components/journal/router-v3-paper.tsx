@@ -34,6 +34,7 @@ const toc: PaperTocItem[] = [
       { href: "#tab-v3-gate", label: "Four methods" },
       { href: "#k0", label: "K=0" },
       { href: "#k3", label: "K=3" },
+      { href: "#regime", label: "Specialist vs this holdout" },
       { href: "#fig-route-auc-curve", label: "Route-AUC curve" },
       { href: "#figures", label: "More figures" },
     ],
@@ -449,7 +450,105 @@ export async function RouterV3Paper() {
           </p>
         </PaperSubsection>
 
-        <PaperSubsection id="figures" number="3.3" title="Figures">
+        <PaperSubsection
+          id="regime"
+          number="3.3"
+          title="Specialist vs this generalist holdout"
+        >
+          <p>
+            This paper trains off django and tests on all {R.djangoHoldout.n}{" "}
+            django tasks (leave-django-out). Experiment 2 does the opposite:
+            train and test on django — {R.specialistE2.nTrainGrad} train /{" "}
+            {R.specialistE2.nHold} holdout, seed 0.
+            That write-up is{" "}
+            <a href={R.specialistE2.journal}>
+              2026-09-15-e02-specialist-django-smoke
+            </a>
+            . Do not stack K=0 {k0} against specialist {R.specialistE2.k0.toFixed(3)}{" "}
+            as if in-distribution ranking is worse: the holdouts are different
+            sizes ({R.djangoHoldout.n} vs {R.specialistE2.nHold}) and the train
+            sets are different ({R.djangoHoldout.nTrain} other-repo vs{" "}
+            {R.specialistE2.nTrainGrad} django). Compare the signed gaps, and
+            the cost ceiling on each split.
+          </p>
+          <PaperTable
+            id="tab-regime"
+            caption="Table 5: Generalist (this paper: train non-django, test django) vs specialist (E2: train and test on django). Specialist K=3 is the overfit checkpoint. K=1 on E2 is diagnostic and is not a generalist counterpart."
+            highlight={(row) =>
+              row[0].startsWith("Fine-tune") || row[0].startsWith("Trajectory")
+            }
+            headers={[
+              "",
+              "Generalist — train off django, test django",
+              "Specialist — train and test on django",
+            ]}
+            rows={[
+              [
+                "Train / test",
+                `${R.djangoHoldout.nTrain} non-django → ${R.djangoHoldout.n} django`,
+                `${R.specialistE2.nTrainGrad} django → ${R.specialistE2.nHold} django`,
+              ],
+              [
+                "Frozen Route-AUC",
+                R.v1v2.djangoRouteAuc.text,
+                R.specialistE2.frozen.toFixed(3),
+              ],
+              [
+                "K=0 Route-AUC",
+                k0,
+                R.specialistE2.k0.toFixed(3),
+              ],
+              [
+                "K=3 Route-AUC",
+                k3,
+                `${R.specialistE2.k3.toFixed(3)} (overfit)`,
+              ],
+              [
+                "Fine-tune lift (K=0 − frozen)",
+                `+${(R.k0.routeAuc - R.djangoHoldout.frozen).toFixed(3)}`,
+                `+${R.specialistE2.k0MinusFrozen.toFixed(3)} (not a pass at n=46)`,
+              ],
+              [
+                "Trajectory gap (K=3 − K=0)",
+                (R.k3.routeAuc - R.k0.routeAuc).toFixed(3),
+                `+${R.specialistE2.k3MinusK0.toFixed(3)} (not confirmatory)`,
+              ],
+              [
+                "Always-Opus quality",
+                `${R.djangoHoldout.alwaysLarge}/${R.djangoHoldout.n} (${(100 * R.k0.alwaysLarge).toFixed(1)}%)`,
+                `${R.specialistE2.alwaysLarge}/${R.specialistE2.nHold}`,
+              ],
+              [
+                "Oracle: send only Opus-only tasks to Opus",
+                `${R.djangoHoldout.oracleOpusCalls} calls → ${R.djangoHoldout.oracle}/${R.djangoHoldout.n} (${(100 * R.k0.oracle).toFixed(1)}%)`,
+                `${R.specialistE2.oracleOpusCalls} calls → ${R.specialistE2.oracleHits}/${R.specialistE2.nHold}`,
+              ],
+              [
+                "K=0 at matched always-Opus quality",
+                "not locked as an Opus-call count on this split",
+                `${R.specialistE2.k0OpusCallsAt33} calls for ${R.specialistE2.alwaysLarge} successes — no cheaper 33`,
+              ],
+              [
+                "K=3 at its operating point",
+                `same ${(100 * R.k3.bestRouteRate).toFixed(1)}% as always-Opus — no cheap wins found`,
+                `${R.specialistE2.k3OpusCallsAtMax} calls, ${R.specialistE2.k3MaxHits} successes — misses 33`,
+              ],
+            ]}
+          />
+          <p>
+            Fine-tune lift is present in both protocols. The trajectory gap
+            flips from {(R.k3.routeAuc - R.k0.routeAuc).toFixed(3)} under
+            repository shift to +{R.specialistE2.k3MinusK0.toFixed(3)}{" "}
+            in-distribution — the SWE-Router mix-1 vs repo-disjoint pattern —
+            but specialist K=3 overfit, so that sign flip is not a confirmation.
+            The cost ceiling is the same shape on both splits: almost no
+            accuracy to buy (oracle is only a few tasks above always-Opus), and
+            the save is sending both-win tasks to Qwen. Neither trained K=3
+            reached that ceiling.
+          </p>
+        </PaperSubsection>
+
+        <PaperSubsection id="figures" number="3.4" title="Figures">
           <RouterV3RouteAucCurve />
           <RouterV3Figures />
         </PaperSubsection>
@@ -488,29 +587,27 @@ export async function RouterV3Paper() {
         <p>
           This smoke tested a generalist router (train off django, test on
           django). RQ2 says that generalist LoRA has ranking lift the frozen
-          encoder did not. It does not say a specialist — train and test on
-          the same task type / similar repos — would look the same, and it
-          does not revive H1.
+          encoder did not. The specialist cell has now been run once (E2 seed
+          0): fine-tune lift is still there (+
+          {R.specialistE2.k0MinusFrozen.toFixed(3)}, not a pass at n=46); the
+          K=3 − K=0 gap flipped sign but K=3 overfit, so H1 stays rejected
+          under shift and is not confirmed in-distribution. Details:{" "}
+          <a href={R.specialistE2.journal}>E2 specialist django smoke</a>.
         </p>
       </PaperSection>
 
       <PaperSection id="next" number="5" title="Next">
         <ol className="list-decimal space-y-2 pl-6">
           <li>
-            Do not scale this K=3 recipe to 5-fold × 3-seed or{" "}
-            <code>{R.secondHoldout}</code> as a generalist. RQ1 already failed
-            that gate.
-          </li>
-          <li>
-            Next experiment is the opposite split: a specialist router. Train
-            and test on the same task type in similar repos, not leave-django-out.
-            Concrete first split: hold out a slice of the {R.djangoN} django
-            tasks and train K=0 LoRA on the remaining django issues (in-repo,
-            in-distribution). Same 7B recipe. Checkpoint the adapter and write
-            holdout scores. Gate: django-in-distribution Route-AUC vs the
-            frozen v1 floor on that split (does RQ2 hold when the router is a
-            specialist?). Secondary: K=0 vs K=3 on the same specialist split —
-            the mix-1 analogue, not a retry of H1 on repo-shift.
+            The opposite split has been run as a seed-0 smoke: train and test
+            on django (
+            <a href={R.specialistE2.journal}>
+              E2 specialist django
+            </a>
+            ). Next on that split is the early-stopped B/C/D rerun, not a
+            retry of this leave-django-out K=3 recipe. Do not scale this K=3
+            recipe to 5-fold × 3-seed or <code>{R.secondHoldout}</code> as a
+            generalist — RQ1 already failed that gate.
           </li>
           <li>
             Extra seeds on the existing generalist K=0 ({k0}) would tighten
@@ -524,7 +621,7 @@ export async function RouterV3Paper() {
           </li>
           <li>
             <code>{R.gpu.instance}</code> is stopped. Leave it stopped unless
-            the specialist split needs GPU time.
+            the E2 early-stopped rerun needs GPU time.
           </li>
         </ol>
       </PaperSection>
