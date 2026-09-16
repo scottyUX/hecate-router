@@ -1,0 +1,5 @@
+{
+  "task_text": "Django's ORM raises IntegrityError when saving a model with a nullable unique field set to None on PostgreSQL.",
+  "file_text": "class Model:\n    def save(self, using=None):\n        ...\n",
+  "router_version": "em4-v1"
+}

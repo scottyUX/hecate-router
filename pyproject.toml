@@ -23,6 +23,8 @@ dependencies = [
 dev = [
     "pytest>=8.0,<10",
     "pytest-asyncio>=0.23,<1",
+    "openapi-spec-validator>=0.7,<1",
+    "jsonschema>=4.20,<5",
 ]
 train = [
     "torch>=2.2,<3",
