@@ -29,6 +29,7 @@ from pathlib import Path
 # the multiplier is unmeasured on this scaffold. This cap is a bound, not an
 # estimate: 600 x $0.10 = $60 worst case, inside option_a.yaml's $100 ceiling.
 DEFAULT_COST_LIMIT_USD = 0.10
+DEFAULT_COST_LIMIT_LARGE_USD = 0.50
 
 # mini-SWE passes no timeout to litellm, so a provider request that never
 # responds blocks its worker indefinitely (observed: one 72B request open 11+
@@ -84,6 +85,27 @@ def main(argv: list[str] | None = None) -> int:
             "Per-instance USD cap. Default is deliberately far below "
             "miniswe.yaml's inherited 3.00: the whole 600-sample single-shot "
             "sweep cost $0.57 total, so a $3 per-instance cap bounds nothing."
+        ),
+    )
+    parser.add_argument(
+        "--cost-limit-large",
+        type=float,
+        default=DEFAULT_COST_LIMIT_LARGE_USD,
+        help=(
+            "Per-instance USD cap for tier=large models. The large tier costs "
+            "~15x the small tier per instance, so one shared cap either "
+            "truncates the large arm or lets the small arm loop unchecked."
+        ),
+    )
+    parser.add_argument(
+        "--global-cost-limit",
+        type=float,
+        default=None,
+        help=(
+            "Hard ceiling on TOTAL spend per model, via MSWEA_GLOBAL_COST_LIMIT. "
+            "Per-instance caps do not bound a sweep: 300 tasks x $1 is $300. "
+            "Upstream raises once cumulative spend crosses this. Applied per "
+            "model process, so the sweep's ceiling is this x number of models."
         ),
     )
     parser.add_argument(
@@ -228,6 +250,17 @@ def main(argv: list[str] | None = None) -> int:
     outcomes_by_model = {}
     for slug in slugs:
         model_dir = run_dir / _slug_to_dirname(slug)
+        tier_cost_limit = (
+            args.cost_limit_large
+            if configured.get(slug) == "large"
+            else cost_limit
+        )
+        model_overrides = [
+            f"agent.cost_limit={tier_cost_limit}"
+            if o.startswith("agent.cost_limit=")
+            else o
+            for o in overrides
+        ]
         if not args.convert_only:
             try:
                 result = run_swebench_batch(
@@ -240,7 +273,8 @@ def main(argv: list[str] | None = None) -> int:
                     filter_spec=args.filter_spec,
                     redo_existing=args.redo_existing,
                     environment_class=environment_class,
-                    config_overrides=tuple(overrides),
+                    config_overrides=tuple(model_overrides),
+                    global_cost_limit=args.global_cost_limit,
                     dry_run=args.dry_run,
                 )
             except MinisweNotInstalledError as exc:

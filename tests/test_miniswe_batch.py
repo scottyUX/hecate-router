@@ -255,3 +255,26 @@ def test_agent_records_carry_no_prompt_or_raw_response(tmp_path: Path) -> None:
 
 def test_outcome_submitted_ignores_whitespace_only_patch() -> None:
     assert AgentOutcome(instance_id="i", model_patch="   \n").submitted is False
+
+
+def test_global_cost_limit_is_exported_to_subprocess(tmp_path: Path) -> None:
+    """Per-instance caps cannot bound a sweep; the global ceiling must reach
+    the mini-extra process as MSWEA_GLOBAL_COST_LIMIT."""
+    with patch("hecate.agent.batch.require_miniswe"), patch(
+        "hecate.agent.batch.subprocess.run"
+    ) as run:
+        run.return_value.returncode = 0
+        run_swebench_batch(
+            model="m", output_dir=tmp_path / "out", global_cost_limit=25.0
+        )
+    env = run.call_args.kwargs["env"]
+    assert env["MSWEA_GLOBAL_COST_LIMIT"] == "25.0"
+
+
+def test_no_global_cost_limit_inherits_parent_env(tmp_path: Path) -> None:
+    with patch("hecate.agent.batch.require_miniswe"), patch(
+        "hecate.agent.batch.subprocess.run"
+    ) as run:
+        run.return_value.returncode = 0
+        run_swebench_batch(model="m", output_dir=tmp_path / "out")
+    assert run.call_args.kwargs["env"] is None

@@ -15,6 +15,7 @@ sweep over several models must give each model its own output directory.
 
 from __future__ import annotations
 
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -99,6 +100,7 @@ def run_swebench_batch(
     redo_existing: bool = False,
     environment_class: str | None = None,
     config_overrides: tuple[str, ...] | list[str] = (),
+    global_cost_limit: float | None = None,
     dry_run: bool = False,
     mini_extra: str | None = None,
 ) -> MinisweBatchResult:
@@ -129,7 +131,13 @@ def run_swebench_batch(
         )
 
     target.mkdir(parents=True, exist_ok=True)
-    completed = subprocess.run(argv, check=False)
+    # Per-instance cost_limit cannot bound a sweep (300 tasks x $1 = $300).
+    # MSWEA_GLOBAL_COST_LIMIT makes upstream raise once cumulative spend in
+    # this process crosses the ceiling.
+    env = None
+    if global_cost_limit:
+        env = {**os.environ, "MSWEA_GLOBAL_COST_LIMIT": str(global_cost_limit)}
+    completed = subprocess.run(argv, check=False, env=env)
     return MinisweBatchResult(
         argv=tuple(argv),
         output_dir=target,
