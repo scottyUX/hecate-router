@@ -20,6 +20,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -42,6 +44,16 @@ DEFAULT_WALL_TIME_LIMIT_S = 2700.0
 
 def _slug_to_dirname(slug: str) -> str:
     return slug.replace("/", "__")
+
+
+def _miniswe_version() -> str | None:
+    """Installed mini-swe-agent version, for the manifest."""
+    try:
+        import minisweagent
+
+        return getattr(minisweagent, "__version__", None)
+    except ImportError:
+        return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -183,6 +195,7 @@ def main(argv: list[str] | None = None) -> int:
     from hecate.agent.miniswe import MinisweNotInstalledError, load_miniswe_config
     from hecate.data.tasks import load_swebench_lite
     from hecate.utils.env import load_env
+    from hecate.utils.manifest import git_commit_sha, write_run_manifest
 
     load_env()
 
@@ -248,7 +261,12 @@ def main(argv: list[str] | None = None) -> int:
         return f"{provider}/{slug}"
 
     outcomes_by_model = {}
+    argv_by_model: dict[str, list[str]] = {}
+    overrides_by_model: dict[str, list[str]] = {}
+    wall_clock_by_model: dict[str, float] = {}
+    returncode_by_model: dict[str, int] = {}
     for slug in slugs:
+        model_started = time.perf_counter()
         model_dir = run_dir / _slug_to_dirname(slug)
         tier_cost_limit = (
             args.cost_limit_large
@@ -261,6 +279,7 @@ def main(argv: list[str] | None = None) -> int:
             else o
             for o in overrides
         ]
+        overrides_by_model[slug] = model_overrides
         if not args.convert_only:
             try:
                 result = run_swebench_batch(
@@ -280,6 +299,8 @@ def main(argv: list[str] | None = None) -> int:
             except MinisweNotInstalledError as exc:
                 print(f"error: {exc}", file=sys.stderr)
                 return 1
+            argv_by_model[slug] = list(result.argv)
+            returncode_by_model[slug] = result.returncode
             print(f"[{slug}] argv={' '.join(result.argv)}")
             if args.dry_run:
                 continue
@@ -294,6 +315,7 @@ def main(argv: list[str] | None = None) -> int:
         except MinisweConvertError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
+        wall_clock_by_model[slug] = round(time.perf_counter() - model_started, 3)
         submitted = sum(1 for o in outcomes_by_model[slug].values() if o.submitted)
         print(
             f"[{slug}] instances={len(outcomes_by_model[slug])} "
@@ -321,6 +343,81 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     records_path = write_generations(records, run_dir / "generations.jsonl")
+
+    # One manifest per model: run_execution.py also writes manifest.json into
+    # this directory, and the sweep is normally invoked once per model, so a
+    # shared filename would be clobbered either way.
+    for slug, outcomes in outcomes_by_model.items():
+        by_exit: dict[str, int] = {}
+        for outcome in outcomes.values():
+            key = outcome.exit_status or "unknown"
+            by_exit[key] = by_exit.get(key, 0) + 1
+        costs = [o.cost_usd for o in outcomes.values() if o.cost_usd is not None]
+        submitted = sum(1 for o in outcomes.values() if o.submitted)
+        manifest_path = write_run_manifest(
+            run_dir / f"manifest-miniswe-{_slug_to_dirname(slug)}.json",
+            {
+                "run_id": args.run_id,
+                "timestamp": datetime.now(timezone.utc)
+                .isoformat(timespec="seconds")
+                .replace("+00:00", "Z"),
+                "git_commit": git_commit_sha(cwd=Path(__file__).resolve().parents[1]),
+                "scaffold": "mini-swe-agent",
+                "scaffold_version": _miniswe_version(),
+                "scaffold_version_range": str(scaffold.get("version_range") or ""),
+                "config_path": args.config,
+                "config_snapshot": option_a,
+                "miniswe_config_path": args.miniswe_config,
+                "miniswe_config_snapshot": miniswe,
+                "model_slug": slug,
+                "agent_model": _agent_model(slug),
+                "tier": configured.get(slug),
+                "subset": subset,
+                "split": split,
+                "argv": argv_by_model.get(slug),
+                "returncode": returncode_by_model.get(slug),
+                "config_overrides": overrides_by_model.get(slug),
+                "cost_limit_usd": (
+                    args.cost_limit_large
+                    if configured.get(slug) == "large"
+                    else cost_limit
+                ),
+                "global_cost_limit_usd": args.global_cost_limit,
+                "request_timeout_s": args.request_timeout,
+                "wall_time_limit_s": args.wall_time_limit,
+                "step_limit": args.step_limit,
+                "workers": args.workers,
+                "platform": args.platform,
+                "slice": slice_spec,
+                "filter": args.filter_spec,
+                "redo_existing": args.redo_existing,
+                "convert_only": args.convert_only,
+                "instances": len(outcomes),
+                "instances_submitted": submitted,
+                "instances_empty": len(outcomes) - submitted,
+                "exit_status_counts": by_exit,
+                "total_cost_usd": round(sum(costs), 6) if costs else None,
+                "cost_per_instance_usd": (
+                    round(sum(costs) / len(costs), 6) if costs else None
+                ),
+                "wall_clock_s": wall_clock_by_model.get(slug),
+                "records_path": str(records_path),
+                # Per-instance detail: aggregates alone cannot be re-derived
+                # from the run dir once trajectories are pruned.
+                "instance_outcomes": [
+                    {
+                        "instance_id": o.instance_id,
+                        "exit_status": o.exit_status,
+                        "cost_usd": o.cost_usd,
+                        "api_calls": o.api_calls,
+                        "patch_chars": len(o.model_patch or ""),
+                    }
+                    for o in sorted(outcomes.values(), key=lambda x: x.instance_id)
+                ],
+            },
+        )
+        print(f"[{slug}] manifest={manifest_path}")
+
     print(f"run_id={args.run_id} records={len(records)} path={records_path}")
     print(
         "next: python scripts/run_execution.py "

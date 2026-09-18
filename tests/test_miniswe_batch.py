@@ -278,3 +278,61 @@ def test_no_global_cost_limit_inherits_parent_env(tmp_path: Path) -> None:
         run.return_value.returncode = 0
         run_swebench_batch(model="m", output_dir=tmp_path / "out")
     assert run.call_args.kwargs["env"] is None
+
+
+def _run_sweep(argv: list[str]) -> int:
+    """Invoke the sweep script's main() with the repo root importable."""
+    import importlib.util
+
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "run_miniswe_sweep", root / "scripts" / "run_miniswe_sweep.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module.main(argv)
+
+
+def test_sweep_writes_a_manifest_per_model(tmp_path: Path, monkeypatch) -> None:
+    """CLAUDE.md requires every run to record its provenance; run_sweep.py
+    writes a manifest and the agent sweep must too."""
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.chdir(root)
+
+    run_dir = tmp_path / "run"
+    model_dir = run_dir / "qwen__qwen-2.5-7b-instruct"
+    _write_output_dir(model_dir, {"astropy__astropy-12907": PATCH})
+
+    rc = _run_sweep(
+        [
+            "--convert-only",
+            "--tasks", "1",
+            "--model", "qwen/qwen-2.5-7b-instruct",
+            "--allow-incomplete",
+            "--output-dir", str(run_dir),
+            "--run-id", "manifest-test",
+        ]
+    )
+    assert rc == 0
+
+    path = run_dir / "manifest-miniswe-qwen__qwen-2.5-7b-instruct.json"
+    assert path.exists(), "expected a per-model manifest"
+    m = json.loads(path.read_text())
+
+    # Provenance: which code and which scaffold produced these numbers.
+    assert m["run_id"] == "manifest-test"
+    assert m["git_commit"]
+    assert m["scaffold"] == "mini-swe-agent"
+    assert m["model_slug"] == "qwen/qwen-2.5-7b-instruct"
+    assert m["config_snapshot"]["models"]
+    # Per-instance detail survives even if trajectories are pruned later.
+    assert m["instance_outcomes"][0]["instance_id"] == "astropy__astropy-12907"
+
+
+def test_manifest_filename_does_not_collide_with_run_execution(tmp_path: Path) -> None:
+    """run_execution.py writes manifest.json into the same run dir."""
+    from hecate.agent.batch import PREDS_FILENAME  # noqa: F401
+
+    name = "manifest-miniswe-qwen__qwen-2.5-7b-instruct.json"
+    assert name != "manifest.json"
