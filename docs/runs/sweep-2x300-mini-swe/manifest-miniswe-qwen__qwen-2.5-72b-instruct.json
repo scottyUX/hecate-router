@@ -1,0 +1,2205 @@
+{
+  "agent_model": "openrouter/qwen/qwen-2.5-72b-instruct",
+  "argv": null,
+  "config_overrides": [
+    "swebench.yaml",
+    "agent.cost_limit=0.5",
+    "agent.wall_time_limit_seconds=2700",
+    "model.model_kwargs.timeout=300.0"
+  ],
+  "config_path": "configs/option_a.yaml",
+  "config_snapshot": {
+    "base_url": "https://openrouter.ai/api/v1",
+    "budget": {
+      "ceiling_usd": 100.0,
+      "target_usd": 38.0
+    },
+    "context": {
+      "max_file_chars": 24000,
+      "max_total_file_chars": 48000,
+      "method": "oracle"
+    },
+    "decoding": {
+      "max_tokens": 4096,
+      "temperature": 0.0
+    },
+    "generation": {
+      "context_window_tokens": 32768
+    },
+    "models": [
+      {
+        "input_cost_per_1m": 0.36,
+        "output_cost_per_1m": 0.4,
+        "slug": "qwen/qwen-2.5-72b-instruct",
+        "tier": "large"
+      },
+      {
+        "input_cost_per_1m": 0.04,
+        "output_cost_per_1m": 0.1,
+        "slug": "qwen/qwen-2.5-7b-instruct",
+        "tier": "small"
+      }
+    ],
+    "provider": "openrouter"
+  },
+  "convert_only": true,
+  "cost_limit_usd": 0.5,
+  "cost_per_instance_usd": 0.112083,
+  "exit_status_counts": {
+    "BadRequestError": 28,
+    "RateLimitError": 1,
+    "RepeatedFormatError": 29,
+    "Submitted": 76,
+    "TimeExceeded": 2,
+    "unknown": 164
+  },
+  "filter": null,
+  "git_commit": "93bbf795390820b5a3f4fd40efc558f2d6678fe0",
+  "global_cost_limit_usd": null,
+  "instance_outcomes": [
+    {
+      "api_calls": 43,
+      "cost_usd": 0.25453596,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "astropy__astropy-12907",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 8,
+      "cost_usd": 0.01076584,
+      "exit_status": "Submitted",
+      "instance_id": "astropy__astropy-14182",
+      "patch_chars": 934
+    },
+    {
+      "api_calls": 32,
+      "cost_usd": 0.16566731999999998,
+      "exit_status": "BadRequestError",
+      "instance_id": "astropy__astropy-14365",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 64,
+      "cost_usd": 0.40385799999999994,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "astropy__astropy-14995",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.00579884,
+      "exit_status": "Submitted",
+      "instance_id": "astropy__astropy-6938",
+      "patch_chars": 514
+    },
+    {
+      "api_calls": 6,
+      "cost_usd": 0.010583640000000002,
+      "exit_status": "Submitted",
+      "instance_id": "astropy__astropy-7746",
+      "patch_chars": 957
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.01284844,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-10914",
+      "patch_chars": 1613
+    },
+    {
+      "api_calls": 12,
+      "cost_usd": 0.0296806,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-10924",
+      "patch_chars": 767
+    },
+    {
+      "api_calls": 44,
+      "cost_usd": 0.21765724,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-11001",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 5,
+      "cost_usd": 0.01172496,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-11019",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 11,
+      "cost_usd": 0.023560519999999998,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-11039",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 12,
+      "cost_usd": 0.02723656,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11049",
+      "patch_chars": 552
+    },
+    {
+      "api_calls": 39,
+      "cost_usd": 0.171701,
+      "exit_status": "TimeExceeded",
+      "instance_id": "django__django-11099",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 48,
+      "cost_usd": 0.34507536,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-11133",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.010918440000000001,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11179",
+      "patch_chars": 588
+    },
+    {
+      "api_calls": 14,
+      "cost_usd": 0.030813599999999997,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11283",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 15,
+      "cost_usd": 0.05129983999999999,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-11422",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 11,
+      "cost_usd": 0.017783039999999996,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11564",
+      "patch_chars": 469
+    },
+    {
+      "api_calls": 14,
+      "cost_usd": 0.03682788,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11583",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 28,
+      "cost_usd": 0.15562059999999997,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-11620",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 33,
+      "cost_usd": 0.21887424000000003,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-11630",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 33,
+      "cost_usd": 0.20602784,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-11742",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 35,
+      "cost_usd": 0.15757812,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11797",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 28,
+      "cost_usd": 0.16038827999999997,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11815",
+      "patch_chars": 364
+    },
+    {
+      "api_calls": 12,
+      "cost_usd": 0.03462596,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11848",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 6,
+      "cost_usd": 0.01005592,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11905",
+      "patch_chars": 581
+    },
+    {
+      "api_calls": 18,
+      "cost_usd": 0.07353124,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-11910",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 47,
+      "cost_usd": 0.32581711999999996,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-11964",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 14,
+      "cost_usd": 0.01819692,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-11999",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 9,
+      "cost_usd": 0.02025244,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-12113",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 15,
+      "cost_usd": 0.09248327999999999,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-12125",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 29,
+      "cost_usd": 0.15188644,
+      "exit_status": "RateLimitError",
+      "instance_id": "django__django-12184",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 41,
+      "cost_usd": 0.23878435999999997,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-12284",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 8,
+      "cost_usd": 0.011499200000000001,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-12286",
+      "patch_chars": 690
+    },
+    {
+      "api_calls": 24,
+      "cost_usd": 0.07480764000000001,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-12308",
+      "patch_chars": 925
+    },
+    {
+      "api_calls": 65,
+      "cost_usd": 0.40097167999999994,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-12453",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 35,
+      "cost_usd": 0.16398484,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-12470",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 16,
+      "cost_usd": 0.02483212,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-12497",
+      "patch_chars": 1393
+    },
+    {
+      "api_calls": 20,
+      "cost_usd": 0.13182104,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-12589",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 72,
+      "cost_usd": 0.4980457999999999,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-12700",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 20,
+      "cost_usd": 0.09000419999999999,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-12708",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.00890204,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-12747",
+      "patch_chars": 530
+    },
+    {
+      "api_calls": 9,
+      "cost_usd": 0.027707039999999995,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-12856",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 24,
+      "cost_usd": 0.16290764000000002,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-12908",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 41,
+      "cost_usd": 0.19279360000000004,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-12915",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 13,
+      "cost_usd": 0.01621212,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-12983",
+      "patch_chars": 523
+    },
+    {
+      "api_calls": 26,
+      "cost_usd": 0.14407383999999998,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-13028",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 39,
+      "cost_usd": 0.1741448,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-13033",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 26,
+      "cost_usd": 0.18136988,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-13158",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 16,
+      "cost_usd": 0.03556804,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-13220",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 18,
+      "cost_usd": 0.027903999999999998,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13230",
+      "patch_chars": 485
+    },
+    {
+      "api_calls": 31,
+      "cost_usd": 0.14093,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13265",
+      "patch_chars": 1756
+    },
+    {
+      "api_calls": 35,
+      "cost_usd": 0.2571136,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-13315",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 29,
+      "cost_usd": 0.13282080000000002,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-13321",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 15,
+      "cost_usd": 0.04635448,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13401",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 11,
+      "cost_usd": 0.02457372,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13447",
+      "patch_chars": 1623
+    },
+    {
+      "api_calls": 26,
+      "cost_usd": 0.11350647999999999,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13448",
+      "patch_chars": 2056
+    },
+    {
+      "api_calls": 3,
+      "cost_usd": 0.0030191199999999997,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13551",
+      "patch_chars": 758
+    },
+    {
+      "api_calls": 36,
+      "cost_usd": 0.15278696,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-13590",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.007385640000000001,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13658",
+      "patch_chars": 831
+    },
+    {
+      "api_calls": 19,
+      "cost_usd": 0.043178760000000004,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13660",
+      "patch_chars": 773
+    },
+    {
+      "api_calls": 29,
+      "cost_usd": 0.13733464,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13710",
+      "patch_chars": 95777
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.021040839999999998,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13757",
+      "patch_chars": 841
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.007548600000000001,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13768",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 26,
+      "cost_usd": 0.14729168000000004,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-13925",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 63,
+      "cost_usd": 0.44595940000000006,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-13933",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 45,
+      "cost_usd": 0.31690492000000003,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-13964",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 47,
+      "cost_usd": 0.3394138399999999,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-14016",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 3,
+      "cost_usd": 0.0032229600000000004,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14017",
+      "patch_chars": 473
+    },
+    {
+      "api_calls": 18,
+      "cost_usd": 0.03363483999999999,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14155",
+      "patch_chars": 4569
+    },
+    {
+      "api_calls": 6,
+      "cost_usd": 0.011678639999999999,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14238",
+      "patch_chars": 660
+    },
+    {
+      "api_calls": 6,
+      "cost_usd": 0.00689576,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14382",
+      "patch_chars": 708
+    },
+    {
+      "api_calls": 26,
+      "cost_usd": 0.17377652,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-14411",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 14,
+      "cost_usd": 0.0347562,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14534",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 23,
+      "cost_usd": 0.11462916,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14580",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 13,
+      "cost_usd": 0.02517836,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14608",
+      "patch_chars": 491
+    },
+    {
+      "api_calls": 19,
+      "cost_usd": 0.06730552,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-14667",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 22,
+      "cost_usd": 0.10488499999999999,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-14672",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 47,
+      "cost_usd": 0.29974359999999994,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-14730",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 9,
+      "cost_usd": 0.010270719999999999,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-14752",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 11,
+      "cost_usd": 0.02968196,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14787",
+      "patch_chars": 606
+    },
+    {
+      "api_calls": 39,
+      "cost_usd": 0.17608975999999996,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-14855",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 35,
+      "cost_usd": 0.18687668,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-14915",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 70,
+      "cost_usd": 0.48341500000000004,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-14997",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 9,
+      "cost_usd": 0.02552652,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-14999",
+      "patch_chars": 10968
+    },
+    {
+      "api_calls": 13,
+      "cost_usd": 0.022112679999999996,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15061",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 20,
+      "cost_usd": 0.06884091999999999,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15202",
+      "patch_chars": 509
+    },
+    {
+      "api_calls": 54,
+      "cost_usd": 0.3102937600000001,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-15213",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 34,
+      "cost_usd": 0.12288911999999999,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15252",
+      "patch_chars": 1096
+    },
+    {
+      "api_calls": 32,
+      "cost_usd": 0.13529716,
+      "exit_status": "TimeExceeded",
+      "instance_id": "django__django-15320",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 12,
+      "cost_usd": 0.02881876,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15347",
+      "patch_chars": 711
+    },
+    {
+      "api_calls": 15,
+      "cost_usd": 0.02977356,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-15388",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 8,
+      "cost_usd": 0.010528119999999998,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15400",
+      "patch_chars": 461
+    },
+    {
+      "api_calls": 22,
+      "cost_usd": 0.0621868,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15498",
+      "patch_chars": 698
+    },
+    {
+      "api_calls": 8,
+      "cost_usd": 0.020031479999999997,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15695",
+      "patch_chars": 19094
+    },
+    {
+      "api_calls": 45,
+      "cost_usd": 0.24662364000000006,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-15738",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 26,
+      "cost_usd": 0.09917528,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15781",
+      "patch_chars": 950
+    },
+    {
+      "api_calls": 76,
+      "cost_usd": 0.42922048,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-15789",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 33,
+      "cost_usd": 0.22986772,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-15790",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 14,
+      "cost_usd": 0.03424144,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15814",
+      "patch_chars": 642
+    },
+    {
+      "api_calls": 8,
+      "cost_usd": 0.02633832,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15819",
+      "patch_chars": 526
+    },
+    {
+      "api_calls": 21,
+      "cost_usd": 0.08867623999999999,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15851",
+      "patch_chars": 582
+    },
+    {
+      "api_calls": 10,
+      "cost_usd": 0.02516084,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-15902",
+      "patch_chars": 1650
+    },
+    {
+      "api_calls": 19,
+      "cost_usd": 0.07179268,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-15996",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 32,
+      "cost_usd": 0.13894727999999998,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-16041",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 9,
+      "cost_usd": 0.01153668,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16046",
+      "patch_chars": 561
+    },
+    {
+      "api_calls": 10,
+      "cost_usd": 0.00971864,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16139",
+      "patch_chars": 703
+    },
+    {
+      "api_calls": 19,
+      "cost_usd": 0.048524319999999996,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16229",
+      "patch_chars": 1056
+    },
+    {
+      "api_calls": 9,
+      "cost_usd": 0.01355236,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16255",
+      "patch_chars": 524
+    },
+    {
+      "api_calls": 4,
+      "cost_usd": 0.00354336,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16379",
+      "patch_chars": 958
+    },
+    {
+      "api_calls": 42,
+      "cost_usd": 0.24562467999999998,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-16400",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 32,
+      "cost_usd": 0.22357251999999994,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-16408",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 5,
+      "cost_usd": 0.00417164,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16527",
+      "patch_chars": 608
+    },
+    {
+      "api_calls": 14,
+      "cost_usd": 0.02459356,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16595",
+      "patch_chars": 2145
+    },
+    {
+      "api_calls": 26,
+      "cost_usd": 0.17953800000000003,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "django__django-16816",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 25,
+      "cost_usd": 0.09270456000000002,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16820",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 3,
+      "cost_usd": 0.0027391200000000003,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16873",
+      "patch_chars": 595
+    },
+    {
+      "api_calls": 32,
+      "cost_usd": 0.21200179999999996,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-16910",
+      "patch_chars": 586
+    },
+    {
+      "api_calls": 23,
+      "cost_usd": 0.09953051999999998,
+      "exit_status": "BadRequestError",
+      "instance_id": "django__django-17051",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 23,
+      "cost_usd": 0.08436536,
+      "exit_status": "Submitted",
+      "instance_id": "django__django-17087",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 13,
+      "cost_usd": 0.04176104,
+      "exit_status": "Submitted",
+      "instance_id": "matplotlib__matplotlib-18869",
+      "patch_chars": 2702
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-22711",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-22835",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-23299",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-23314",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-23476",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-23562",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-23563",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-23913",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-23964",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-23987",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-24149",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-24265",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-24334",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-24970",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-25079",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-25311",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-25332",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-25433",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-25442",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-25498",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-26011",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "matplotlib__matplotlib-26020",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 36,
+      "cost_usd": 0.22032283999999996,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "mwaskom__seaborn-2848",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 50,
+      "cost_usd": 0.32882632,
+      "exit_status": "BadRequestError",
+      "instance_id": "mwaskom__seaborn-3010",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 21,
+      "cost_usd": 0.0545488,
+      "exit_status": "Submitted",
+      "instance_id": "mwaskom__seaborn-3190",
+      "patch_chars": 686
+    },
+    {
+      "api_calls": 40,
+      "cost_usd": 0.22715156000000003,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "mwaskom__seaborn-3407",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 36,
+      "cost_usd": 0.23461804000000003,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "pallets__flask-4045",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 4,
+      "cost_usd": 0.00331856,
+      "exit_status": "Submitted",
+      "instance_id": "pallets__flask-4992",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 8,
+      "cost_usd": 0.012691000000000001,
+      "exit_status": "Submitted",
+      "instance_id": "pallets__flask-5063",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 4,
+      "cost_usd": 0.00364348,
+      "exit_status": "Submitted",
+      "instance_id": "psf__requests-1963",
+      "patch_chars": 485
+    },
+    {
+      "api_calls": 17,
+      "cost_usd": 0.05131636,
+      "exit_status": "Submitted",
+      "instance_id": "psf__requests-2148",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.01017008,
+      "exit_status": "Submitted",
+      "instance_id": "psf__requests-2317",
+      "patch_chars": 435
+    },
+    {
+      "api_calls": 8,
+      "cost_usd": 0.02928404,
+      "exit_status": "Submitted",
+      "instance_id": "psf__requests-2674",
+      "patch_chars": 543
+    },
+    {
+      "api_calls": 7,
+      "cost_usd": 0.02241652,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "psf__requests-3362",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 8,
+      "cost_usd": 0.015009039999999998,
+      "exit_status": "Submitted",
+      "instance_id": "psf__requests-863",
+      "patch_chars": 460
+    },
+    {
+      "api_calls": 14,
+      "cost_usd": 0.05407179999999999,
+      "exit_status": "Submitted",
+      "instance_id": "pydata__xarray-3364",
+      "patch_chars": 308
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pydata__xarray-4094",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pydata__xarray-4248",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pydata__xarray-4493",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pydata__xarray-5131",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pylint-dev__pylint-5859",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pylint-dev__pylint-6506",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pylint-dev__pylint-7080",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pylint-dev__pylint-7114",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pylint-dev__pylint-7228",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pylint-dev__pylint-7993",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-11143",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-11148",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-5103",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-5221",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-5227",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-5413",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-5495",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-5692",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-6116",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-7168",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-7220",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-7373",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-7432",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-7490",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-8365",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-8906",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "pytest-dev__pytest-9359",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-10297",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-10508",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-10949",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-11040",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-11281",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-12471",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-13142",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-13241",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-13439",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-13496",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-13497",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-13584",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-13779",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-14092",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-14894",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-14983",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-15512",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-15535",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-25500",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-25570",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-25638",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "scikit-learn__scikit-learn-25747",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-10325",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-10451",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-7686",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-7738",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-7975",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8273",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8282",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8435",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8474",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8506",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8595",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8627",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8713",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8721",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sphinx-doc__sphinx-8801",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-11400",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-11870",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-11897",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-12171",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-12236",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-12419",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-12454",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-12481",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13031",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13043",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13146",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13177",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13437",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13471",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13480",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13647",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13773",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13895",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13915",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-13971",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-14024",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-14308",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-14317",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-14396",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-14774",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-14817",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-15011",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-15308",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-15345",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-15346",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-15609",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-15678",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-16106",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-16281",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-16503",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-16792",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-16988",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-17022",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-17139",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-17630",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-17655",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-18057",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-18087",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-18189",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-18199",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-18532",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-18621",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-18698",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-18835",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-19007",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-19254",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-19487",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-20049",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-20154",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-20212",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-20322",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-20442",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": 52,
+      "cost_usd": 0.28280228,
+      "exit_status": "RepeatedFormatError",
+      "instance_id": "sympy__sympy-20590",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-20639",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-21055",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-21171",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-21379",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-21612",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-21614",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-21627",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-21847",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-22005",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-22714",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-22840",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-23117",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-23191",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-23262",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-24066",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-24102",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-24152",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-24213",
+      "patch_chars": 0
+    },
+    {
+      "api_calls": null,
+      "cost_usd": null,
+      "exit_status": null,
+      "instance_id": "sympy__sympy-24909",
+      "patch_chars": 0
+    }
+  ],
+  "instances": 300,
+  "instances_empty": 242,
+  "instances_submitted": 58,
+  "miniswe_config_path": "configs/miniswe.yaml",
+  "miniswe_config_snapshot": {
+    "defaults": {
+      "cost_limit": 3.0,
+      "environment_class": "docker",
+      "exit_immediately": true,
+      "instance": "0",
+      "model": "openrouter/qwen/qwen-2.5-7b-instruct",
+      "output": null
+    },
+    "output": {
+      "runs_root": "data/outputs/runs"
+    },
+    "scaffold": {
+      "name": "mini-swe-agent",
+      "package": "mini-swe-agent",
+      "split": "test",
+      "subset": "lite",
+      "version_range": ">=2,<3"
+    }
+  },
+  "model_slug": "qwen/qwen-2.5-72b-instruct",
+  "platform": null,
+  "records_path": "data/outputs/runs/sweep-2x300-mini-swe/generations.jsonl",
+  "redo_existing": false,
+  "request_timeout_s": 300.0,
+  "returncode": null,
+  "run_id": "sweep-2x300-mini-swe",
+  "scaffold": "mini-swe-agent",
+  "scaffold_version": "2.4.6",
+  "scaffold_version_range": ">=2,<3",
+  "slice": null,
+  "split": "test",
+  "step_limit": null,
+  "subset": "lite",
+  "tier": "large",
+  "timestamp": "2026-09-18T16:39:36Z",
+  "total_cost_usd": 15.243225,
+  "wall_clock_s": 0.709,
+  "wall_time_limit_s": 2700.0,
+  "workers": 1
+}
