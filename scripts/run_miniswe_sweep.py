@@ -58,10 +58,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--output-dir",
-        default="data/outputs/runs/miniswe-2x300-qwen",
+        default="data/outputs/runs/sweep-2x300-mini-swe",
         help="Run directory: per-model agent output plus merged generations.jsonl",
     )
-    parser.add_argument("--run-id", default="miniswe-2x300-qwen")
+    parser.add_argument("--run-id", default="sweep-2x300-mini-swe")
     parser.add_argument(
         "--tasks",
         type=int,
