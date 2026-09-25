@@ -148,9 +148,10 @@ On the repository, each task is on the Scrum board, the task file is committed b
 Before submitting to Canvas, check **each of the following for both tasks**:
 
 - [ ] The task is on the team's Scrum board.
-- [ ] The task file is committed before any implementation code.
+- [ ] The task's base commit is created before any implementation code is written.
 - [ ] The `<id>-base` tag is pushed.
-- [ ] The task implementation and tests are committed.
+- [ ] The task implementation is committed.
+- [ ] The tests are committed.
 - [ ] The pull request has been reviewed and merged.
 - [ ] The `<id>-done` tag is pushed on the completed/merged commit.
 - [ ] The task tests and existing tests pass on `main`.
@@ -164,6 +165,12 @@ Submit **two merged pull-request links**, one for each task:
 1. Task 1: `<merged PR link>`
 2. Task 2: `<merged PR link>`
 
+3. For the Repo Metrics write-up, write **one paragraph** that:
+   * briefly describes what your task implemented
+   * identifies the two Repo Metrics metrics you selected
+   * reports the results for those two metrics
+   * compares the two metrics and explains what they show about your task.
+   
 **You do not need to submit the task files, Git tags, Scrum board, or Repo Metrics separately.**
 
 ## Grading
