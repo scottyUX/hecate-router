@@ -88,18 +88,54 @@ Setup for all: start the app with an empty user store and send requests to `/api
 
 ## Workflow
 
-1. Create the task and add it to your Scrum board. Most teams use a digital board such as GitHub Projects.
-2. Branch from an up-to-date `main`: `git switch -c task/US-1-T-1`.
-3. Commit the task file alone, message `US-1-T-1: task spec`.
-4. Tag and push that commit before you implement: `git tag US-1-T-1-base && git push origin task/US-1-T-1 US-1-T-1-base`.
-5. Implement the task and add its tests in later commits on the same branch. Do not weaken a test to make it pass.
-6. Open a pull request titled `US-1-T-1: <title>`. A teammate reviews it. Merge when the team’s test command passes.
-7. On the merge commit: `git tag US-1-T-1-done <merge commit> && git push origin US-1-T-1-done`.
-8. Run Repo Metrics on the merged pull request.
-   - Section 01: https://repo-metrics-dashboard.vercel.app/course/CSE115A-Fall26-S01/analyze
-   - Section 02: https://repo-metrics-dashboard.vercel.app/course/CSE115A-Fall26-S02/analyze
+Steps below use `US-1-T-1` as the example task id, swap in your own.
 
-   Sign in with GitHub, enter your team name, and select the team repository. In **Choose what to analyze**, open **Closed pull requests** and select this task’s pull request. That run scores the TypeScript and TSX files the pull request changed. The team name is for Repo Metrics only. It is not part of the Canvas submission.
+**1. Create the task**
+- Write the task file at `docs/tasks/sprint-N/US-1-T-1.md`.
+- Add a card for it to your Scrum board (e.g. GitHub Projects).
+
+**2. Branch from an up-to-date `main`:**
+
+`git switch -c task/US-1-T-1`.
+
+**3. Commit the spec alone**
+```bash
+git add docs/tasks/sprint-N/US-1-T-1.md
+git commit -m "US-1-T-1: task spec"
+```
+- No implementation code in this commit — spec only.
+
+**4. Tag and push the spec commit, before writing any code**
+```bash
+git tag US-1-T-1-base
+git push origin task/US-1-T-1 US-1-T-1-base
+```
+
+**5. Implement**
+- Add the implementation and its tests in later commits on the same branch.
+- Do not weaken a test to make it pass.
+
+**6. Open a pull request**
+- Title: `US-1-T-1: <title>`.
+- A teammate reviews it.
+- Merge once the team's test command passes.
+
+**7. Tag the merge commit**
+```bash
+git tag US-1-T-1-done <merge commit sha>
+git push origin US-1-T-1-done
+```
+
+**8. Run Repo Metrics on the merged PR**
+- Section 01: https://repo-metrics-dashboard.vercel.app/course/CSE115A-Fall26-S01/analyze
+- Section 02: https://repo-metrics-dashboard.vercel.app/course/CSE115A-Fall26-S02/analyze
+
+  1. Sign in with GitHub.
+  2. Enter your team name and select the team repository.
+  3. Under **Choose what to analyze**, open **Closed pull requests**.
+  4. Select this task's pull request.
+
+  This run scores the TypeScript/TSX files the PR changed. Team name is for Repo Metrics only, not part of the Canvas submission.
 
 ## How to submit
 
