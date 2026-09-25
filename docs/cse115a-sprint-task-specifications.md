@@ -107,6 +107,29 @@ Everything is due at the end of the sprint. Paste two merged pull-request links 
 
 On the repository, each task is on the Scrum board, the task file is committed before the implementation, the `<id>-base` and `<id>-done` tags are pushed, the tests pass on `main`, and Repo Metrics has been run on the merged pull request.
 
+## Sprint Submission Checklist
+
+Before submitting to Canvas, check **each of the following for both tasks**:
+
+- [ ] The task is on the team's Scrum board.
+- [ ] The task file is committed before any implementation code.
+- [ ] The `<id>-base` tag is pushed.
+- [ ] The task implementation and tests are committed.
+- [ ] The pull request has been reviewed and merged.
+- [ ] The `<id>-done` tag is pushed on the completed/merged commit.
+- [ ] The task tests and existing tests pass on `main`.
+- [ ] Repo Metrics has been run on the **merged pull request**.
+- [ ] I have the link to the **merged pull request**.
+
+## Canvas
+
+Submit **two merged pull-request links**, one for each task:
+
+1. Task 1: `<merged PR link>`
+2. Task 2: `<merged PR link>`
+
+**You do not need to submit the task files, Git tags, Scrum board, or Repo Metrics separately.**
+
 ## Grading
 
 Each task is scored out of 10. Your sprint score is the average of your two best tasks. A missing task scores 0. The grader reads the task file and checks the merged pull request and the two tags.
