@@ -24,8 +24,6 @@ You own at least two tasks each sprint. Each task must meet all of these:
 - The task file is created before any implementation code.
 - Every acceptance criterion has at least one committed test.
 
-Your team's repository must run its tests in GitHub Actions on every pull request and on every push to `main`. The **Tests pass** criterion is graded from those results on your merge commit. Without them, the criterion cannot be checked automatically.
-
 ## Task structure
 
 | Field | Its job | What to write |
@@ -123,7 +121,7 @@ git push origin task/US-1-T-1 US-1-T-1-base
 - Title: `US-1-T-1: <title>`.
 - The PR changes only this task's file under `docs/tasks/`. One task file per PR.
 - A teammate reviews it.
-- Merge once the GitHub Actions tests pass.
+- Merge once the team's test command passes.
 
 **7. Tag the merge commit**
 
@@ -166,7 +164,7 @@ Before pressing **Submit Assignment N**, check **each of the following for both 
 - [ ] The implementation and tests are committed on the task branch.
 - [ ] The pull request was opened from your account, reviewed, and merged.
 - [ ] The `<id>-done` tag is pushed on the merge commit.
-- [ ] The task tests and existing tests pass in GitHub Actions on `main`.
+- [ ] The task tests and existing tests pass on `main`.
 - [ ] The task is added in the Repo Metrics app and its checks have no items to review.
 
 ## Canvas
@@ -183,7 +181,7 @@ For each sprint, write **one paragraph** that:
 
 ## Grading
 
-Each task is scored out of 10. Your sprint score is the average of your two tasks. A missing task scores 0. The grader reads the task file and checks the merged pull request, the two tags, and the GitHub Actions results on the merge commit. An instructor reviews every grade before you see it.
+Each task is scored out of 10. Your sprint score is the average of your two tasks. A missing task scores 0. The grader reads the task file and checks the merged pull request, and the two tags. An instructor reviews every grade before you see it.
 
 | Criterion | Full credit | Partial | None | Pts |
 |---|---|---|---|---|
@@ -192,7 +190,7 @@ Each task is scored out of 10. Your sprint score is the average of your two task
 | Acceptance criteria | Every item pass/fail and checkable | Some items vague | Missing or not checkable | 2 |
 | Tests section | Every criterion mapped to a test with setup and assertion | Some criteria unmapped | Names only, or missing | 1 |
 | Test quality | Tests assert the criteria and fail without the implementation | Some weak or trivial assertions | Tests cannot fail | 1 |
-| Tests pass | All task tests pass in GitHub Actions at `-done`; existing tests still pass | Some task tests still failing | Tests do not run, or missing | 2 |
+| Tests pass | All task tests pass at `-done`; existing tests still pass | Some task tests still failing | Tests do not run, or missing | 2 |
 | Process | Spec committed first, both tags pushed, Scrum board card present, both tasks submitted in the app | One step missing or late | Implementation committed before the task file | 1 |
 
 Consent to the research, whether a task is later chosen for the benchmark, which AI tools you used, and how any AI tool performs on your task do not affect your grade.
