@@ -308,8 +308,12 @@ def main(argv: list[str] | None = None) -> int:
     # model (container start / image pull failed): infra failures, not model
     # failures. Upstream resume skips anything in preds.json, so these must be
     # pruned from preds.json before a re-run will retry them.
+    # Same test as --prune-infra-failures, so an instance killed by e.g. an
+    # OpenRouter 402 is never graded as a model failure, pruned or not.
     infra_failed = sorted(
-        i for i, o in outcomes.items() if o.traj_path is None or o.exit_status is None
+        i
+        for i, o in outcomes.items()
+        if o.exit_status is None or _is_infra_failure(model_dir, i)
     )
     submitted = sum(1 for o in outcomes.values() if o.submitted)
     print(
