@@ -38,6 +38,9 @@ class ModelSpec:
     slug: str  # OpenRouter slug, also the model_slug on generation records
     providers: tuple[str, ...]  # OpenRouter provider.order, no fallbacks beyond these
     global_cost_limit_usd: float
+    # Extra -c overrides for this model only. Kept to operational settings;
+    # anything that changes what the model sees must stay shared.
+    extra_overrides: tuple[str, ...] = ()
 
 
 # Per-process caps sum to the $250 experiment budget. Split by expected cost
@@ -57,6 +60,12 @@ MODELS: dict[str, ModelSpec] = {
             "google/gemini-3-flash-preview",
             ("google-ai-studio", "google-vertex"),
             40.0,
+            # litellm's price table returns $0 for some Gemini 3 Flash calls
+            # and mini-SWE then kills the instance (3/12 in the first minutes
+            # of the run). Ignoring keeps the instance alive; that call is
+            # counted as $0 toward the cap, but OpenRouter's billed usage.cost
+            # is still in every saved response for the real total.
+            ("model.cost_tracking=ignore_errors",),
         ),
         ModelSpec("minimax", "minimax/minimax-m2.5", ("minimax",), 25.0),
     )
@@ -84,6 +93,7 @@ def config_overrides_for(
     overrides = [
         str(config_path),
         f"model.model_kwargs.extra_body.provider.order={json.dumps(list(spec.providers))}",
+        *spec.extra_overrides,
     ]
     if platform:
         overrides.append(
@@ -92,29 +102,46 @@ def config_overrides_for(
     return overrides
 
 
-def prune_infra_failures(model_dir: Path) -> list[str]:
-    """Remove preds.json entries whose instance never produced a trajectory.
+# Tracebacks that mean the harness, not the model, ended the instance.
+INFRA_TRACEBACK_MARKERS = ("Error calculating cost",)
 
-    Upstream writes a preds.json entry even when the container fails to start,
-    and its resume logic skips anything already in preds.json, so without this
-    those instances would never be retried. Checks for the trajectory file
-    itself, not its exit status, so failures before agent creation are caught
-    too (the gap that cost the sanity check matplotlib-26113).
+
+def _is_infra_failure(model_dir: Path, iid: str) -> bool:
+    traj = model_dir / iid / f"{iid}.traj.json"
+    if not traj.exists():
+        return True
+    try:
+        info = json.loads(traj.read_text()).get("info", {})
+    except (OSError, json.JSONDecodeError):
+        return True
+    trace = str(info.get("traceback") or "")
+    return any(marker in trace for marker in INFRA_TRACEBACK_MARKERS)
+
+
+def prune_infra_failures(model_dir: Path) -> list[str]:
+    """Re-queue instances the harness, not the model, ended.
+
+    Two cases: no trajectory at all (container start / image pull failed
+    before the agent existed; the gap that cost the sanity check
+    matplotlib-26113), or a trajectory ended by a known harness error (see
+    INFRA_TRACEBACK_MARKERS). Upstream's resume skips anything already in
+    preds.json, so the entry is removed; any trajectory dir is moved under
+    _infra_failed/ rather than deleted, so the failed attempt stays on record.
     """
     preds_path = model_dir / "preds.json"
     if not preds_path.exists():
         return []
     preds = json.loads(preds_path.read_text())
-    pruned = sorted(
-        iid for iid in preds if not (model_dir / iid / f"{iid}.traj.json").exists()
-    )
+    pruned = sorted(iid for iid in preds if _is_infra_failure(model_dir, iid))
     if pruned:
-        backup = preds_path.with_suffix(
-            f".json.bak-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
-        )
-        backup.write_text(preds_path.read_text())
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        preds_path.with_suffix(f".json.bak-{stamp}").write_text(preds_path.read_text())
         for iid in pruned:
             del preds[iid]
+            if (model_dir / iid).exists():
+                dest = model_dir / "_infra_failed" / f"{iid}-{stamp}"
+                dest.parent.mkdir(exist_ok=True)
+                (model_dir / iid).rename(dest)
         preds_path.write_text(json.dumps(preds, indent=2))
     return pruned
 

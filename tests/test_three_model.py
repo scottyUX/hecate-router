@@ -82,3 +82,26 @@ def test_prune_infra_failures_drops_only_trajectoryless(tmp_path: Path) -> None:
     assert RUN.prune_infra_failures(tmp_path) == ["never"]
     assert set(json.loads((tmp_path / "preds.json").read_text())) == {"ran"}
     assert list(tmp_path.glob("preds.json.bak-*"))
+
+
+def test_prune_requeues_cost_tracking_crash_and_keeps_its_trajectory(tmp_path: Path) -> None:
+    (tmp_path / "crashed").mkdir()
+    (tmp_path / "crashed" / "crashed.traj.json").write_text(
+        json.dumps({"info": {"exit_status": "RuntimeError",
+                             "traceback": "RuntimeError: Error calculating cost for model x"}})
+    )
+    (tmp_path / "ok").mkdir()
+    (tmp_path / "ok" / "ok.traj.json").write_text(
+        json.dumps({"info": {"exit_status": "Submitted"}})
+    )
+    (tmp_path / "preds.json").write_text(json.dumps({"crashed": {}, "ok": {}}))
+    assert RUN.prune_infra_failures(tmp_path) == ["crashed"]
+    assert set(json.loads((tmp_path / "preds.json").read_text())) == {"ok"}
+    assert not (tmp_path / "crashed").exists()
+    assert len(list((tmp_path / "_infra_failed").glob("crashed-*/crashed.traj.json"))) == 1
+
+
+def test_only_gemini_ignores_cost_tracking_errors() -> None:
+    for key, spec in RUN.MODELS.items():
+        overrides = RUN.config_overrides_for(spec, Path("cfg.yaml"))
+        assert ("model.cost_tracking=ignore_errors" in overrides) == (key == "gemini")
