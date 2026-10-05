@@ -105,3 +105,14 @@ def test_only_gemini_ignores_cost_tracking_errors() -> None:
     for key, spec in RUN.MODELS.items():
         overrides = RUN.config_overrides_for(spec, Path("cfg.yaml"))
         assert ("model.cost_tracking=ignore_errors" in overrides) == (key == "gemini")
+
+
+def test_prune_requeues_openrouter_credit_exhaustion(tmp_path: Path) -> None:
+    (tmp_path / "broke").mkdir()
+    (tmp_path / "broke" / "broke.traj.json").write_text(json.dumps({"info": {
+        "exit_status": "APIError",
+        "traceback": 'OpenrouterException - {"error":{"message":"This request would '
+                     'exceed your available credits","code":402,"metadata":'
+                     '{"reason":"in_flight_budget_exhausted"}}}'}}))
+    (tmp_path / "preds.json").write_text(json.dumps({"broke": {}}))
+    assert RUN.prune_infra_failures(tmp_path) == ["broke"]

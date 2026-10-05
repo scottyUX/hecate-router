@@ -103,7 +103,14 @@ def config_overrides_for(
 
 
 # Tracebacks that mean the harness, not the model, ended the instance.
-INFRA_TRACEBACK_MARKERS = ("Error calculating cost",)
+INFRA_TRACEBACK_MARKERS = (
+    "Error calculating cost",
+    # OpenRouter 402s: the account ran out of credits mid-run (Opus,
+    # 2026-10-05). Billing, not the model.
+    "in_flight_budget_exhausted",
+    "requires more credits",
+    "exceed your available credits",
+)
 
 
 def _is_infra_failure(model_dir: Path, iid: str) -> bool:
