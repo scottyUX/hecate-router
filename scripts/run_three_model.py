@@ -310,7 +310,10 @@ def main(argv: list[str] | None = None) -> int:
         f"infra_failed={len(infra_failed)}"
     )
 
-    wanted = set(instance_ids)
+    # Infra failures never reached the model; grading their empty patch would
+    # record them as unresolved, i.e. as model failures. Leave them out of
+    # generations.jsonl entirely (they stay listed in the manifest).
+    wanted = set(instance_ids) - set(infra_failed)
     records = build_records(
         {spec.slug: {i: o for i, o in outcomes.items() if i in wanted}},
         [t for t in tasks if t.instance_id in wanted],
