@@ -147,16 +147,16 @@ Submit in the [Repo Metrics app](https://cse115a-repo-metrics-production.up.rail
 
 **Every sprint**
 1. Open **Assignment N**, where `N` is the sprint number.
-2. In **Task 1**, paste the first merged pull-request link and press **Submit task**. Keep the tab open while the analysis runs.
+2. In **Task 1**, paste the first merged pull-request link and press **Add PR**. Keep the tab open while the analysis runs.
 3. Do the same in **Task 2** for your second task.
-4. Read the checks under each task. A check marked for review can cost the Process point. To re-check a task after fixing it (for example, after pushing a missing tag), paste the same link again and press the button under it.
-5. When both tasks are analyzed, press **Submit Assignment N**. You can submit once. After that, both tasks are locked.
+4. Read the checks under each task. A check marked for review can cost the Process point. To re-check a task after fixing it (for example, after pushing a missing tag), press **Re-check** on that task.
+5. When both tasks are analyzed, press **Submit Sprint N**. Both tasks lock when you submit. To change them, press **Change submission**. You can do this until the sprint closes, as long as your grade hasn't been released.
 
 Your grade appears in the app after an instructor reviews it.
 
 ## Sprint Submission Checklist
 
-Before pressing **Submit Assignment N**, check **each of the following for both tasks**:
+Before pressing **Submit Sprint N**, check **each of the following for both tasks**:
 
 - [ ] The task is on the team's Scrum board.
 - [ ] The task file was committed alone, before any implementation code.
