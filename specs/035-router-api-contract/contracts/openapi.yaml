@@ -1,0 +1,295 @@
+openapi: 3.1.0
+
+info:
+  title: Hecate Router API
+  version: "v1"
+  description: |
+    Route-only inference. Given a coding task, return the model tier that should
+    handle it.
+
+    See `router-api.md` for score semantics, tier-to-slug resolution, the auth
+    boundary, and the versioning policy. Worked payloads are in `examples/`.
+  license:
+    name: MIT
+
+servers:
+  - url: https://{service}.run.app
+    description: Cloud Run service (IAM-only)
+    variables:
+      service:
+        default: hecate-router
+
+security:
+  - cloudRunIam: []
+
+paths:
+  /v1/route:
+    post:
+      operationId: route
+      summary: Route a task to a model tier
+      description: |
+        Returns the tier (`small` or `large`) that should handle the given
+        task, the per-tier scores behind that decision, and the OpenRouter slug
+        mapped to the chosen tier.
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        description: |
+          Maximum 4 MiB measured over the whole
+          body before JSON parsing. This is a transport guard, separate from
+          the per-field character maxima in `RouteRequest`; exceeding either
+          returns 413 `payload_too_large`.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteRequest"
+      responses:
+        "200":
+          description: Routing decision
+          headers:
+            X-Request-Id:
+              $ref: "#/components/headers/XRequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteResponse"
+        "400":
+          $ref: "#/components/responses/MalformedRequest"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UnknownRouterVersion"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/RouterUnavailable"
+
+components:
+
+  securitySchemes:
+    cloudRunIam:
+      type: http
+      scheme: bearer
+      description: |
+        Google-issued identity token, e.g. `gcloud auth print-identity-token`.
+        The caller must hold `roles/run.invoker` on the service.
+        Rejections are emitted by Cloud Run before this application runs and do
+        not use `ErrorBody`.
+
+  parameters:
+    RequestId:
+      name: X-Request-Id
+      in: header
+      required: false
+      description: |
+        Correlation id. Echoed in the response body and the
+        `X-Request-Id` response header. When absent, the service generates a
+        UUIDv4.
+      schema:
+        type: string
+        maxLength: 200
+
+  headers:
+    XRequestId:
+      description: Correlation id for this request; matches `request_id` in the body.
+      required: true
+      schema:
+        type: string
+
+  schemas:
+
+    RouteRequest:
+      type: object
+      additionalProperties: false
+      required: [task_text]
+      properties:
+        task_text:
+          type: string
+          minLength: 1
+          maxLength: 64000
+          pattern: "\\S"
+          description: |
+            The coding task to route. Required.
+            Whitespace-only values are rejected with 422.
+            `maxLength` counts characters.
+        file_text:
+          type: string
+          maxLength: 256000
+          description: |
+            Optional oracle/context file text. Whether a given `router_version`
+            consumes this field is version-dependent and not specified in v1;
+            see `router-api.md`.
+            `maxLength` counts characters.
+        router_version:
+          type: string
+          maxLength: 200
+          description: |
+            Packaged router version, e.g. `em4-v1`. Optional; defaults
+            to the latest artifact packaged in the deployment. Aliases such as
+            `latest` are not accepted. An unrecognized value returns 404.
+
+    RouteResponse:
+      type: object
+      additionalProperties: false
+      required: [route, scores, model_slug, router_version, request_id]
+      properties:
+        route:
+          type: string
+          enum: [small, large]
+          description: The tier that should handle this task.
+        scores:
+          $ref: "#/components/schemas/Scores"
+        model_slug:
+          type: string
+          description: |
+            OpenRouter slug mapped to the chosen tier, resolved from
+            `configs/option_a.yaml`.
+          examples: [qwen/qwen-2.5-7b-instruct, qwen/qwen-2.5-72b-instruct]
+        router_version:
+          type: string
+          description: |
+            The router version that produced this decision, resolved
+            even when the request omitted the field.
+          examples: [em4-v1]
+        request_id:
+          type: string
+          description: Correlation id; matches the `X-Request-Id` response header.
+
+    Scores:
+      type: object
+      additionalProperties: false
+      required: [small, large]
+      description: |
+        Independent per-model estimates.
+      properties:
+        small:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Estimate for the small tier.
+        large:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Estimate for the large tier.
+
+    ErrorBody:
+      type: object
+      additionalProperties: false
+      required: [error]
+      description: |
+        The error shape emitted by this application. 401 and 403 come
+        from the Cloud Run front end and do not use this schema.
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, request_id]
+          properties:
+            code:
+              type: string
+              enum:
+                - malformed_request
+                - unknown_router_version
+                - payload_too_large
+                - validation_error
+                - rate_limited
+                - internal_error
+                - router_unavailable
+              description: Stable machine-readable code. Branch on this, not on `message`.
+            message:
+              type: string
+              description: Human-readable detail. Not stable; do not parse.
+            request_id:
+              type: string
+              description: Correlation id for this request.
+
+  responses:
+
+    MalformedRequest:
+      description: Request body is not valid JSON.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+
+    Unauthenticated:
+      description: |
+        Missing or invalid identity token. Emitted by the Cloud Run front end
+        before this application executes: the body is NOT `ErrorBody`, carries
+        no `request_id`, and does not appear in this service's logs. Callers
+        must check for 401/403 before parsing a body as `ErrorBody`.
+
+    Forbidden:
+      description: |
+        Authenticated, but the principal lacks `roles/run.invoker` on this
+        service. Emitted by the Cloud Run front end before this application
+        executes: the body is NOT `ErrorBody`, carries no `request_id`, and does
+        not appear in this service's logs.
+
+    UnknownRouterVersion:
+      description: The requested `router_version` is not served by this deployment.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+
+    PayloadTooLarge:
+      description: |
+        Request body or a field exceeds its documented maximum
+        length.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+
+    ValidationError:
+      description: Body parsed, but a field failed validation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+
+    RateLimited:
+      description: Too many requests.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+
+    InternalError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
+
+    RouterUnavailable:
+      description: |
+        The router artifact is unavailable or still loading. For example a cold
+        start still fetching the checkpoint from GCS. Retryable.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorBody"
