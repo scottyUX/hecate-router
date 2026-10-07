@@ -90,6 +90,9 @@ Setup for all: start the app with an empty user store and send requests to `/api
 
 Steps below use `US-1-T-1` (User Story 1, Task 1) as the example task id, swap in your own.
 
+**Team setup (once, before your first task)**
+- One teammate with admin access to the team repository turns off the merge options that break the Process check: **Settings → General → Pull Requests**. Keep **Allow merge commits** checked, and uncheck **Allow squash merging** and **Allow rebase merging**. Then the merge button can only make a merge commit.
+
 **1. Create the task**
 - Write the task file at `docs/tasks/sprint-1/US-1-T-1.md` (use your sprint number, not the letter `N`).
 - Add a card for it to your Scrum board (e.g. GitHub Projects).
@@ -128,7 +131,7 @@ git push origin task/US-1-T-1 US-1-T-1-base
   git log --oneline --reverse origin/main..
   ```
   The first line should be your task spec commit. If it isn't, see [Fixing mistakes](#fixing-mistakes) before you merge.
-- Merge once the team's test command passes, using **Merge pull request** (a merge commit). Do not use **Squash and merge** or **Rebase and merge**. Both rewrite your commits, so the spec commit and its `-base` tag no longer appear on `main`, and the Process check fails. GitHub remembers your last choice, so check the button label before clicking.
+- Merge once the team's test command passes, using **Merge pull request** (a merge commit). Do not use **Squash and merge** or **Rebase and merge**. Both rewrite your commits, so the spec commit and its `-base` tag no longer appear on `main`, and the Process check fails. GitHub remembers your last choice, so check the button label before clicking. If your team did the [team setup](#workflow), this is the only option.
 
 **7. Tag the merge commit**
 
@@ -200,6 +203,8 @@ These steps cover two mistakes: your task spec isn't the first commit on the bra
 5. Optional: delete the old branch with `git push origin --delete task/US-1-T-1`.
 
 **If your PR is already merged:** submit the task anyway. You lose the Process point (1 of 10), but everything else is graded normally. Do not delete and re-add files to rewrite the history.
+
+If the PR was squash- or rebase-merged, ask your team to do the [team setup](#workflow) so it can't happen again.
 
 If you're unsure, ask a TA before changing anything.
 
