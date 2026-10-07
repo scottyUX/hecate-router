@@ -90,6 +90,9 @@ Setup for all: start the app with an empty user store and send requests to `/api
 
 Steps below use `US-1-T-1` (User Story 1, Task 1) as the example task id, swap in your own.
 
+**Team setup (once, before your first task)**
+- One teammate with admin access to the team repository turns off the merge options that break the Process check: **Settings → General → Pull Requests**. Keep **Allow merge commits** checked, and uncheck **Allow squash merging** and **Allow rebase merging**. Then the merge button can only make a merge commit.
+
 **1. Create the task**
 - Write the task file at `docs/tasks/sprint-1/US-1-T-1.md` (use your sprint number, not the letter `N`).
 - Add a card for it to your Scrum board (e.g. GitHub Projects).
@@ -111,6 +114,7 @@ git tag US-1-T-1-base
 git push origin task/US-1-T-1 US-1-T-1-base
 ```
 - This commit must stay the first commit on the branch. Do not rebase, amend, or force-push it after tagging.
+- If this commit isn't first, or you changed it after tagging, see [Fixing mistakes](#fixing-mistakes).
 
 **5. Implement**
 - Add the implementation and its tests on the same branch.
@@ -121,7 +125,13 @@ git push origin task/US-1-T-1 US-1-T-1-base
 - Title: `US-1-T-1: <title>`.
 - The PR changes only this task's file under `docs/tasks/`. One task file per PR.
 - A teammate reviews it.
-- Merge once the team's test command passes.
+- Before merging, check that your task spec is the first commit on the branch:
+  ```bash
+  git fetch origin
+  git log --oneline --reverse origin/main..
+  ```
+  The first line should be your task spec commit. If it isn't, see [Fixing mistakes](#fixing-mistakes) before you merge.
+- Merge once the team's test command passes, using **Merge pull request** (a merge commit). Do not use **Squash and merge** or **Rebase and merge**. Both rewrite your commits, so the spec commit and its `-base` tag no longer appear on `main`, and the Process check fails. GitHub remembers your last choice, so check the button label before clicking. If your team did the [team setup](#workflow), this is the only option.
 
 **7. Tag the merge commit**
 
@@ -166,6 +176,37 @@ Before pressing **Submit Assignment N**, check **each of the following for both 
 - [ ] The `<id>-done` tag is pushed on the merge commit.
 - [ ] The task tests and existing tests pass on `main`.
 - [ ] The task is added in the Repo Metrics app and its checks have no items to review.
+
+## Fixing mistakes
+
+These steps cover two mistakes: your task spec isn't the first commit on the branch, or you amended, rebased, or force-pushed it after tagging.
+
+**If your PR is not yet merged:** don't edit or delete files on that branch. Commits added later don't change which commit is first. Instead:
+
+1. Copy your task file, code, and tests somewhere outside the repo.
+2. Start a new branch from an up-to-date `main`:
+   ```bash
+   git switch main
+   git pull
+   git switch -c task/US-1-T-1-v2
+   ```
+3. Copy your task file back, commit it alone, and move the base tag to it:
+   ```bash
+   git add docs/tasks/sprint-1/US-1-T-1.md
+   git commit -m "US-1-T-1: task spec"
+   git tag -d US-1-T-1-base
+   git push origin :refs/tags/US-1-T-1-base
+   git tag US-1-T-1-base
+   git push origin task/US-1-T-1-v2 US-1-T-1-base
+   ```
+4. Copy your code and tests back, commit, push, and open a new pull request. Close the old one.
+5. Optional: delete the old branch with `git push origin --delete task/US-1-T-1`.
+
+**If your PR is already merged:** submit the task anyway. You lose the Process point (1 of 10), but everything else is graded normally. Do not delete and re-add files to rewrite the history.
+
+If the PR was squash- or rebase-merged, ask your team to do the [team setup](#workflow) so it can't happen again.
+
+If you're unsure, ask a TA before changing anything.
 
 ## Canvas
 
