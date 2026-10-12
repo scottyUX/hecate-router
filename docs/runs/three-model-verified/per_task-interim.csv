@@ -1,0 +1,301 @@
+model,instance_id,repo,difficulty,status,resolved,patch_applied,exit_status,cost_usd,steps,api_calls,actions,actions_per_step,format_errors,prompt_tokens,completion_tokens,reasoning_tokens,max_prompt_tokens,inspect_actions,search_actions,edit_actions,revert_actions,test_runs,test_runs_passed,test_runs_failed,script_runs,script_runs_passed,script_runs_failed,files_inspected,files_written,helper_files_written,nonzero_returncodes,tracebacks,timeouts,edit_run_cycles,failed_run_then_edit,first_edit_step,first_test_step,first_edit_frac,first_test_frac,runtime_s,time_to_first_test_s,time_to_first_edit_s,time_to_submit_s
+opus,astropy__astropy-13033,astropy/astropy,15 min - 1 hour,attempted,False,True,Submitted,0.75997,38,38,42,1.105,0,686188,8647,0,30033,11,6,2,0,14,12,2,11,7,4,4,3,2,6,4,0,1,0,9,11,0.237,0.289,187.35,80.18,59.98,187.35
+opus,astropy__astropy-13453,astropy/astropy,15 min - 1 hour,attempted,True,True,Submitted,0.620824,34,34,41,1.206,0,607653,6244,0,27955,24,4,3,1,2,2,0,7,7,0,3,4,3,0,0,0,2,0,20,27,0.588,0.794,129.49,102.67,64.74,129.49
+opus,astropy__astropy-14096,astropy/astropy,15 min - 1 hour,attempted,True,True,Submitted,0.442428,22,22,24,1.091,0,319231,5456,0,23909,10,1,1,0,2,2,0,8,4,4,1,8,7,4,4,0,1,0,11,14,0.5,0.636,114.46,72.99,52.5,114.46
+opus,astropy__astropy-14365,astropy/astropy,15 min - 1 hour,attempted,False,True,Submitted,0.742436,46,46,47,1.022,0,757594,7685,0,25357,16,2,6,1,3,3,0,17,17,0,1,12,11,0,1,0,3,0,10,22,0.217,0.478,176.72,104.14,43.33,176.72
+opus,astropy__astropy-14369,astropy/astropy,1-4 hours,attempted,False,True,Submitted,1.731139,64,64,66,1.031,0,1928644,17349,0,52894,19,10,7,2,5,5,0,28,27,1,3,8,7,1,1,0,6,0,3,44,0.047,0.688,327.97,224.39,11.18,327.97
+opus,django__django-10999,django/django,<15 min fix,attempted,False,True,Submitted,0.156567,13,13,13,1.0,0,69153,1723,0,7549,3,1,1,0,2,2,0,3,3,0,1,2,1,0,0,0,1,0,4,7,0.308,0.538,38.9,21.77,11.48,38.9
+opus,django__django-11066,django/django,<15 min fix,attempted,True,True,Submitted,0.107989,6,6,7,1.167,0,26529,679,0,5828,3,1,1,0,0,0,0,0,0,0,1,2,1,0,0,0,0,0,2,,0.333,,13.17,,3.75,13.17
+opus,django__django-11119,django/django,<15 min fix,attempted,True,True,Submitted,0.364921,24,24,27,1.125,0,297635,3929,0,17235,7,2,1,2,6,3,3,3,3,0,4,4,3,2,2,0,1,0,8,12,0.333,0.5,81.1,46.57,27.19,81.1
+opus,django__django-11138,django/django,1-4 hours,attempted,True,True,Submitted,4.582044,118,118,123,1.042,0,6263568,35699,0,91759,62,9,13,3,12,6,6,34,26,8,11,27,23,8,12,0,7,1,18,57,0.153,0.483,535.14,267.96,60.28,535.14
+opus,django__django-11141,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.453483,30,30,32,1.067,0,359035,5667,0,19113,9,5,3,0,4,3,1,6,6,0,3,14,13,1,1,0,3,0,7,17,0.233,0.567,107.9,61.54,23.85,107.9
+opus,django__django-11149,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.722537,35,35,39,1.114,0,642693,8191,0,30701,19,4,1,0,8,7,1,5,5,0,3,6,5,0,1,0,1,0,9,13,0.257,0.371,186.07,72.38,49.05,186.07
+opus,django__django-11333,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.398139,30,30,35,1.167,0,319546,4957,0,15576,13,3,3,0,9,8,1,5,2,3,4,5,3,2,3,0,1,0,8,15,0.267,0.5,112.97,64.66,45.91,112.97
+opus,django__django-11433,django/django,<15 min fix,attempted,True,True,Submitted,1.06478,43,43,47,1.093,0,1037911,12705,0,38222,22,2,3,2,5,3,2,9,8,1,7,9,8,1,1,0,2,1,23,27,0.535,0.628,219.87,131.77,107.63,219.87
+opus,django__django-11734,django/django,15 min - 1 hour,attempted,True,True,Submitted,7.584731,153,153,160,1.046,0,10886010,56319,0,123376,78,6,11,14,17,10,7,45,39,6,8,35,34,8,7,0,9,0,32,100,0.209,0.654,931.26,652.38,140.58,931.26
+opus,django__django-12039,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.614609,29,29,32,1.103,0,478130,9029,0,24449,11,5,1,0,5,4,1,8,4,4,5,5,4,5,3,0,1,0,9,13,0.31,0.448,138.05,89.27,70.48,138.05
+opus,django__django-12262,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.305269,19,19,19,1.0,0,181760,4468,0,14580,6,1,1,0,3,3,0,4,4,0,1,6,5,0,1,0,1,0,7,11,0.368,0.579,78.03,55.99,31.83,78.03
+opus,django__django-12273,django/django,15 min - 1 hour,attempted,True,True,Submitted,2.552889,98,98,103,1.051,0,3182015,24730,0,55576,37,9,10,5,14,11,3,35,35,0,8,24,23,0,3,0,7,0,27,53,0.276,0.541,449.51,249.62,139.37,449.51
+opus,django__django-12304,django/django,<15 min fix,attempted,True,True,Submitted,0.414191,24,24,26,1.083,0,233931,6586,0,16036,8,3,1,0,4,4,0,6,4,2,5,4,3,3,2,0,1,0,12,15,0.5,0.625,104.93,80.41,65.38,104.93
+opus,django__django-12308,django/django,<15 min fix,attempted,False,True,Submitted,0.478328,31,31,34,1.097,0,442693,4826,0,22288,16,3,1,0,6,6,0,5,5,0,4,6,5,0,1,0,1,0,13,18,0.419,0.581,141.4,85.03,58.3,141.4
+opus,django__django-12708,django/django,1-4 hours,attempted,True,True,Submitted,0.559704,34,34,34,1.0,0,497023,5982,0,24962,16,2,1,0,4,4,0,8,7,1,6,2,1,1,1,0,1,1,16,23,0.471,0.676,124.18,86.18,52.79,124.18
+opus,django__django-12754,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.636448,32,32,32,1.0,0,523635,7530,0,27548,15,2,1,0,3,3,0,8,7,1,2,6,5,1,1,0,1,0,21,25,0.656,0.781,136.51,89.0,77.26,136.51
+opus,django__django-12965,django/django,15 min - 1 hour,attempted,True,True,Submitted,1.094892,51,51,55,1.078,0,1223562,9791,0,37231,22,2,3,0,9,9,0,10,9,1,5,9,8,1,4,0,3,0,9,36,0.176,0.706,208.25,148.23,28.71,208.25
+opus,django__django-13023,django/django,<15 min fix,attempted,True,True,Submitted,0.432661,32,32,35,1.094,0,307376,5457,0,16227,12,3,2,0,4,4,0,9,6,3,3,2,1,3,3,0,2,0,11,23,0.344,0.719,115.23,85.02,36.66,115.23
+opus,django__django-13401,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.786468,42,42,47,1.119,0,732228,8830,0,30635,16,6,3,2,13,12,1,10,8,2,2,7,6,2,3,0,2,0,8,22,0.19,0.524,180.35,92.22,32.87,180.35
+opus,django__django-13512,django/django,<15 min fix,attempted,False,True,Submitted,0.341131,25,25,29,1.16,0,259742,3808,0,16255,11,4,1,0,3,3,0,7,4,3,4,5,4,3,1,0,1,0,14,19,0.56,0.76,89.17,71.86,47.13,89.17
+opus,django__django-13516,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.455877,33,33,38,1.152,0,381868,4925,0,17760,9,7,1,2,6,3,3,9,9,0,4,4,3,0,2,0,1,0,14,20,0.424,0.606,171.53,70.35,48.35,171.53
+opus,django__django-13741,django/django,<15 min fix,attempted,True,True,Submitted,0.286363,20,20,20,1.0,0,173633,3973,0,14320,8,1,1,0,2,2,0,4,4,0,2,5,4,0,0,0,1,0,9,13,0.45,0.65,83.69,52.4,31.15,83.69
+opus,django__django-13821,django/django,<15 min fix,attempted,True,True,Submitted,0.432796,30,30,41,1.367,0,406278,3930,0,19436,27,6,5,0,0,0,0,3,3,0,5,7,3,2,0,0,1,0,14,,0.467,,81.72,,37.75,81.72
+opus,django__django-13837,django/django,1-4 hours,attempted,True,True,Submitted,0.548228,35,35,39,1.114,0,478833,6544,0,21735,10,2,6,1,3,2,1,5,4,1,3,8,7,1,3,0,2,2,5,19,0.143,0.543,122.14,73.72,20.87,122.14
+opus,django__django-13964,django/django,15 min - 1 hour,attempted,True,True,Submitted,1.225029,62,62,64,1.032,0,1379574,12285,0,35226,22,12,6,1,16,16,0,11,11,0,9,11,10,0,0,0,3,0,13,31,0.21,0.5,246.91,149.91,48.76,246.91
+opus,django__django-14034,django/django,15 min - 1 hour,attempted,False,True,Submitted,1.098034,46,46,48,1.043,0,1029392,14153,0,35716,12,2,3,1,10,9,1,13,11,2,2,12,11,2,3,0,3,0,7,10,0.152,0.217,244.03,60.01,34.0,244.03
+opus,django__django-14053,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.874416,42,42,43,1.024,0,813540,10347,0,31375,18,3,7,0,7,5,2,7,7,0,4,12,11,0,1,0,5,0,6,23,0.143,0.548,190.62,98.95,20.04,190.62
+opus,django__django-14155,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.542474,30,30,31,1.033,0,428687,6980,0,22926,7,2,2,2,7,3,4,8,8,0,2,7,6,1,2,0,1,0,8,16,0.267,0.533,132.15,82.33,35.65,132.15
+opus,django__django-14238,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.322488,23,23,25,1.087,0,202807,4667,0,13098,8,2,2,0,4,4,0,6,6,0,2,9,8,1,1,0,2,0,7,12,0.304,0.522,122.29,74.12,47.01,122.29
+opus,django__django-14349,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.249834,17,17,19,1.118,0,165789,3239,0,13077,6,1,1,0,2,2,0,6,6,0,2,3,2,0,1,0,1,0,8,11,0.471,0.647,94.44,69.23,55.8,94.44
+opus,django__django-14351,django/django,15 min - 1 hour,attempted,True,True,Submitted,1.950004,64,64,67,1.047,0,2148168,20764,0,62005,34,8,4,0,10,10,0,11,10,1,5,12,11,2,1,0,3,0,22,47,0.344,0.734,334.56,256.88,75.14,334.56
+opus,django__django-14373,django/django,<15 min fix,attempted,True,True,Submitted,0.195126,18,18,19,1.056,0,122777,2460,0,9547,8,2,1,0,2,2,0,3,3,0,2,2,1,0,1,0,1,0,7,11,0.389,0.611,54.76,33.53,21.79,54.76
+opus,django__django-14434,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.394363,24,24,27,1.125,0,248745,4952,0,17334,14,2,1,0,3,2,1,4,4,0,2,5,4,0,1,0,1,0,15,18,0.625,0.75,98.01,75.39,66.1,98.01
+opus,django__django-14534,django/django,<15 min fix,attempted,True,True,Submitted,0.659338,43,43,44,1.023,0,638443,7113,0,24538,15,2,2,0,7,5,2,8,5,3,3,5,4,3,5,0,2,1,11,18,0.256,0.419,167.29,61.96,41.9,167.29
+opus,django__django-14539,django/django,<15 min fix,attempted,True,True,Submitted,0.431323,26,26,26,1.0,0,309945,6368,0,17394,5,1,2,1,5,5,0,9,9,0,1,2,1,0,1,0,2,0,10,15,0.385,0.577,118.1,79.58,59.02,118.1
+opus,django__django-14608,django/django,<15 min fix,attempted,True,True,Submitted,0.582177,26,26,32,1.231,0,526718,5155,0,29667,15,4,2,0,5,5,0,4,3,1,4,4,3,1,1,0,1,0,10,14,0.385,0.538,101.32,64.18,41.47,101.32
+opus,django__django-14672,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.266526,18,18,19,1.056,0,174875,3338,0,13472,5,2,4,0,4,4,0,4,4,0,2,11,10,0,0,0,2,0,3,11,0.167,0.611,62.28,41.88,15.04,62.28
+opus,django__django-15278,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.398119,22,22,27,1.227,0,255583,5434,0,16661,9,3,1,0,3,3,0,6,5,1,2,6,5,1,1,0,1,0,11,15,0.5,0.682,93.59,70.71,48.16,93.59
+opus,django__django-15315,django/django,<15 min fix,attempted,True,True,Submitted,0.394461,22,22,28,1.273,0,271268,5177,0,18404,9,2,2,0,2,1,1,5,5,0,1,6,5,1,2,0,1,0,10,14,0.455,0.636,93.55,58.69,39.23,93.55
+opus,django__django-15368,django/django,<15 min fix,attempted,True,True,Submitted,0.301,19,19,22,1.158,0,166993,3840,0,13997,9,2,1,0,2,2,0,4,4,0,2,4,3,0,0,0,1,0,9,13,0.474,0.684,68.35,52.62,33.1,68.35
+opus,django__django-15467,django/django,<15 min fix,attempted,True,True,Submitted,0.229243,13,13,14,1.077,0,64911,3511,0,7734,6,1,1,0,0,0,0,3,3,0,2,4,3,0,0,0,1,0,6,,0.462,,51.92,,23.38,51.92
+opus,django__django-15503,django/django,1-4 hours,attempted,True,True,Submitted,1.840135,63,63,71,1.127,0,1895194,22746,0,51546,27,2,4,1,7,5,2,28,28,0,4,6,5,1,2,0,4,0,16,25,0.254,0.397,369.04,150.04,96.23,369.04
+opus,django__django-15732,django/django,15 min - 1 hour,attempted,True,True,Submitted,1.404189,56,56,70,1.25,0,1397428,17300,0,43374,31,5,4,0,5,5,0,20,20,0,4,17,16,2,0,0,3,0,32,47,0.571,0.839,290.94,256.88,160.36,290.94
+opus,django__django-15851,django/django,<15 min fix,attempted,True,True,Submitted,0.254838,18,18,21,1.167,0,141699,3273,0,11820,7,2,2,1,2,1,1,3,3,0,3,4,3,0,2,0,1,0,5,12,0.278,0.667,70.31,48.03,19.59,70.31
+opus,django__django-15957,django/django,1-4 hours,attempted,True,True,Submitted,1.565099,57,57,61,1.07,0,1545033,17706,0,50951,29,6,2,0,7,7,0,14,10,4,4,13,12,2,4,0,2,0,27,40,0.474,0.702,275.71,208.58,124.65,275.71
+opus,django__django-16100,django/django,<15 min fix,attempted,True,True,Submitted,0.293121,25,25,25,1.0,0,206673,3012,0,12349,13,1,1,0,2,2,0,2,2,0,1,3,2,0,2,0,1,0,13,19,0.52,0.76,77.05,58.91,40.61,77.05
+opus,django__django-16136,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.506837,30,30,32,1.067,0,403264,7060,0,20500,13,4,3,0,4,4,0,8,7,1,4,13,12,3,0,0,1,0,12,19,0.4,0.633,128.74,86.66,56.29,128.74
+opus,django__django-16145,django/django,<15 min fix,attempted,True,True,Submitted,0.381375,27,27,27,1.0,0,254208,5907,0,15398,9,4,2,0,3,3,0,9,6,3,3,5,4,1,3,0,2,0,10,18,0.37,0.667,151.12,94.7,48.2,151.12
+opus,django__django-16429,django/django,<15 min fix,attempted,True,True,Submitted,0.182325,15,15,16,1.067,0,91861,2224,0,9474,5,1,1,0,3,3,0,3,3,0,1,4,3,0,1,0,1,0,4,8,0.267,0.533,47.58,28.15,14.31,47.58
+opus,django__django-16819,django/django,15 min - 1 hour,attempted,True,True,Submitted,2.228892,87,87,92,1.057,0,2693788,20402,0,58631,53,3,10,0,5,5,0,28,22,6,5,19,18,9,7,0,9,0,20,74,0.23,0.851,367.92,327.05,61.61,367.92
+opus,matplotlib__matplotlib-14623,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,1.185507,51,51,53,1.039,0,1223469,12021,0,43002,23,5,3,0,4,2,2,17,16,1,4,13,12,2,2,0,3,0,26,41,0.51,0.804,219.32,178.91,94.22,219.32
+opus,matplotlib__matplotlib-20488,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.862578,45,45,52,1.156,0,793738,10903,0,29466,8,1,1,2,10,7,3,17,17,0,3,2,1,2,0,0,1,0,29,24,0.644,0.533,216.36,126.28,152.1,216.36
+opus,matplotlib__matplotlib-23476,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,0.5646,33,33,37,1.121,0,532922,5727,0,24659,23,3,3,0,5,5,0,4,3,1,4,6,5,1,0,0,1,1,15,22,0.455,0.667,159.75,100.81,65.35,159.75
+opus,matplotlib__matplotlib-24026,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.285235,15,15,16,1.067,0,124137,4868,0,12605,3,1,1,0,1,1,0,7,6,1,1,3,2,1,1,0,1,0,6,9,0.4,0.6,91.64,66.94,40.83,91.64
+opus,matplotlib__matplotlib-24870,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,2.284186,77,77,85,1.104,0,2792409,20832,0,59055,22,6,4,4,10,6,4,34,32,2,4,7,5,5,2,0,3,0,16,29,0.208,0.377,442.79,142.84,73.54,442.79
+opus,matplotlib__matplotlib-24970,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.357095,26,26,26,1.0,0,205073,5255,0,12648,11,1,2,0,0,0,0,12,12,0,2,4,3,0,0,0,2,0,13,,0.5,,105.16,,55.74,105.16
+opus,matplotlib__matplotlib-25479,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,0.430271,21,21,26,1.238,0,339681,4832,0,21270,15,2,0,0,0,0,0,6,6,0,3,2,2,0,0,0,0,0,,,,,97.97,,,97.97
+opus,matplotlib__matplotlib-26208,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,1.398915,59,59,59,1.0,0,1626697,10951,0,49397,29,5,1,0,6,6,0,9,9,0,3,9,8,0,0,0,1,0,43,47,0.729,0.797,250.13,187.86,157.64,250.13
+opus,psf__requests-1142,psf/requests,<15 min fix,attempted,True,True,Submitted,0.735527,40,40,42,1.05,0,662832,9297,0,26200,16,5,1,0,2,2,0,18,18,0,5,3,2,1,0,0,1,0,11,26,0.275,0.65,159.66,107.42,32.82,159.66
+opus,psf__requests-1766,psf/requests,<15 min fix,attempted,True,True,Submitted,0.113059,11,11,11,1.0,0,50531,1385,0,6093,5,1,1,0,0,0,0,1,1,0,1,3,2,0,0,0,1,0,4,,0.364,,30.1,,9.47,30.1
+opus,psf__requests-6028,psf/requests,15 min - 1 hour,attempted,False,True,Submitted,1.053571,55,55,64,1.164,0,1149316,10133,0,35028,24,5,1,0,4,3,1,24,24,0,5,3,2,0,0,0,1,0,43,47,0.782,0.855,230.68,187.29,167.66,230.68
+opus,pydata__xarray-3151,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.329578,19,19,21,1.105,0,218476,3825,0,16872,9,2,1,0,2,2,0,4,4,0,2,4,3,0,0,0,1,0,8,12,0.421,0.632,94.99,64.42,28.01,94.99
+opus,pydata__xarray-3305,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.372258,26,26,26,1.0,0,228010,4233,0,14699,17,1,2,0,0,0,0,6,6,0,3,5,3,0,0,0,1,0,14,,0.538,,321.08,,58.54,321.08
+opus,pydata__xarray-6599,pydata/xarray,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,pydata__xarray-6938,pydata/xarray,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,pydata__xarray-7393,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.4497,29,29,35,1.207,0,367066,4421,0,22012,18,4,1,0,3,3,0,7,7,0,3,2,1,0,0,0,1,0,17,23,0.586,0.793,195.74,130.57,62.26,195.74
+opus,pylint-dev__pylint-6528,pylint-dev/pylint,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,pylint-dev__pylint-7277,pylint-dev/pylint,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,pytest-dev__pytest-7324,pytest-dev/pytest,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,scikit-learn__scikit-learn-13439,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.171141,16,16,16,1.0,0,98654,2117,0,8575,8,1,2,0,0,0,0,3,2,1,1,2,1,2,1,0,1,1,8,,0.5,,52.91,,29.49,52.91
+opus,scikit-learn__scikit-learn-14053,scikit-learn/scikit-learn,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,scikit-learn__scikit-learn-14087,scikit-learn/scikit-learn,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,scikit-learn__scikit-learn-14141,scikit-learn/scikit-learn,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,scikit-learn__scikit-learn-25232,scikit-learn/scikit-learn,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,scikit-learn__scikit-learn-25973,scikit-learn/scikit-learn,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,scikit-learn__scikit-learn-9288,scikit-learn/scikit-learn,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sphinx-doc__sphinx-10673,sphinx-doc/sphinx,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sphinx-doc__sphinx-11510,sphinx-doc/sphinx,1-4 hours,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sphinx-doc__sphinx-7454,sphinx-doc/sphinx,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sphinx-doc__sphinx-7757,sphinx-doc/sphinx,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sphinx-doc__sphinx-7910,sphinx-doc/sphinx,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sphinx-doc__sphinx-8269,sphinx-doc/sphinx,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sphinx-doc__sphinx-8459,sphinx-doc/sphinx,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sphinx-doc__sphinx-9658,sphinx-doc/sphinx,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-12489,sympy/sympy,1-4 hours,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-13798,sympy/sympy,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-14711,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-14976,sympy/sympy,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-15875,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-16597,sympy/sympy,1-4 hours,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-17630,sympy/sympy,1-4 hours,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-17655,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-21847,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-23824,sympy/sympy,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+opus,sympy__sympy-24539,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+gemini,astropy__astropy-13033,astropy/astropy,15 min - 1 hour,attempted,False,True,Submitted,0.091874,29,29,29,1.0,0,378079,3410,0,27436,11,4,3,2,5,0,5,9,9,0,1,7,6,6,0,0,3,0,12,21,0.414,0.724,66.96,42.6,21.81,66.96
+gemini,astropy__astropy-13453,astropy/astropy,15 min - 1 hour,attempted,True,True,Submitted,0.174715,57,57,57,1.0,0,755086,3444,0,19649,37,1,5,0,0,0,0,15,11,4,2,10,9,4,3,0,5,1,19,,0.333,,100.13,,29.41,100.13
+gemini,astropy__astropy-14096,astropy/astropy,15 min - 1 hour,attempted,True,True,Submitted,0.094333,32,32,32,1.0,0,261448,4262,0,22074,7,0,3,2,2,0,2,20,5,15,1,18,17,2,15,0,1,0,22,28,0.688,0.875,73.75,60.16,41.87,73.75
+gemini,astropy__astropy-14365,astropy/astropy,15 min - 1 hour,attempted,False,True,Submitted,0.059673,23,23,23,1.0,0,170314,1542,0,10769,13,1,2,0,0,0,0,5,5,0,1,6,5,0,0,0,2,0,7,,0.304,,38.0,,12.28,38.0
+gemini,astropy__astropy-14369,astropy/astropy,1-4 hours,attempted,False,True,Submitted,0.079717,26,26,26,1.0,0,321734,3517,0,26965,7,3,1,2,3,3,0,12,11,1,3,10,10,1,1,0,1,0,1,21,0.038,0.808,70.6,54.2,1.73,70.6
+gemini,django__django-10999,django/django,<15 min fix,attempted,False,True,Submitted,0.049712,17,17,17,1.0,0,101410,4517,0,9749,3,1,1,0,0,0,0,11,11,0,1,6,5,0,0,0,1,0,13,,0.765,,38.42,,30.99,38.42
+gemini,django__django-11066,django/django,<15 min fix,attempted,True,True,Submitted,0.019397,10,10,10,1.0,0,36325,1015,0,5064,2,2,1,0,1,1,0,2,2,0,1,3,2,0,0,0,1,0,4,7,0.4,0.7,22.61,18.78,11.43,22.61
+gemini,django__django-11119,django/django,<15 min fix,attempted,False,False,LimitsExceeded,0.720157,250,250,250,1.0,0,4503642,7341,0,23036,7,4,1,0,0,0,0,239,3,236,5,4,4,237,236,0,1,0,9,,0.036,,475.28,,12.4,
+gemini,django__django-11138,django/django,1-4 hours,attempted,False,True,Submitted,0.188586,57,58,57,1.0,1,863301,5581,0,26032,38,2,11,0,0,0,0,5,4,1,5,9,5,5,1,0,1,0,28,,0.491,,106.59,,56.54,106.59
+gemini,django__django-11141,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.118908,47,47,47,1.0,0,365914,6114,0,15215,11,5,15,5,5,3,2,22,20,2,3,15,14,5,2,0,8,0,4,16,0.085,0.34,112.19,42.42,5.64,112.19
+gemini,django__django-11149,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.135002,36,36,36,1.0,0,525037,14391,0,26563,11,1,8,4,0,0,0,21,16,5,1,5,4,5,5,0,5,0,4,,0.111,,106.04,,17.89,106.04
+gemini,django__django-11333,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.042825,26,26,26,1.0,0,87878,2012,0,6343,12,2,2,0,3,1,2,6,6,0,2,5,4,2,1,0,2,0,14,21,0.538,0.808,41.19,31.27,20.04,41.19
+gemini,django__django-11433,django/django,<15 min fix,attempted,False,True,Submitted,0.293501,63,63,63,1.0,0,1901967,24019,0,100898,13,2,32,28,21,0,21,23,16,7,1,8,7,28,26,0,6,0,16,39,0.254,0.619,222.98,87.47,34.2,222.98
+gemini,django__django-11734,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.140839,40,40,40,1.0,0,735149,7889,0,28878,21,4,11,0,12,9,3,4,1,3,4,3,3,6,6,0,2,0,7,7,0.175,0.175,98.08,20.14,20.14,98.08
+gemini,django__django-12039,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.067945,21,21,21,1.0,0,257449,2902,0,18011,7,3,2,1,3,1,2,3,2,1,4,3,2,4,3,0,2,1,10,16,0.476,0.762,39.73,29.11,14.61,39.73
+gemini,django__django-12262,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.248381,90,90,90,1.0,0,1007090,7509,0,19924,21,4,11,0,0,0,0,62,60,2,1,11,11,1,1,0,8,0,15,,0.167,,156.4,,23.38,156.4
+gemini,django__django-12273,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.169211,48,48,48,1.0,0,728211,10321,0,24066,15,2,18,5,6,2,4,18,14,4,3,15,14,8,7,0,4,0,5,39,0.104,0.812,113.03,92.27,18.89,113.03
+gemini,django__django-12304,django/django,<15 min fix,attempted,True,True,Submitted,0.103722,36,36,36,1.0,0,327130,6053,0,14679,8,2,3,0,2,1,1,23,21,2,3,13,12,3,3,0,2,0,25,32,0.694,0.889,72.8,65.57,51.19,72.8
+gemini,django__django-12308,django/django,<15 min fix,attempted,False,True,Submitted,0.079171,28,28,28,1.0,0,315665,3868,0,15683,11,7,1,0,3,3,0,8,4,4,4,7,6,4,4,0,1,1,12,17,0.429,0.607,54.62,31.78,22.03,54.62
+gemini,django__django-12708,django/django,1-4 hours,attempted,True,True,Submitted,0.369594,158,158,158,1.0,0,1512675,13626,0,29745,132,1,3,2,0,0,0,19,14,5,4,8,7,5,5,0,1,0,146,,0.924,,257.53,,233.68,257.53
+gemini,django__django-12754,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.25419,63,63,63,1.0,0,1128471,24696,0,35108,18,0,10,7,0,0,0,41,29,12,1,9,8,12,12,0,5,0,2,,0.032,,180.15,,5.62,180.15
+gemini,django__django-12965,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.248972,82,82,82,1.0,0,1300932,14681,0,31419,40,5,11,7,1,1,0,33,24,9,5,6,5,9,9,0,6,3,53,80,0.646,0.976,179.59,176.62,99.35,179.59
+gemini,django__django-13023,django/django,<15 min fix,attempted,False,True,Submitted,0.053923,31,31,31,1.0,0,128581,2203,0,6701,18,3,1,0,1,1,0,7,7,0,2,6,5,1,0,0,1,0,21,28,0.677,0.903,47.69,44.16,29.62,47.69
+gemini,django__django-13401,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.308624,119,120,119,1.0,1,1257584,8461,0,19143,104,1,5,2,2,1,1,10,8,2,1,4,3,3,2,0,1,0,109,113,0.916,0.95,211.12,190.77,179.52,211.12
+gemini,django__django-13512,django/django,<15 min fix,attempted,True,True,Submitted,0.068468,27,27,27,1.0,0,188488,2282,0,10654,8,3,3,0,5,3,2,8,6,2,3,5,3,4,2,0,3,0,7,20,0.259,0.741,51.78,37.31,12.32,51.78
+gemini,django__django-13516,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.063671,28,29,28,1.0,1,170484,2132,0,8714,9,2,3,0,2,1,1,10,10,0,1,8,7,2,1,0,2,0,10,22,0.357,0.786,48.91,35.9,19.13,48.91
+gemini,django__django-13741,django/django,<15 min fix,attempted,True,True,Submitted,0.07332,27,27,27,1.0,0,181769,4719,0,10562,11,1,5,0,0,0,0,11,7,4,1,7,6,4,4,0,1,0,12,,0.444,,53.47,,27.83,53.47
+gemini,django__django-13821,django/django,<15 min fix,attempted,True,True,Submitted,0.08211,30,30,30,1.0,0,297458,1144,0,13860,27,19,1,0,0,0,0,0,0,0,5,1,0,10,0,0,0,0,6,,0.2,,50.86,,12.36,50.86
+gemini,django__django-13837,django/django,1-4 hours,attempted,True,True,Submitted,0.10621,40,40,40,1.0,0,354281,4770,0,19378,9,1,7,1,7,3,4,10,10,0,3,15,14,6,2,0,4,0,2,25,0.05,0.625,84.51,40.12,2.19,84.51
+gemini,django__django-13964,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.100649,31,32,31,1.0,1,328652,6385,0,17414,12,0,7,4,0,0,0,14,8,6,2,11,10,5,6,0,3,2,3,,0.097,,71.95,,9.19,70.72
+gemini,django__django-14034,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.076355,33,33,33,1.0,0,179194,3989,0,9984,8,2,4,3,2,1,1,17,15,2,2,7,6,3,3,0,4,0,14,30,0.424,0.909,63.91,58.65,23.88,63.91
+gemini,django__django-14053,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.087302,28,28,28,1.0,0,277778,7703,0,17743,10,2,5,4,0,0,0,15,11,4,1,6,5,4,1,0,4,0,11,,0.393,,80.55,,24.48,80.55
+gemini,django__django-14155,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.162342,71,72,71,1.0,1,482778,8026,0,13898,17,1,9,6,1,1,0,43,41,2,1,10,9,2,1,0,6,0,30,69,0.423,0.972,147.04,141.91,63.65,147.04
+gemini,django__django-14238,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.070841,24,24,24,1.0,0,291215,2507,0,21439,7,2,2,1,1,1,0,12,6,6,1,11,10,6,6,0,2,0,5,22,0.208,0.917,53.74,50.62,8.3,53.74
+gemini,django__django-14349,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.109816,47,47,47,1.0,0,318762,4723,0,12319,19,3,10,7,1,1,0,22,14,8,2,9,8,7,8,0,3,0,12,44,0.255,0.936,85.81,80.97,21.17,85.81
+gemini,django__django-14351,django/django,15 min - 1 hour,attempted,False,False,LimitsExceeded,0.741959,250,250,250,1.0,0,4694544,11794,0,25351,243,2,2,0,0,0,0,4,2,2,2,4,4,2,2,0,1,0,3,,0.012,,416.64,,8.86,
+gemini,django__django-14373,django/django,<15 min fix,attempted,True,True,Submitted,0.046156,25,25,25,1.0,0,92920,1687,0,8569,10,4,2,0,1,1,0,7,6,1,3,3,2,2,1,0,2,0,6,23,0.24,0.92,35.68,33.44,8.63,35.68
+gemini,django__django-14434,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.069661,27,28,27,1.0,1,213367,2791,0,12067,18,3,1,0,0,0,0,6,5,1,2,2,1,2,1,0,1,0,15,,0.556,,50.98,,31.3,50.98
+gemini,django__django-14534,django/django,<15 min fix,attempted,False,True,Submitted,0.079035,25,25,25,1.0,0,272794,4299,0,17078,11,2,5,1,3,1,2,4,4,0,2,4,3,2,2,0,2,1,8,13,0.32,0.52,57.41,31.4,12.2,57.41
+gemini,django__django-14539,django/django,<15 min fix,attempted,True,True,Submitted,0.061428,22,22,22,1.0,0,180430,2540,0,11571,6,2,1,0,2,1,1,10,10,0,3,10,9,1,0,0,1,0,12,18,0.545,0.818,40.05,33.87,19.25,40.05
+gemini,django__django-14608,django/django,<15 min fix,attempted,True,True,Submitted,0.583806,217,218,217,1.0,1,2878837,10161,0,24317,206,6,1,0,0,0,0,8,7,1,4,5,4,4,1,0,1,0,14,,0.065,,361.3,,30.35,361.3
+gemini,django__django-14672,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.041093,16,16,16,1.0,0,98587,2113,0,8686,6,1,2,0,2,1,1,4,2,2,2,5,4,2,2,0,1,1,3,12,0.188,0.75,33.76,24.2,11.06,33.76
+gemini,django__django-15278,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.123391,33,33,33,1.0,0,495761,5698,0,22150,19,1,0,0,2,1,1,8,2,6,2,3,3,4,7,0,0,0,,30,,0.909,82.64,73.39,,82.64
+gemini,django__django-15315,django/django,<15 min fix,attempted,True,True,Submitted,0.059278,20,20,20,1.0,0,113378,3585,0,9585,2,0,1,0,2,0,2,10,3,7,1,4,3,9,8,0,1,0,15,17,0.75,0.85,46.61,40.24,35.82,46.61
+gemini,django__django-15368,django/django,<15 min fix,attempted,True,True,Submitted,0.079709,30,30,30,1.0,0,204326,3071,0,10206,13,1,2,0,0,0,0,12,10,2,2,4,3,2,2,0,2,0,15,,0.5,,52.63,,25.26,52.63
+gemini,django__django-15467,django/django,<15 min fix,attempted,True,True,Submitted,0.035279,21,21,21,1.0,0,61062,1880,0,4914,12,1,2,0,0,0,0,4,4,0,1,4,3,0,0,0,2,0,7,,0.333,,31.87,,10.76,31.87
+gemini,django__django-15503,django/django,1-4 hours,attempted,False,True,Submitted,0.163771,52,52,52,1.0,0,664124,9561,0,22466,7,2,4,2,0,0,0,35,12,23,1,13,12,21,23,0,3,0,4,,0.077,,109.0,,11.36,109.0
+gemini,django__django-15732,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.097432,25,25,25,1.0,0,352906,5366,0,24402,6,2,12,9,2,1,1,14,0,14,3,9,8,4,15,0,2,0,4,22,0.16,0.88,72.51,57.69,12.74,72.51
+gemini,django__django-15851,django/django,<15 min fix,attempted,True,True,Submitted,0.172439,74,74,74,1.0,0,576886,6179,0,12803,6,6,9,2,0,0,0,37,36,1,1,11,11,4,1,0,5,0,6,,0.081,,128.38,,12.02,128.38
+gemini,django__django-15957,django/django,1-4 hours,attempted,False,True,Submitted,0.140548,46,46,46,1.0,0,589050,7186,0,24392,27,3,4,1,5,1,4,8,3,5,3,7,6,9,8,0,2,1,7,7,0.152,0.152,91.28,18.0,18.0,91.28
+gemini,django__django-16100,django/django,<15 min fix,attempted,False,True,Submitted,0.745178,191,192,191,1.0,1,5661215,23783,0,38381,170,2,2,0,0,0,0,19,16,3,2,2,1,3,3,0,0,0,35,,0.183,,400.97,,123.01,400.97
+gemini,django__django-16136,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.087428,25,25,25,1.0,0,311897,4565,0,16918,7,2,3,2,2,2,0,11,6,5,2,5,4,1,5,0,3,1,10,20,0.4,0.8,61.91,54.19,29.42,61.91
+gemini,django__django-16145,django/django,<15 min fix,attempted,True,True,Submitted,0.095699,35,35,35,1.0,0,357342,4757,0,15083,8,5,4,3,3,1,2,15,12,3,2,10,9,5,1,1,4,2,8,25,0.229,0.714,128.36,111.65,74.05,128.36
+gemini,django__django-16429,django/django,<15 min fix,attempted,True,True,Submitted,0.042292,20,20,20,1.0,0,96175,2588,0,7662,4,2,4,4,0,0,0,10,8,2,1,6,5,2,2,0,1,0,5,,0.25,,31.97,,5.79,31.97
+gemini,django__django-16819,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.149774,49,49,49,1.0,0,648146,9805,0,25960,14,3,8,5,0,0,0,28,28,0,3,4,3,1,0,0,8,0,19,,0.388,,105.2,,28.08,105.2
+gemini,matplotlib__matplotlib-14623,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.163923,66,67,66,1.0,1,671497,6292,0,19458,40,3,10,6,0,0,0,18,16,2,5,12,11,5,2,0,4,0,13,,0.197,,146.48,,26.96,146.48
+gemini,matplotlib__matplotlib-20488,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.112728,35,35,35,1.0,0,365102,7483,0,18033,14,2,1,0,1,1,0,16,15,1,3,5,4,0,1,0,1,0,26,29,0.743,0.829,111.94,93.55,79.27,111.94
+gemini,matplotlib__matplotlib-23476,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,0.133173,47,48,47,1.0,1,647988,2086,0,19059,40,5,2,0,0,0,0,3,2,1,3,6,5,6,1,0,1,0,2,,0.043,,100.69,,18.52,100.69
+gemini,matplotlib__matplotlib-24026,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.036834,13,13,13,1.0,0,77095,4009,0,11061,2,0,3,1,0,0,0,6,4,2,1,5,4,1,2,0,1,0,6,,0.462,,47.22,,24.13,47.22
+gemini,matplotlib__matplotlib-24870,matplotlib/matplotlib,15 min - 1 hour,attempted,False,False,LimitsExceeded,0.53008,250,250,250,1.0,0,2091649,8430,0,13982,247,2,0,0,0,0,0,1,1,0,2,1,1,0,0,0,0,0,,,,,444.84,,,
+gemini,matplotlib__matplotlib-24970,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.089391,33,33,33,1.0,0,342310,3299,0,14712,11,1,1,0,0,0,0,18,18,0,1,19,18,1,0,0,1,0,25,,0.758,,72.13,,54.31,72.13
+gemini,matplotlib__matplotlib-25479,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,0.087665,33,34,33,1.0,1,308598,1997,0,12726,20,0,3,0,0,0,0,8,7,1,2,7,6,1,1,0,2,0,21,,0.636,,73.09,,48.6,73.09
+gemini,matplotlib__matplotlib-26208,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,0.299788,89,89,89,1.0,0,1769345,11409,0,34317,43,4,8,5,0,0,0,41,40,1,4,37,36,1,1,0,3,1,67,,0.753,,194.41,,143.76,193.02
+gemini,psf__requests-1142,psf/requests,<15 min fix,attempted,True,True,Submitted,0.285809,94,95,94,1.0,1,1343968,14541,0,31383,37,2,17,12,0,0,0,52,49,3,3,13,12,4,3,0,6,0,8,,0.085,,178.14,,10.39,178.14
+gemini,psf__requests-1766,psf/requests,<15 min fix,attempted,True,True,Submitted,0.052099,28,28,28,1.0,0,114145,1342,0,9876,15,3,2,0,0,0,0,5,3,2,3,4,3,2,2,0,2,0,13,,0.464,,46.96,,15.98,46.96
+gemini,psf__requests-6028,psf/requests,15 min - 1 hour,attempted,False,False,LimitsExceeded,0.823261,248,250,248,1.0,2,4628486,25611,0,42352,28,3,27,4,0,0,0,194,191,3,2,12,12,2,2,0,20,0,21,,0.085,,479.78,,33.7,410.3
+gemini,pydata__xarray-3151,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.101802,47,48,47,1.0,1,260002,3564,0,9977,21,5,5,2,0,0,0,18,16,2,2,6,5,3,1,0,3,0,18,,0.383,,91.13,,38.56,91.13
+gemini,pydata__xarray-3305,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.159653,64,65,64,1.0,1,590212,4606,0,16885,37,2,1,2,3,2,1,18,17,1,7,11,10,3,1,0,1,0,31,58,0.484,0.906,228.02,178.67,60.0,228.02
+gemini,pydata__xarray-6599,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.156579,47,47,47,1.0,0,619242,8761,0,24143,19,3,7,0,0,0,0,22,18,4,5,20,19,4,4,0,3,0,25,,0.532,,144.31,,72.14,144.31
+gemini,pydata__xarray-6938,pydata/xarray,15 min - 1 hour,attempted,False,True,Submitted,0.081111,33,33,33,1.0,0,259706,2448,0,12679,18,1,2,0,0,0,0,10,10,0,2,9,8,0,0,0,2,0,20,,0.606,,85.36,,47.49,85.36
+gemini,pydata__xarray-7393,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.49809,185,187,185,1.0,2,2701092,8763,0,20449,167,6,3,2,0,0,0,15,15,0,3,12,11,0,0,0,1,0,33,,0.178,,323.31,,63.03,321.79
+gemini,pylint-dev__pylint-6528,pylint-dev/pylint,15 min - 1 hour,attempted,True,True,Submitted,0.680962,141,144,141,1.0,3,5347387,24097,0,73405,61,9,23,13,0,0,0,19,17,2,8,6,5,34,8,0,5,0,2,,0.014,,451.11,,1.66,448.39
+gemini,pylint-dev__pylint-7277,pylint-dev/pylint,<15 min fix,attempted,True,True,Submitted,0.038352,21,21,21,1.0,0,92603,2171,0,7355,8,4,1,0,1,1,0,7,7,0,2,7,6,0,0,0,1,0,12,19,0.571,0.905,42.49,39.79,22.18,42.49
+gemini,pytest-dev__pytest-7324,pytest-dev/pytest,15 min - 1 hour,attempted,True,True,Submitted,0.112385,32,32,32,1.0,0,404067,6323,0,25417,5,2,9,3,6,1,5,15,15,0,1,11,10,5,0,0,3,0,12,19,0.375,0.594,80.89,41.06,23.81,80.89
+gemini,scikit-learn__scikit-learn-13439,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.037926,20,20,20,1.0,0,87959,1318,0,6560,8,3,2,0,1,1,0,5,3,2,2,3,2,2,2,0,2,1,8,17,0.4,0.85,44.11,40.12,14.34,44.11
+gemini,scikit-learn__scikit-learn-14053,scikit-learn/scikit-learn,15 min - 1 hour,attempted,True,True,Submitted,0.042533,20,20,20,1.0,0,95978,1550,0,8136,6,1,2,1,2,1,1,8,5,3,1,7,6,4,3,0,2,0,9,17,0.45,0.85,51.81,44.9,27.19,51.81
+gemini,scikit-learn__scikit-learn-14087,scikit-learn/scikit-learn,15 min - 1 hour,attempted,True,True,Submitted,0.341663,131,132,131,1.0,1,1499614,13209,0,28482,99,0,3,0,0,0,0,16,10,6,1,10,9,5,6,0,2,1,90,,0.687,,248.61,,137.7,248.61
+gemini,scikit-learn__scikit-learn-14141,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.017198,11,11,11,1.0,0,32493,317,0,4132,4,1,1,0,1,1,0,3,3,0,2,3,2,0,0,0,1,0,5,8,0.455,0.727,19.26,16.35,10.03,19.26
+gemini,scikit-learn__scikit-learn-25232,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.101693,41,41,41,1.0,0,369827,4366,0,15843,23,3,5,1,4,3,1,8,6,2,4,6,5,4,1,1,2,0,19,33,0.463,0.805,148.7,122.21,27.77,148.7
+gemini,scikit-learn__scikit-learn-25973,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.088429,39,39,39,1.0,0,255730,3785,0,14117,25,1,4,0,1,1,0,9,8,1,2,5,4,2,1,0,2,0,24,37,0.615,0.949,83.92,80.99,38.0,83.92
+gemini,scikit-learn__scikit-learn-9288,scikit-learn/scikit-learn,15 min - 1 hour,attempted,False,True,Submitted,0.0995,32,32,32,1.0,0,410568,3361,0,20276,23,2,1,0,0,0,0,7,5,2,1,4,3,2,2,0,1,0,23,,0.719,,66.01,,49.66,66.01
+gemini,sphinx-doc__sphinx-10673,sphinx-doc/sphinx,15 min - 1 hour,attempted,True,True,Submitted,0.165952,60,61,60,1.0,1,800353,4378,0,24211,43,7,10,0,0,0,0,5,5,0,11,7,6,6,0,0,2,0,2,,0.033,,110.21,,4.05,110.21
+gemini,sphinx-doc__sphinx-11510,sphinx-doc/sphinx,1-4 hours,attempted,False,True,Submitted,0.246842,51,51,51,1.0,0,1327576,26831,0,52514,22,5,20,7,0,0,0,17,16,1,7,13,12,2,1,0,1,0,2,,0.039,,212.71,,5.13,212.71
+gemini,sphinx-doc__sphinx-7454,sphinx-doc/sphinx,<15 min fix,attempted,False,False,LimitsExceeded,0.687969,250,250,250,1.0,0,3920603,8566,0,22837,247,1,2,0,0,0,0,0,0,0,1,3,3,1,0,0,0,0,2,,0.008,,447.71,,4.6,
+gemini,sphinx-doc__sphinx-7757,sphinx-doc/sphinx,15 min - 1 hour,attempted,True,True,Submitted,0.057848,24,24,24,1.0,0,173091,2600,0,14083,10,4,4,1,1,1,0,8,8,0,4,13,12,2,0,0,3,0,2,22,0.083,0.917,38.78,36.57,4.0,38.78
+gemini,sphinx-doc__sphinx-7910,sphinx-doc/sphinx,<15 min fix,attempted,True,True,Submitted,0.0594,24,24,24,1.0,0,135018,4560,0,9653,6,1,10,2,0,0,0,13,13,0,1,6,5,0,0,0,3,0,5,,0.208,,48.86,,11.65,48.86
+gemini,sphinx-doc__sphinx-8269,sphinx-doc/sphinx,<15 min fix,attempted,True,True,Submitted,0.061339,21,21,21,1.0,0,188426,2459,0,14012,9,2,3,1,0,0,0,6,5,1,1,7,6,1,1,0,3,0,6,,0.286,,35.92,,8.87,35.92
+gemini,sphinx-doc__sphinx-8459,sphinx-doc/sphinx,<15 min fix,attempted,True,True,Submitted,0.136054,48,48,48,1.0,0,535136,2449,0,16180,31,5,5,0,0,0,0,8,8,0,5,5,4,0,0,0,1,0,2,,0.042,,92.67,,3.88,92.67
+gemini,sphinx-doc__sphinx-9658,sphinx-doc/sphinx,15 min - 1 hour,attempted,False,True,Submitted,0.133015,40,41,40,1.0,1,588944,4659,0,24689,23,4,5,0,0,0,0,10,10,0,3,13,11,1,0,0,3,0,3,,0.075,,96.76,,7.83,96.76
+gemini,sympy__sympy-12489,sympy/sympy,1-4 hours,attempted,True,True,Submitted,0.157886,56,56,56,1.0,0,643054,5885,0,24066,35,1,9,4,1,1,0,11,9,2,1,4,3,2,2,0,3,0,16,54,0.286,0.964,131.77,128.91,46.89,131.77
+gemini,sympy__sympy-13798,sympy/sympy,15 min - 1 hour,attempted,False,True,Submitted,0.068053,27,27,27,1.0,0,179995,2670,0,11747,10,1,2,0,0,0,0,13,10,3,1,8,7,2,2,0,2,1,6,,0.222,,54.69,,10.33,54.69
+gemini,sympy__sympy-14711,sympy/sympy,<15 min fix,attempted,True,True,Submitted,0.03994,19,19,19,1.0,0,96805,2030,0,8158,8,0,2,1,0,0,0,7,5,2,1,6,5,1,2,0,1,0,8,,0.421,,49.35,,18.17,49.35
+gemini,sympy__sympy-14976,sympy/sympy,15 min - 1 hour,attempted,True,True,Submitted,0.080758,37,37,37,1.0,0,215102,2484,0,9368,14,2,2,0,5,3,2,15,15,0,4,13,12,5,0,0,1,0,19,31,0.514,0.838,69.62,56.94,33.64,69.62
+gemini,sympy__sympy-15875,sympy/sympy,<15 min fix,attempted,False,True,Submitted,0.1225,43,43,43,1.0,0,353137,8853,0,14743,2,1,4,0,0,0,0,36,24,12,2,9,8,11,12,0,3,0,8,,0.186,,142.88,,20.05,142.88
+gemini,sympy__sympy-16597,sympy/sympy,1-4 hours,attempted,False,True,Submitted,0.153682,60,60,60,1.0,0,625543,6990,0,22758,12,2,19,13,17,2,15,24,24,0,2,22,21,15,12,0,8,1,25,29,0.417,0.483,255.92,92.17,79.04,255.92
+gemini,sympy__sympy-17630,sympy/sympy,1-4 hours,attempted,False,True,Submitted,0.145401,46,46,46,1.0,0,551775,8564,0,20818,11,0,0,4,2,1,1,31,26,5,1,14,14,6,5,0,0,0,,43,,0.935,166.72,155.08,,166.72
+gemini,sympy__sympy-17655,sympy/sympy,<15 min fix,attempted,True,True,Submitted,0.222872,87,87,87,1.0,0,940173,9549,0,23988,22,6,7,0,5,3,2,38,30,8,4,5,4,6,10,0,7,0,4,74,0.046,0.851,275.2,198.03,16.53,275.2
+gemini,sympy__sympy-21847,sympy/sympy,<15 min fix,attempted,True,True,Submitted,0.061011,23,23,23,1.0,0,161731,2798,0,10060,5,2,2,0,2,0,2,12,12,0,2,7,6,2,0,0,2,0,8,15,0.348,0.652,72.97,44.48,24.16,72.97
+gemini,sympy__sympy-23824,sympy/sympy,15 min - 1 hour,attempted,True,True,Submitted,0.035589,17,17,17,1.0,0,93952,1384,0,8597,7,2,1,0,2,1,1,3,2,1,2,4,3,1,1,0,1,1,10,14,0.588,0.824,54.66,39.41,27.42,54.66
+gemini,sympy__sympy-24539,sympy/sympy,<15 min fix,attempted,True,True,Submitted,0.014448,9,9,9,1.0,0,23347,925,0,3722,2,0,1,0,0,0,0,4,2,2,1,4,3,2,2,0,1,1,3,,0.333,,22.02,,5.78,22.02
+minimax,astropy__astropy-13033,astropy/astropy,15 min - 1 hour,attempted,True,True,Submitted,0.031931,31,31,31,1.0,0,355062,7364,3210,19740,7,1,2,0,5,3,2,14,4,10,2,4,3,11,10,0,2,0,6,13,0.194,0.419,108.45,48.0,24.02,108.45
+minimax,astropy__astropy-13453,astropy/astropy,15 min - 1 hour,attempted,True,True,Submitted,0.048532,51,51,51,1.0,0,834168,8347,2465,27250,22,1,2,2,4,4,0,14,10,4,4,3,2,4,4,0,2,1,17,30,0.333,0.588,139.51,67.78,35.54,139.51
+minimax,astropy__astropy-14096,astropy/astropy,15 min - 1 hour,attempted,True,True,Submitted,0.023046,27,27,27,1.0,0,246175,6822,2823,17630,6,2,3,0,3,3,0,10,7,3,2,5,4,3,3,0,2,0,8,19,0.296,0.704,109.42,72.56,23.91,109.42
+minimax,astropy__astropy-14365,astropy/astropy,15 min - 1 hour,attempted,False,True,Submitted,0.012574,19,19,19,1.0,0,153004,3355,1175,12135,4,1,1,0,3,3,0,5,5,0,1,7,6,0,1,0,1,0,6,11,0.316,0.579,53.26,33.91,15.75,53.26
+minimax,astropy__astropy-14369,astropy/astropy,1-4 hours,attempted,False,True,Submitted,0.100843,72,72,72,1.0,0,1781892,17998,9088,51689,10,5,5,9,7,7,0,24,20,4,3,4,3,5,4,0,5,0,12,53,0.167,0.736,255.13,199.9,46.92,255.13
+minimax,django__django-10999,django/django,<15 min fix,attempted,False,True,Submitted,0.008036,16,16,16,1.0,0,76217,2545,792,6946,3,2,1,0,3,3,0,3,3,0,2,2,1,0,1,0,1,0,4,9,0.25,0.562,41.99,25.39,7.61,41.99
+minimax,django__django-11066,django/django,<15 min fix,attempted,True,True,Submitted,0.007903,16,16,16,1.0,0,86064,2290,809,8318,6,3,1,0,2,2,0,1,1,0,3,2,1,0,1,0,1,0,4,10,0.25,0.625,39.51,23.52,8.5,39.51
+minimax,django__django-11119,django/django,<15 min fix,attempted,True,True,Submitted,0.01712,26,26,26,1.0,0,234806,3855,1052,13567,8,3,1,0,4,2,2,5,4,1,5,4,3,1,4,0,1,0,8,12,0.308,0.462,66.65,33.57,20.39,66.65
+minimax,django__django-11138,django/django,1-4 hours,attempted,True,True,Submitted,0.219974,123,123,123,1.0,0,4514195,39948,15506,76495,39,5,13,4,16,8,8,46,36,10,8,14,10,11,18,0,8,0,12,54,0.098,0.439,501.72,170.35,29.34,501.72
+minimax,django__django-11141,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.147733,102,102,102,1.0,0,3227035,24764,12110,56606,27,16,7,6,16,12,4,31,24,7,7,12,11,8,11,0,5,1,5,20,0.049,0.196,361.9,58.09,22.54,361.9
+minimax,django__django-11149,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.039536,36,36,36,1.0,0,563082,9269,2570,25273,11,6,1,0,9,8,1,6,5,1,2,6,5,1,2,0,1,0,10,13,0.278,0.361,145.95,52.3,46.33,145.95
+minimax,django__django-11333,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.026498,30,30,30,1.0,0,315152,7169,2235,17964,10,3,2,0,4,4,0,10,8,2,2,8,6,2,3,0,2,0,7,19,0.233,0.633,103.09,67.82,29.21,103.09
+minimax,django__django-11433,django/django,<15 min fix,attempted,True,True,Submitted,0.093797,70,70,70,1.0,0,1696212,26289,11584,44517,26,3,2,2,3,3,0,26,23,3,5,19,18,4,4,0,2,0,40,60,0.571,0.857,300.01,270.81,166.79,300.01
+minimax,django__django-11734,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.749873,236,236,236,1.0,0,18262996,88766,37222,157059,81,9,21,17,12,9,3,104,82,22,10,22,20,24,19,0,17,0,58,205,0.246,0.869,1168.97,1017.02,207.33,1168.97
+minimax,django__django-12039,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.037108,43,43,43,1.0,0,557813,9158,1637,22877,14,4,1,0,8,8,0,12,10,2,6,4,3,3,1,0,1,0,10,15,0.233,0.349,120.14,41.77,25.68,120.14
+minimax,django__django-12262,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.028103,30,30,30,1.0,0,363698,10583,4277,19486,6,1,1,4,5,3,2,9,7,2,1,2,1,3,5,0,1,0,8,13,0.267,0.433,122.09,61.92,32.2,122.09
+minimax,django__django-12273,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.058595,59,59,59,1.0,0,966850,18027,6056,30253,19,2,2,0,7,7,0,26,23,3,1,23,22,3,3,0,2,0,19,36,0.322,0.61,218.13,121.38,55.38,218.13
+minimax,django__django-12304,django/django,<15 min fix,attempted,True,True,Submitted,0.014959,24,24,24,1.0,0,156263,6134,993,11185,6,2,2,0,2,2,0,9,7,2,4,2,1,2,3,0,2,0,7,15,0.292,0.625,73.45,43.7,17.91,73.45
+minimax,django__django-12308,django/django,<15 min fix,attempted,False,True,Submitted,0.030165,41,41,41,1.0,0,467909,8715,3251,19819,19,5,1,0,4,3,1,10,8,2,6,2,1,2,3,0,1,0,19,24,0.463,0.585,120.8,73.46,54.86,120.8
+minimax,django__django-12708,django/django,1-4 hours,attempted,True,True,Submitted,0.022542,34,34,34,1.0,0,349859,5574,1955,16467,13,7,1,0,5,5,0,3,3,0,3,4,3,0,0,0,1,0,16,20,0.471,0.588,89.35,53.85,38.37,89.35
+minimax,django__django-12754,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.162613,94,94,94,1.0,0,3227215,35312,5460,62613,29,6,2,0,8,8,0,39,29,10,4,6,5,11,11,0,1,0,33,46,0.351,0.489,399.09,171.25,115.04,397.56
+minimax,django__django-12965,django/django,15 min - 1 hour,attempted,False,False,Submitted,0.065038,70,70,70,1.0,0,1274427,13631,5669,32599,19,4,2,4,5,5,0,23,20,3,6,20,19,3,4,0,2,0,24,54,0.343,0.771,220.71,172.05,61.92,220.71
+minimax,django__django-13023,django/django,<15 min fix,attempted,False,False,Submitted,0.027145,42,42,42,1.0,0,393570,7342,1520,17927,10,3,2,2,4,4,0,17,10,7,3,4,3,7,8,0,1,0,16,22,0.381,0.524,105.9,54.13,31.29,105.9
+minimax,django__django-13401,django/django,15 min - 1 hour,attempted,False,False,Submitted,0.019906,35,35,35,1.0,0,285066,5965,1483,13525,13,6,2,0,7,7,0,6,5,1,1,5,4,1,2,0,1,0,11,16,0.314,0.457,103.53,49.26,29.33,103.53
+minimax,django__django-13512,django/django,<15 min fix,attempted,False,False,Submitted,0.033693,52,52,52,1.0,0,582829,7608,2722,19440,18,4,3,0,7,7,0,14,6,8,8,11,10,7,6,0,2,0,20,28,0.385,0.538,142.92,66.67,47.66,142.92
+minimax,django__django-13516,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.020755,38,38,38,1.0,0,322957,4959,1877,13258,12,4,1,2,7,5,2,11,11,0,3,2,1,2,0,0,1,0,15,20,0.395,0.526,139.13,45.3,35.29,139.13
+minimax,django__django-13741,django/django,<15 min fix,attempted,True,True,Submitted,0.019076,24,24,24,1.0,0,205300,5271,1713,14606,6,1,1,0,4,4,0,7,5,2,2,2,1,3,3,0,1,0,9,13,0.375,0.542,76.72,36.42,24.04,76.72
+minimax,django__django-13821,django/django,<15 min fix,attempted,True,True,Submitted,0.036635,54,54,54,1.0,0,659529,7918,3545,21548,30,10,6,0,2,1,1,8,7,1,10,6,2,5,1,0,1,0,19,36,0.352,0.667,125.62,79.78,46.64,125.62
+minimax,django__django-13837,django/django,1-4 hours,attempted,True,True,Submitted,0.04639,53,53,53,1.0,0,749749,12042,4252,24427,12,3,1,0,5,2,3,20,11,9,4,9,8,13,11,0,1,0,18,20,0.34,0.377,154.43,48.19,45.05,154.43
+minimax,django__django-13964,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.090105,73,73,73,1.0,0,1570634,19928,6595,39090,26,6,2,0,11,11,0,24,17,7,4,19,18,8,9,0,2,0,18,47,0.247,0.644,251.91,157.36,54.06,251.91
+minimax,django__django-14034,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.039951,34,34,34,1.0,0,445451,15134,6109,25510,9,1,2,0,4,2,2,14,8,6,2,4,3,7,9,0,1,0,8,13,0.235,0.382,155.8,53.92,32.68,155.8
+minimax,django__django-14053,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.071502,54,54,54,1.0,0,1150842,18474,5030,36612,11,3,2,4,5,5,0,20,18,2,2,16,15,2,3,0,2,0,12,31,0.222,0.574,212.32,135.95,51.21,212.32
+minimax,django__django-14155,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.017825,29,29,29,1.0,0,216544,6551,2234,12699,9,7,1,0,4,3,1,8,8,0,1,3,2,2,2,0,1,0,8,15,0.276,0.517,81.74,46.13,26.69,81.74
+minimax,django__django-14238,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.024319,47,47,47,1.0,0,367807,7189,1813,14072,11,4,10,0,5,5,0,14,9,5,2,4,3,8,5,0,8,1,9,35,0.191,0.745,110.96,80.19,20.18,110.96
+minimax,django__django-14349,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.012644,20,20,20,1.0,0,155744,3433,1068,11476,6,1,1,0,3,3,0,6,6,0,2,3,2,0,1,0,1,0,9,12,0.45,0.6,46.46,27.48,21.02,46.46
+minimax,django__django-14351,django/django,15 min - 1 hour,attempted,False,False,LimitsExceeded,0.575549,250,250,250,1.0,0,15626227,58856,20376,117625,89,7,22,18,19,9,10,98,80,18,11,16,16,23,19,0,13,0,70,56,0.28,0.224,886.71,146.67,194.0,
+minimax,django__django-14373,django/django,<15 min fix,attempted,True,True,Submitted,0.014169,26,26,26,1.0,0,181239,4170,1177,11235,7,2,2,0,3,3,0,8,6,2,3,2,1,2,3,0,1,0,10,16,0.385,0.615,66.88,35.24,20.62,66.88
+minimax,django__django-14434,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.036756,35,35,35,1.0,0,461149,8447,3693,22583,14,3,4,0,5,5,0,9,8,1,3,7,6,1,1,0,2,0,17,26,0.486,0.743,126.73,87.73,57.81,126.73
+minimax,django__django-14534,django/django,<15 min fix,attempted,True,True,Submitted,0.055874,59,59,59,1.0,0,904494,13003,6872,28597,21,5,3,1,10,7,3,14,12,2,3,2,1,2,4,0,3,1,12,20,0.203,0.339,186.15,54.12,29.76,186.15
+minimax,django__django-14539,django/django,<15 min fix,attempted,True,True,Submitted,0.019104,24,24,24,1.0,0,234297,6814,3025,15114,6,1,1,4,1,1,0,9,9,0,2,3,2,0,0,0,1,0,9,19,0.375,0.792,85.93,75.57,37.69,85.93
+minimax,django__django-14608,django/django,<15 min fix,attempted,True,True,Submitted,0.041403,42,42,42,1.0,0,570454,9691,1819,24978,15,2,2,0,5,5,0,13,8,5,5,2,1,5,6,0,1,0,14,24,0.333,0.571,117.63,54.81,25.39,117.63
+minimax,django__django-14672,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.020352,30,30,30,1.0,0,296919,5195,1700,14637,10,3,1,0,5,5,0,7,6,1,2,3,2,1,2,0,1,0,13,19,0.433,0.633,75.31,54.01,37.8,75.31
+minimax,django__django-15278,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.017602,27,27,27,1.0,0,233747,4789,1533,13385,9,4,2,0,5,4,1,4,4,0,3,5,4,1,0,0,1,0,12,16,0.444,0.593,68.47,38.87,26.06,68.47
+minimax,django__django-15315,django/django,<15 min fix,attempted,True,True,Submitted,0.018128,29,29,29,1.0,0,229236,6460,3446,13818,7,3,1,0,5,3,2,6,6,0,2,3,2,0,3,0,1,0,9,13,0.31,0.448,87.08,32.83,22.75,87.08
+minimax,django__django-15368,django/django,<15 min fix,attempted,True,True,Submitted,0.012406,19,19,19,1.0,0,95570,4268,958,9417,3,2,1,0,2,1,1,7,6,1,2,5,4,2,2,0,1,0,8,13,0.421,0.684,56.91,40.84,19.64,56.91
+minimax,django__django-15467,django/django,<15 min fix,attempted,True,True,Submitted,0.087685,74,74,74,1.0,0,1653406,24836,7350,38629,27,3,1,0,10,6,4,30,25,5,6,2,1,9,6,0,1,0,6,53,0.081,0.716,301.04,248.13,19.06,301.04
+minimax,django__django-15503,django/django,1-4 hours,attempted,True,True,Submitted,0.184693,129,129,129,1.0,0,4326633,28300,11469,61430,34,5,11,14,24,13,11,39,39,0,2,16,15,1,6,0,8,0,10,15,0.078,0.116,408.11,49.46,35.95,408.11
+minimax,django__django-15732,django/django,15 min - 1 hour,attempted,False,True,Submitted,0.048331,52,52,52,1.0,0,768578,12379,4902,25957,16,8,2,0,6,6,0,12,12,0,5,13,12,1,0,0,1,0,31,35,0.596,0.673,169.74,117.7,100.21,169.74
+minimax,django__django-15851,django/django,<15 min fix,attempted,True,True,Submitted,0.011766,20,20,20,1.0,0,114798,3866,1459,9975,5,6,1,0,0,0,0,3,3,0,5,2,1,0,0,0,1,0,9,,0.45,,51.21,,25.36,51.21
+minimax,django__django-15957,django/django,1-4 hours,attempted,True,True,Submitted,0.062651,61,61,61,1.0,0,1109466,12968,3798,33072,27,6,2,0,7,7,0,15,11,4,4,8,7,6,4,0,2,0,33,38,0.541,0.623,181.47,109.77,86.1,181.47
+minimax,django__django-16100,django/django,<15 min fix,attempted,True,True,Submitted,0.017779,25,25,25,1.0,0,176974,4435,1712,13524,10,1,1,0,4,4,0,6,5,1,1,3,2,1,2,0,1,0,10,14,0.4,0.56,65.13,34.48,25.15,65.13
+minimax,django__django-16136,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.020501,28,28,28,1.0,0,269863,5231,1429,15449,6,5,1,0,5,4,1,9,8,1,1,3,2,2,3,0,1,0,8,13,0.286,0.464,89.14,38.66,24.06,89.14
+minimax,django__django-16145,django/django,<15 min fix,attempted,True,True,Submitted,0.037813,41,41,41,1.0,0,521736,9092,2689,21156,15,3,1,0,8,7,1,10,7,3,3,3,2,3,4,0,1,0,11,19,0.268,0.463,146.14,68.78,38.97,146.14
+minimax,django__django-16429,django/django,<15 min fix,attempted,True,True,Submitted,0.008819,18,18,18,1.0,0,91848,2715,857,7736,3,3,1,0,2,2,0,5,4,1,2,2,1,1,2,0,1,0,5,10,0.278,0.556,43.3,27.82,12.84,43.3
+minimax,django__django-16819,django/django,15 min - 1 hour,attempted,True,True,Submitted,0.049232,54,54,54,1.0,0,815392,10094,3270,28301,22,2,2,0,8,8,0,18,17,1,6,4,3,1,2,0,2,0,21,31,0.389,0.574,175.46,79.18,56.87,175.46
+minimax,matplotlib__matplotlib-14623,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.093218,87,87,87,1.0,0,1968762,15309,4918,41726,41,5,3,0,4,4,0,26,26,0,5,22,21,1,0,0,2,0,43,72,0.494,0.828,252.29,205.01,110.3,252.29
+minimax,matplotlib__matplotlib-20488,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.247251,139,139,139,1.0,0,5684019,42062,13381,71599,34,1,21,14,13,7,6,63,57,6,4,12,11,7,5,0,13,2,55,10,0.396,0.072,592.23,25.55,237.38,592.23
+minimax,matplotlib__matplotlib-23476,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,0.044826,49,49,49,1.0,0,756549,8235,4273,26582,24,4,4,0,5,4,1,9,8,1,4,8,7,2,1,0,3,0,28,38,0.571,0.776,158.86,120.49,82.02,158.86
+minimax,matplotlib__matplotlib-24026,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.03097,38,38,38,1.0,0,453047,9879,2652,20060,7,5,2,2,4,4,0,17,15,2,3,3,2,2,2,0,2,0,11,20,0.289,0.526,142.16,93.49,37.6,142.16
+minimax,matplotlib__matplotlib-24870,matplotlib/matplotlib,15 min - 1 hour,attempted,False,True,Submitted,0.045987,43,43,43,1.0,0,669723,9549,2821,27262,15,2,2,0,2,2,0,17,14,3,2,4,3,3,3,0,2,0,17,28,0.395,0.651,141.43,90.1,42.13,141.43
+minimax,matplotlib__matplotlib-24970,matplotlib/matplotlib,15 min - 1 hour,attempted,True,True,Submitted,0.01211,25,25,25,1.0,0,151504,3941,1590,9232,7,1,3,0,0,0,0,4,4,0,2,2,1,1,0,0,0,0,12,,0.48,,57.28,,32.28,57.28
+minimax,matplotlib__matplotlib-25479,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,0.045831,45,45,45,1.0,0,756205,8458,2572,28309,14,3,2,5,3,2,1,14,9,5,2,6,5,6,5,0,1,0,15,29,0.333,0.644,130.11,85.72,42.36,130.11
+minimax,matplotlib__matplotlib-26208,matplotlib/matplotlib,<15 min fix,attempted,False,True,Submitted,0.151944,101,101,101,1.0,0,3236647,25064,9604,58599,34,3,1,0,10,8,2,37,28,9,4,4,3,12,9,1,1,0,78,83,0.772,0.822,490.37,311.11,288.19,490.37
+minimax,psf__requests-1142,psf/requests,<15 min fix,attempted,True,True,Submitted,0.020596,26,26,26,1.0,0,274378,5106,1297,16939,11,2,1,0,0,0,0,9,8,1,3,3,2,1,1,0,1,0,15,,0.577,,62.39,,29.52,62.39
+minimax,psf__requests-1766,psf/requests,<15 min fix,attempted,True,True,Submitted,0.008892,14,14,14,1.0,0,78699,2842,1262,8560,3,2,1,0,2,1,1,3,3,0,1,2,1,0,0,0,1,0,5,9,0.357,0.643,53.89,33.21,17.96,53.89
+minimax,psf__requests-6028,psf/requests,15 min - 1 hour,attempted,False,True,Submitted,0.064659,62,62,62,1.0,0,1019560,16250,7624,31075,21,5,1,0,5,1,4,29,28,1,3,3,2,3,1,0,1,0,25,34,0.403,0.548,223.62,118.9,76.06,223.62
+minimax,pydata__xarray-3151,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.027805,32,32,32,1.0,0,359614,6819,2108,18692,11,1,2,1,2,2,0,12,8,4,1,2,1,4,4,0,1,1,10,19,0.312,0.594,117.0,57.17,22.72,117.0
+minimax,pydata__xarray-3305,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.018105,28,28,28,1.0,0,230221,4778,1243,15399,12,1,2,0,3,3,0,7,7,0,3,5,3,0,0,0,1,0,15,22,0.536,0.786,120.63,83.31,35.69,120.63
+minimax,pydata__xarray-6599,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.093257,69,69,69,1.0,0,1611211,23806,9510,46274,16,1,3,6,6,6,0,29,27,2,3,2,1,2,2,0,2,0,17,55,0.246,0.797,407.52,327.8,63.37,407.52
+minimax,pydata__xarray-6938,pydata/xarray,15 min - 1 hour,attempted,False,True,Submitted,0.061172,68,68,68,1.0,0,1162404,13611,4575,32678,30,2,3,0,8,7,1,24,23,1,5,2,1,1,1,0,2,0,27,32,0.397,0.471,331.0,133.06,101.32,331.0
+minimax,pydata__xarray-7393,pydata/xarray,15 min - 1 hour,attempted,True,True,Submitted,0.024125,34,34,34,1.0,0,364857,5462,1512,16867,12,4,1,0,5,5,0,10,9,1,2,3,2,1,1,0,1,0,16,21,0.471,0.618,126.75,80.07,46.39,126.75
+minimax,pylint-dev__pylint-6528,pylint-dev/pylint,15 min - 1 hour,attempted,True,True,Submitted,0.232998,169,169,169,1.0,0,5515890,24908,10438,63506,67,12,12,3,13,11,2,28,21,7,8,15,14,33,3,4,8,0,16,115,0.095,0.68,836.24,552.81,25.25,836.24
+minimax,pylint-dev__pylint-7277,pylint-dev/pylint,<15 min fix,attempted,True,True,Submitted,0.017543,24,24,24,1.0,0,210130,6110,1603,14218,6,1,1,0,2,2,0,11,8,3,2,11,10,3,3,0,1,0,10,15,0.417,0.625,74.15,54.39,32.78,74.15
+minimax,pytest-dev__pytest-7324,pytest-dev/pytest,15 min - 1 hour,attempted,True,True,Submitted,0.025741,34,34,34,1.0,0,312405,7060,2663,16849,8,2,4,0,5,4,1,16,13,3,2,6,5,3,3,0,2,0,10,14,0.294,0.412,95.3,34.22,23.4,95.3
+minimax,scikit-learn__scikit-learn-13439,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.011711,22,22,22,1.0,0,144636,3112,906,10187,9,1,2,0,2,2,0,5,2,3,2,2,1,5,3,0,1,1,8,15,0.364,0.682,66.09,45.75,20.53,66.09
+minimax,scikit-learn__scikit-learn-14053,scikit-learn/scikit-learn,15 min - 1 hour,attempted,True,True,Submitted,0.015349,21,21,21,1.0,0,163091,3548,1548,11984,6,1,2,1,2,1,1,6,5,1,1,2,1,1,1,0,1,0,8,16,0.381,0.762,59.31,48.95,27.3,59.31
+minimax,scikit-learn__scikit-learn-14087,scikit-learn/scikit-learn,15 min - 1 hour,attempted,True,True,Submitted,0.046245,56,56,56,1.0,0,831532,11664,5220,25124,21,2,3,1,2,2,0,20,13,7,2,2,1,7,6,0,3,1,21,46,0.375,0.821,215.2,163.62,88.05,215.2
+minimax,scikit-learn__scikit-learn-14141,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.009159,23,23,23,1.0,0,113832,2132,1057,8205,6,4,1,0,2,2,0,6,6,0,3,2,1,0,0,0,1,0,7,11,0.304,0.478,74.92,26.05,15.19,74.92
+minimax,scikit-learn__scikit-learn-25232,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.059247,54,54,54,1.0,0,1004398,12616,3142,32853,12,1,2,0,6,3,3,28,21,7,2,4,3,10,7,2,2,0,13,27,0.241,0.5,393.89,126.97,39.35,393.89
+minimax,scikit-learn__scikit-learn-25973,scikit-learn/scikit-learn,<15 min fix,attempted,True,True,Submitted,0.022075,26,26,26,1.0,0,256163,4528,1123,17596,14,2,1,0,2,2,0,6,5,1,3,3,2,2,1,0,1,0,14,20,0.538,0.769,99.11,67.27,34.91,99.11
+minimax,scikit-learn__scikit-learn-9288,scikit-learn/scikit-learn,15 min - 1 hour,attempted,True,True,Submitted,0.017954,22,22,22,1.0,0,184493,4600,1806,16427,9,1,1,0,3,3,0,5,5,0,1,3,2,0,0,0,1,0,12,15,0.545,0.682,127.52,72.49,39.6,127.52
+minimax,sphinx-doc__sphinx-10673,sphinx-doc/sphinx,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sphinx-doc__sphinx-11510,sphinx-doc/sphinx,1-4 hours,attempted,False,True,Submitted,0.207872,121,121,121,1.0,0,4510526,23828,6229,68734,52,31,24,4,12,12,0,10,10,0,10,10,9,3,1,0,6,0,12,78,0.099,0.645,524.35,253.97,23.97,524.35
+minimax,sphinx-doc__sphinx-7454,sphinx-doc/sphinx,<15 min fix,attempted,True,True,Submitted,0.111346,103,103,103,1.0,0,2447655,10365,4247,42103,40,6,16,3,8,5,3,8,8,0,7,7,6,5,0,0,3,0,25,78,0.243,0.757,247.81,167.19,44.87,247.81
+minimax,sphinx-doc__sphinx-7757,sphinx-doc/sphinx,15 min - 1 hour,attempted,True,True,Submitted,0.033391,39,39,39,1.0,0,463763,7704,2511,22085,14,5,1,0,3,3,0,10,9,1,4,5,4,2,1,0,1,0,20,23,0.513,0.59,130.13,70.14,60.71,130.13
+minimax,sphinx-doc__sphinx-7910,sphinx-doc/sphinx,<15 min fix,attempted,True,True,Submitted,0.020605,23,23,23,1.0,0,208143,5332,2036,14649,7,1,2,0,2,2,0,8,7,1,1,7,6,1,1,0,1,0,6,14,0.261,0.609,74.1,44.9,20.43,74.1
+minimax,sphinx-doc__sphinx-8269,sphinx-doc/sphinx,<15 min fix,attempted,True,True,Submitted,0.020567,35,35,35,1.0,0,319704,4914,2462,13901,6,1,11,1,1,1,0,1,1,0,1,4,3,0,0,0,1,0,5,25,0.143,0.714,89.34,71.82,14.47,89.34
+minimax,sphinx-doc__sphinx-8459,sphinx-doc/sphinx,<15 min fix,attempted,True,True,Submitted,0.052829,61,61,61,1.0,0,891430,8690,3915,27586,24,4,8,2,7,5,2,8,6,2,8,8,7,4,2,0,1,0,27,46,0.443,0.754,218.61,151.79,71.31,218.61
+minimax,sphinx-doc__sphinx-9658,sphinx-doc/sphinx,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-12489,sympy/sympy,1-4 hours,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-13798,sympy/sympy,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-14711,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-14976,sympy/sympy,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-15875,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-16597,sympy/sympy,1-4 hours,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-17630,sympy/sympy,1-4 hours,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-17655,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-21847,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-23824,sympy/sympy,15 min - 1 hour,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+minimax,sympy__sympy-24539,sympy/sympy,<15 min fix,missing,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

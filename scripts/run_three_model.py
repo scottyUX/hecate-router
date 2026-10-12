@@ -41,6 +41,8 @@ class ModelSpec:
     # Extra -c overrides for this model only. Kept to operational settings;
     # anything that changes what the model sees must stay shared.
     extra_overrides: tuple[str, ...] = ()
+    # Recorded in the manifest; must match any reasoning override above.
+    reasoning: str = "provider default (not pinned)"
 
 
 # Per-process caps sum to the $250 experiment budget. Split by expected cost
@@ -65,7 +67,11 @@ MODELS: dict[str, ModelSpec] = {
             # of the run). Ignoring keeps the instance alive; that call is
             # counted as $0 toward the cap, but OpenRouter's billed usage.cost
             # is still in every saved response for the real total.
-            ("model.cost_tracking=ignore_errors",),
+            (
+                "model.cost_tracking=ignore_errors",
+                "model.model_kwargs.extra_body.reasoning.effort=high",
+            ),
+            reasoning="effort=high",
         ),
         ModelSpec("minimax", "minimax/minimax-m2.5", ("minimax",), 25.0),
     )
@@ -330,7 +336,7 @@ def main(argv: list[str] | None = None) -> int:
         [t for t in tasks if t.instance_id in wanted],
         tiers={spec.slug: "small"},
         run_id=f"{RUN_ID}-{spec.key}",
-        scaffold_version=">=2,<3",
+        scaffold_version="2.0.0",
         require_complete=False,
     )
     records_path = write_generations(records, model_dir / "generations.jsonl")
@@ -363,7 +369,7 @@ def main(argv: list[str] | None = None) -> int:
             "model_slug": spec.slug,
             "agent_model": agent_model,
             "providers": list(spec.providers),
-            "reasoning": "provider default (not pinned)",
+            "reasoning": spec.reasoning,
             "subset": "verified",
             "split": "test",
             "tasks_file": str(TASKS_FILE),

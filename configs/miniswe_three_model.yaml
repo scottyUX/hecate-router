@@ -6,7 +6,8 @@
 # are byte-identical to that run. Differences:
 #   - agent.cost_limit: 0 (no per-task cap)
 #   - model block: per-model name/provider set by scripts/run_three_model.py,
-#     cache_control on, request timeout 600s, no pinned reasoning effort.
+#     cache_control on, request timeout 600s, no pinned reasoning effort
+#     except Gemini (effort=high, set by the runner).
 #
 # Full replacement of upstream's swebench.yaml (upstream drops its default
 # config once any -c is passed), so this cannot be a partial diff.
@@ -210,9 +211,9 @@ model:
     # call blocks its worker indefinitely (seen in the Lite sweep). Generous,
     # since Opus responses on long contexts can legitimately take minutes.
     timeout: 600
-    # No reasoning key: each model runs at its OpenRouter default reasoning
-    # behavior (recorded in the manifest). Forcing one effort level means
-    # different things per provider.
+    # No reasoning key here: Opus and MiniMax run at their OpenRouter default
+    # reasoning behavior; Gemini gets reasoning.effort=high via a runner
+    # override (both recorded in the manifest).
     extra_body:
       # Ask OpenRouter to return its own billed cost in usage; it lands in
       # each trajectory's raw response, a cross-check on litellm's price-table
