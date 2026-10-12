@@ -89,9 +89,9 @@ def test_r2_provider_routing_matches_leaderboard_providers() -> None:
     m = R2.models
     assert m["opus"].model_kwargs["provider"] == {"order": ["anthropic"], "allow_fallbacks": False}
     assert m["gemini"].model_kwargs["provider"] == {"order": ["google-ai-studio"], "allow_fallbacks": False}
-    assert m["minimax"].model_kwargs["provider"] == {"only": ["novita", "minimax/fp8", "atlas-cloud"]}
+    assert m["minimax"].model_kwargs["provider"] == {"only": ["novita", "minimax/fp8"]}
     mix = json.loads((ROOT / RUN.LEADERBOARD_REFERENCE_DIR / "minimax_provider_mix.json").read_text())
-    assert {"Novita", "Minimax", "AtlasCloud"} <= set(mix["calls"])
+    assert {"Novita", "Minimax"} <= set(mix["calls"])
 
 
 def test_version_guard_refuses_wrong_install(monkeypatch, capsys) -> None:

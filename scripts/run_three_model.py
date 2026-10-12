@@ -146,7 +146,7 @@ R2_MODELS: dict[str, ModelSpec] = {
         ModelSpec(
             "minimax",
             "minimax/minimax-m2.5",
-            ("novita", "minimax/fp8", "atlas-cloud"),
+            ("novita", "minimax/fp8"),
             15.0,
             reasoning="effort=high",
             model_kwargs={
@@ -154,10 +154,13 @@ R2_MODELS: dict[str, ModelSpec] = {
                 # The entry was unpinned and OpenRouter load-balanced it across
                 # Novita, Minimax, Fireworks, SiliconFlow and AtlasCloud
                 # (configs/leaderboard_reference/minimax_provider_mix.json).
-                # Fireworks and SiliconFlow no longer serve M2.5; `only`
-                # without `order` keeps the load balancing among the rest.
+                # Fireworks and SiliconFlow no longer serve M2.5. AtlasCloud
+                # (2% of the leaderboard's calls) took 100% in the r2 smoke
+                # run, since OpenRouter balances toward the cheapest provider,
+                # so it is excluded. `only` without `order` keeps balancing
+                # between the two that served 83% of the leaderboard's calls.
                 # minimax/fp8 excludes the newer minimax/highspeed endpoint.
-                "provider": {"only": ["novita", "minimax/fp8", "atlas-cloud"]},
+                "provider": {"only": ["novita", "minimax/fp8"]},
             },
             set_cache_control=None,
             model_class="openrouter",

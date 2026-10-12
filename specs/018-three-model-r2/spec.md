@@ -72,7 +72,7 @@ Per model:
 | Gemini provider | Google AI Studio | ai-studio → vertex | **`order: [google-ai-studio]`, no fallbacks** |
 | Gemini cache control | off | `default_end` | **off** |
 | **MiniMax** model class / name | `OpenRouterModel`, `minimax/minimax-m2.5` | litellm, `openrouter/minimax/minimax-m2.5` | `OpenRouterModel`, `minimax/minimax-m2.5` |
-| MiniMax provider | unpinned (load-balanced, mix below) | `order: [minimax]` | **`only: [novita, minimax/fp8, atlas-cloud]`** |
+| MiniMax provider | unpinned (load-balanced, mix below) | `order: [minimax]` | **`only: [novita, minimax/fp8]`** |
 | MiniMax cache control | off | `default_end` | **off** |
 
 ### Decisions and known residual differences
@@ -102,10 +102,11 @@ Per model:
   MiniMax was served by Novita 46%, Minimax 37%, Fireworks 13%, SiliconFlow
   2% and AtlasCloud 2%; 18 of the 20 tasks switched provider mid-task.
   Fireworks and SiliconFlow no longer list MiniMax M2.5 on OpenRouter
-  (checked 2026-10-12). r2 restricts routing to the three remaining
-  providers with `only` and no `order`, so OpenRouter load-balances among
-  them as it did for the leaderboard. Those providers served 85% of the
-  leaderboard's calls. `minimax/fp8` excludes the `minimax/highspeed`
+  (checked 2026-10-12). r2 first allowed the three remaining providers;
+  in the smoke run OpenRouter sent 100% of calls to AtlasCloud (cheapest),
+  so r2 restricts routing to Novita and Minimax with `only` and no
+  `order`. OpenRouter load-balances between them, as it did for the
+  leaderboard; they served 83% of the leaderboard's calls. `minimax/fp8` excludes the `minimax/highspeed`
   endpoint, which may not have existed in February. The realized mix is
   reported from per-call `provider` fields.
 - **Docker images** use `:latest`, as the leaderboard did. Image digests are

@@ -96,7 +96,7 @@ gemini:  model_name="google/gemini-3-flash-preview",
          kwargs = R2_COMMON | {"provider": {"order": ["google-ai-studio"], "allow_fallbacks": False}},
          set_cache_control=None, cap=40
 minimax: model_name="minimax/minimax-m2.5",
-         kwargs = R2_COMMON | {"provider": {"only": ["novita", "minimax/fp8", "atlas-cloud"]}},
+         kwargs = R2_COMMON | {"provider": {"only": ["novita", "minimax/fp8"]}},
          set_cache_control=None, cap=15
 ```
 
