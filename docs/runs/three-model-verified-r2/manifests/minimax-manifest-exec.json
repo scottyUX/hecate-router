@@ -1,0 +1,43 @@
+{
+  "cli_overrides": {
+    "max_workers": 4,
+    "output_dir": "data/outputs/runs/three-model-verified-r2/minimax",
+    "run_id": "three-model-verified-r2-minimax-exec"
+  },
+  "config_path": "/home/arav/hecate-r2/data/outputs/runs/three-model-verified-r2/minimax/execution.yaml",
+  "config_snapshot": {
+    "cache_level": "env",
+    "dataset_name": "SWE-bench/SWE-bench_Verified",
+    "force_rebuild": false,
+    "input_generations": "data/outputs/runs/three-model-verified-r2/minimax/generations.jsonl",
+    "m1_positive_rate_flag_threshold": 0.15,
+    "max_workers": 4,
+    "modal": false,
+    "namespace": "swebench",
+    "option_a_config": "data/outputs/runs/three-model-verified-r2/minimax/option_a.yaml",
+    "split": "test",
+    "timeout": 1800
+  },
+  "dataset_name": "SWE-bench/SWE-bench_Verified",
+  "dry_run": false,
+  "git_commit": "b4c9643ee6d776b14a5b04c0c391a50207ed08f2",
+  "input_path": "/home/arav/hecate-r2/data/outputs/runs/three-model-verified-r2/minimax/generations.jsonl",
+  "model_slugs": [
+    "minimax/minimax-m2.5"
+  ],
+  "namespace": "swebench",
+  "pairs_attempted": 50,
+  "pairs_evaluated": 50,
+  "pairs_pending": 0,
+  "pairs_resolved": 34,
+  "pairs_skipped_no_patch": 0,
+  "pairs_skipped_resume": 0,
+  "records_path": "data/outputs/runs/three-model-verified-r2/minimax/executions.jsonl",
+  "run_id": "three-model-verified-r2-minimax-exec",
+  "split": "test",
+  "stage1_run_ids": [
+    "three-model-verified-r2-minimax"
+  ],
+  "swebench_version": "4.1.0",
+  "timestamp": "2026-10-12T21:48:52.761465+00:00"
+}

@@ -47,32 +47,33 @@
 - [x] T010 `compare_three_model_leaderboard.py`: `/N` labels,
       `--baseline-per-task`. Reasoning tokens come through the existing
       `--trajectories` medians.
-- [ ] T010b Realized provider mix per model from r2 trajectories (per-call
+- [x] T010b Realized provider mix per model from r2 trajectories (per-call
       `extra.response.provider`); needed for T020.
 - [x] T011 Full test suite green.
 
 ## Phase 3: VM run
 
-- [ ] T012 `hecate-exec`: `git pull`; `pip install -e ".[agent]"`; confirm
+- [x] T012 `hecate-exec`: `git pull`; `pip install -e ".[agent]"`; confirm
       2.0.0.
-- [ ] T013 Top up OpenRouter to ≥ $130 available.
-- [ ] T014 `EXPERIMENT=r2`: preflight, config check, pull.
-- [ ] T015 Smoke: `--tasks 2` per model into a smoke-only run root. Check:
+- [x] T013 Top up OpenRouter to ≥ $130 available. (Ran on a separate key with
+      $100; spend was $66.63.)
+- [x] T014 `EXPERIMENT=r2`: preflight, config check, pull.
+- [x] T015 Smoke: `--tasks 2` per model into a smoke-only run root. Check:
       Gemini served only by Google AI Studio and Opus only by Anthropic;
       MiniMax only by the three allowed providers; reasoning tokens/call
       within roughly 2x of the leaderboard's on the same tasks; Opus shows
       reasoning between tool calls (beta header effective); no 60 s
       timeout retries; `usage.cost` > 0 on every call. **Stop if any check
       fails.**
-- [ ] T016 `start`; watch `status`.
-- [ ] T017 `--prune-infra-failures` and rerun until no infra failures remain.
+- [x] T016 `start`; watch `status`.
+- [x] T017 `--prune-infra-failures` and rerun until no infra failures remain.
 
 ## Phase 4: Grade and report
 
-- [ ] T018 Grade all three (r2 env vars).
-- [ ] T019 `extract_traj_features.py` and `analyze_three_model.py` with r2
+- [x] T018 Grade all three (r2 env vars).
+- [x] T019 `extract_traj_features.py` and `analyze_three_model.py` with r2
       paths.
-- [ ] T020 Compare against the leaderboard (primary) and r1 (secondary).
-- [ ] T021 `docs/runs/three-model-verified-r2/README.md`: method and full
+- [x] T020 Compare against the leaderboard (primary) and r1 (secondary).
+- [x] T021 `docs/runs/three-model-verified-r2/README.md`: method and full
       config table vs the leaderboard, results, the pre-registered analysis,
       realized provider mix, residual differences and caveats.

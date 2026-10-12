@@ -1,0 +1,1554 @@
+{
+  "generated": "2026-10-12T21:49:11Z",
+  "run_root": "data/outputs/runs/three-model-verified-r2",
+  "tasks_file": "configs/three_model_tasks_r2.json",
+  "n_tasks": 50,
+  "models": [
+    "opus",
+    "gemini",
+    "minimax"
+  ],
+  "per_model": {
+    "opus": {
+      "tasks": 50,
+      "attempted": 50,
+      "infra_failures": 0,
+      "missing": 0,
+      "ungraded": 0,
+      "exit_status": {
+        "Submitted": 49,
+        "LimitsExceeded": 1
+      },
+      "patch_applied": 49,
+      "resolved": 37,
+      "graded": 50,
+      "rate": 0.74,
+      "ci95": [
+        0.6044657801100008,
+        0.8412862034863262
+      ],
+      "by_difficulty": {
+        "<15 min fix": {
+          "resolved": 16,
+          "graded": 20,
+          "rate": 0.8,
+          "ci95": [
+            0.5839782779742401,
+            0.9193436467288
+          ]
+        },
+        "15 min - 1 hour": {
+          "resolved": 19,
+          "graded": 25,
+          "rate": 0.76,
+          "ci95": [
+            0.5656994004476144,
+            0.8850384226967327
+          ]
+        },
+        "1-4 hours": {
+          "resolved": 2,
+          "graded": 5,
+          "rate": 0.4,
+          "ci95": [
+            0.1176182311592533,
+            0.769280067791163
+          ]
+        }
+      },
+      "by_repo": {
+        "django/django": {
+          "resolved": 21,
+          "graded": 26,
+          "rate": 0.8076923076923077,
+          "ci95": [
+            0.6212336384535001,
+            0.9149306422821174
+          ]
+        },
+        "sympy/sympy": {
+          "resolved": 3,
+          "graded": 6,
+          "rate": 0.5,
+          "ci95": [
+            0.18761280689940868,
+            0.8123871931005913
+          ]
+        },
+        "matplotlib/matplotlib": {
+          "resolved": 2,
+          "graded": 4,
+          "rate": 0.5,
+          "ci95": [
+            0.15003570882017148,
+            0.8499642911798285
+          ]
+        },
+        "astropy/astropy": {
+          "resolved": 2,
+          "graded": 3,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.2076549551264879,
+            0.9385096847238394
+          ]
+        },
+        "pydata/xarray": {
+          "resolved": 3,
+          "graded": 3,
+          "rate": 1.0,
+          "ci95": [
+            0.43849391955098227,
+            1.0
+          ]
+        },
+        "sphinx-doc/sphinx": {
+          "resolved": 2,
+          "graded": 3,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.2076549551264879,
+            0.9385096847238394
+          ]
+        },
+        "scikit-learn/scikit-learn": {
+          "resolved": 2,
+          "graded": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.34237195288961925,
+            1.0
+          ]
+        },
+        "psf/requests": {
+          "resolved": 1,
+          "graded": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.20654329147389294,
+            1.0
+          ]
+        },
+        "pylint-dev/pylint": {
+          "resolved": 1,
+          "graded": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.20654329147389294,
+            1.0
+          ]
+        },
+        "pytest-dev/pytest": {
+          "resolved": 0,
+          "graded": 1,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.7934567085261071
+          ]
+        }
+      },
+      "total_cost_usd": 46.4393,
+      "cost_per_task_usd": 0.9288,
+      "cost_per_resolved_usd": 1.2551,
+      "api_calls_mean": 37.8,
+      "api_calls_median": 32.0,
+      "steps_mean": 37.8,
+      "runtime_s_mean": 223.7,
+      "runtime_s_median": 186.1
+    },
+    "gemini": {
+      "tasks": 50,
+      "attempted": 50,
+      "infra_failures": 0,
+      "missing": 0,
+      "ungraded": 0,
+      "exit_status": {
+        "Submitted": 50
+      },
+      "patch_applied": 50,
+      "resolved": 37,
+      "graded": 50,
+      "rate": 0.74,
+      "ci95": [
+        0.6044657801100008,
+        0.8412862034863262
+      ],
+      "by_difficulty": {
+        "<15 min fix": {
+          "resolved": 15,
+          "graded": 20,
+          "rate": 0.75,
+          "ci95": [
+            0.5312949900419365,
+            0.888139947210597
+          ]
+        },
+        "15 min - 1 hour": {
+          "resolved": 19,
+          "graded": 25,
+          "rate": 0.76,
+          "ci95": [
+            0.5656994004476144,
+            0.8850384226967327
+          ]
+        },
+        "1-4 hours": {
+          "resolved": 3,
+          "graded": 5,
+          "rate": 0.6,
+          "ci95": [
+            0.23071993220883708,
+            0.8823817688407467
+          ]
+        }
+      },
+      "by_repo": {
+        "django/django": {
+          "resolved": 21,
+          "graded": 26,
+          "rate": 0.8076923076923077,
+          "ci95": [
+            0.6212336384535001,
+            0.9149306422821174
+          ]
+        },
+        "sympy/sympy": {
+          "resolved": 4,
+          "graded": 6,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.29998832134152864,
+            0.9032306674407831
+          ]
+        },
+        "matplotlib/matplotlib": {
+          "resolved": 2,
+          "graded": 4,
+          "rate": 0.5,
+          "ci95": [
+            0.15003570882017148,
+            0.8499642911798285
+          ]
+        },
+        "astropy/astropy": {
+          "resolved": 2,
+          "graded": 3,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.2076549551264879,
+            0.9385096847238394
+          ]
+        },
+        "pydata/xarray": {
+          "resolved": 2,
+          "graded": 3,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.2076549551264879,
+            0.9385096847238394
+          ]
+        },
+        "sphinx-doc/sphinx": {
+          "resolved": 2,
+          "graded": 3,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.2076549551264879,
+            0.9385096847238394
+          ]
+        },
+        "scikit-learn/scikit-learn": {
+          "resolved": 2,
+          "graded": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.34237195288961925,
+            1.0
+          ]
+        },
+        "psf/requests": {
+          "resolved": 1,
+          "graded": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.20654329147389294,
+            1.0
+          ]
+        },
+        "pylint-dev/pylint": {
+          "resolved": 0,
+          "graded": 1,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.7934567085261071
+          ]
+        },
+        "pytest-dev/pytest": {
+          "resolved": 1,
+          "graded": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.20654329147389294,
+            1.0
+          ]
+        }
+      },
+      "total_cost_usd": 14.5169,
+      "cost_per_task_usd": 0.2903,
+      "cost_per_resolved_usd": 0.3923,
+      "api_calls_mean": 65.02,
+      "api_calls_median": 60.0,
+      "steps_mean": 65,
+      "runtime_s_mean": 228.1,
+      "runtime_s_median": 206.0
+    },
+    "minimax": {
+      "tasks": 50,
+      "attempted": 50,
+      "infra_failures": 0,
+      "missing": 0,
+      "ungraded": 0,
+      "exit_status": {
+        "Submitted": 50
+      },
+      "patch_applied": 50,
+      "resolved": 34,
+      "graded": 50,
+      "rate": 0.68,
+      "ci95": [
+        0.5418944286372394,
+        0.792419559060006
+      ],
+      "by_difficulty": {
+        "<15 min fix": {
+          "resolved": 16,
+          "graded": 20,
+          "rate": 0.8,
+          "ci95": [
+            0.5839782779742401,
+            0.9193436467288
+          ]
+        },
+        "15 min - 1 hour": {
+          "resolved": 16,
+          "graded": 25,
+          "rate": 0.64,
+          "ci95": [
+            0.44518154601046633,
+            0.7975234356826436
+          ]
+        },
+        "1-4 hours": {
+          "resolved": 2,
+          "graded": 5,
+          "rate": 0.4,
+          "ci95": [
+            0.1176182311592533,
+            0.769280067791163
+          ]
+        }
+      },
+      "by_repo": {
+        "django/django": {
+          "resolved": 19,
+          "graded": 26,
+          "rate": 0.7307692307692307,
+          "ci95": [
+            0.5391659658023868,
+            0.8629572447493261
+          ]
+        },
+        "sympy/sympy": {
+          "resolved": 4,
+          "graded": 6,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.29998832134152864,
+            0.9032306674407831
+          ]
+        },
+        "matplotlib/matplotlib": {
+          "resolved": 2,
+          "graded": 4,
+          "rate": 0.5,
+          "ci95": [
+            0.15003570882017148,
+            0.8499642911798285
+          ]
+        },
+        "astropy/astropy": {
+          "resolved": 2,
+          "graded": 3,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.2076549551264879,
+            0.9385096847238394
+          ]
+        },
+        "pydata/xarray": {
+          "resolved": 2,
+          "graded": 3,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.2076549551264879,
+            0.9385096847238394
+          ]
+        },
+        "sphinx-doc/sphinx": {
+          "resolved": 2,
+          "graded": 3,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.2076549551264879,
+            0.9385096847238394
+          ]
+        },
+        "scikit-learn/scikit-learn": {
+          "resolved": 2,
+          "graded": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.34237195288961925,
+            1.0
+          ]
+        },
+        "psf/requests": {
+          "resolved": 1,
+          "graded": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.20654329147389294,
+            1.0
+          ]
+        },
+        "pylint-dev/pylint": {
+          "resolved": 0,
+          "graded": 1,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.7934567085261071
+          ]
+        },
+        "pytest-dev/pytest": {
+          "resolved": 0,
+          "graded": 1,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.7934567085261071
+          ]
+        }
+      },
+      "total_cost_usd": 3.4836,
+      "cost_per_task_usd": 0.0697,
+      "cost_per_resolved_usd": 0.1025,
+      "api_calls_mean": 62.98,
+      "api_calls_median": 54.0,
+      "steps_mean": 62.96,
+      "runtime_s_mean": 265.9,
+      "runtime_s_median": 207.1
+    }
+  },
+  "cross_model": {
+    "n_common": 50,
+    "all_solved": 31,
+    "none_solved": 8,
+    "only_one": {
+      "opus": 2,
+      "gemini": 4,
+      "minimax": 1
+    },
+    "only_one_ids": {
+      "opus": [
+        "pydata__xarray-6938",
+        "pylint-dev__pylint-6528"
+      ],
+      "gemini": [
+        "django__django-11141",
+        "django__django-12273",
+        "pytest-dev__pytest-7324",
+        "sympy__sympy-12489"
+      ],
+      "minimax": [
+        "sympy__sympy-14976"
+      ]
+    },
+    "exactly_two": {
+      "opus+gemini": 2,
+      "opus+minimax": 2,
+      "gemini+minimax": 0
+    },
+    "exactly_two_ids": {
+      "opus+gemini": [
+        "django__django-11149",
+        "django__django-14351"
+      ],
+      "opus+minimax": [
+        "django__django-11433",
+        "django__django-12754"
+      ],
+      "gemini+minimax": []
+    },
+    "pairwise": {
+      "opus vs gemini": {
+        "n": 50,
+        "agreement": 0.84,
+        "kappa": 0.584,
+        "opus_only": 4,
+        "gemini_only": 4,
+        "mcnemar_p": 1.0
+      },
+      "opus vs minimax": {
+        "n": 50,
+        "agreement": 0.9,
+        "kappa": 0.758,
+        "opus_only": 4,
+        "minimax_only": 1,
+        "mcnemar_p": 0.375
+      },
+      "gemini vs minimax": {
+        "n": 50,
+        "agreement": 0.82,
+        "kappa": 0.565,
+        "gemini_only": 6,
+        "minimax_only": 3,
+        "mcnemar_p": 0.5078
+      }
+    },
+    "oracle": {
+      "resolved_rate": 0.84,
+      "cost_usd": 7.5086,
+      "single_model_rate": {
+        "opus": 0.74,
+        "gemini": 0.74,
+        "minimax": 0.68
+      },
+      "single_model_cost_usd": {
+        "opus": 46.4393,
+        "gemini": 14.5169,
+        "minimax": 3.4836
+      }
+    }
+  },
+  "features": {
+    "opus": [
+      {
+        "feature": "script_runs_passed",
+        "n": 50,
+        "auroc": 0.248,
+        "mean_resolved": 6.568,
+        "mean_unresolved": 12.231
+      },
+      {
+        "feature": "script_runs",
+        "n": 50,
+        "auroc": 0.264,
+        "mean_resolved": 9.486,
+        "mean_unresolved": 15.538
+      },
+      {
+        "feature": "reasoning_tokens",
+        "n": 50,
+        "auroc": 0.308,
+        "mean_resolved": 3335.811,
+        "mean_unresolved": 5155.385
+      },
+      {
+        "feature": "completion_tokens",
+        "n": 50,
+        "auroc": 0.31,
+        "mean_resolved": 10053.27,
+        "mean_unresolved": 15068.308
+      },
+      {
+        "feature": "max_prompt_tokens",
+        "n": 50,
+        "auroc": 0.32,
+        "mean_resolved": 29327.676,
+        "mean_unresolved": 39006.154
+      },
+      {
+        "feature": "actions_per_step",
+        "n": 50,
+        "auroc": 0.323,
+        "mean_resolved": 1.114,
+        "mean_unresolved": 1.188
+      },
+      {
+        "feature": "cost_usd",
+        "n": 50,
+        "auroc": 0.331,
+        "mean_resolved": 0.834,
+        "mean_unresolved": 1.197
+      },
+      {
+        "feature": "runtime_s",
+        "n": 50,
+        "auroc": 0.343,
+        "mean_resolved": 203.901,
+        "mean_unresolved": 279.956
+      },
+      {
+        "feature": "actions",
+        "n": 50,
+        "auroc": 0.348,
+        "mean_resolved": 39.946,
+        "mean_unresolved": 51.0
+      },
+      {
+        "feature": "steps",
+        "n": 50,
+        "auroc": 0.359,
+        "mean_resolved": 36.027,
+        "mean_unresolved": 42.846
+      },
+      {
+        "feature": "api_calls",
+        "n": 50,
+        "auroc": 0.359,
+        "mean_resolved": 36.027,
+        "mean_unresolved": 42.846
+      },
+      {
+        "feature": "search_actions",
+        "n": 50,
+        "auroc": 0.363,
+        "mean_resolved": 4.135,
+        "mean_unresolved": 6.308
+      },
+      {
+        "feature": "prompt_tokens",
+        "n": 50,
+        "auroc": 0.366,
+        "mean_resolved": 783904.486,
+        "mean_unresolved": 1137113.154
+      },
+      {
+        "feature": "time_to_submit_s",
+        "n": 49,
+        "auroc": 0.372,
+        "mean_resolved": 203.901,
+        "mean_unresolved": 249.198
+      },
+      {
+        "feature": "script_runs_failed",
+        "n": 50,
+        "auroc": 0.377,
+        "mean_resolved": 2.919,
+        "mean_unresolved": 3.308
+      },
+      {
+        "feature": "nonzero_returncodes",
+        "n": 50,
+        "auroc": 0.377,
+        "mean_resolved": 4.595,
+        "mean_unresolved": 5.0
+      },
+      {
+        "feature": "inspect_actions",
+        "n": 50,
+        "auroc": 0.381,
+        "mean_resolved": 14.757,
+        "mean_unresolved": 18.385
+      },
+      {
+        "feature": "first_test_step",
+        "n": 41,
+        "auroc": 0.394,
+        "mean_resolved": 24.097,
+        "mean_unresolved": 27.5
+      },
+      {
+        "feature": "time_to_first_test_s",
+        "n": 41,
+        "auroc": 0.403,
+        "mean_resolved": 149.793,
+        "mean_unresolved": 183.306
+      },
+      {
+        "feature": "files_inspected",
+        "n": 50,
+        "auroc": 0.412,
+        "mean_resolved": 3.486,
+        "mean_unresolved": 3.923
+      },
+      {
+        "feature": "first_edit_step",
+        "n": 50,
+        "auroc": 0.44,
+        "mean_resolved": 14.946,
+        "mean_unresolved": 16.231
+      },
+      {
+        "feature": "edit_run_cycles",
+        "n": 50,
+        "auroc": 0.455,
+        "mean_resolved": 1.324,
+        "mean_unresolved": 1.692
+      },
+      {
+        "feature": "failed_run_then_edit",
+        "n": 50,
+        "auroc": 0.541,
+        "mean_resolved": 0.108,
+        "mean_unresolved": 0.0
+      },
+      {
+        "feature": "time_to_first_edit_s",
+        "n": 50,
+        "auroc": 0.459,
+        "mean_resolved": 96.102,
+        "mean_unresolved": 106.273
+      },
+      {
+        "feature": "helper_files_written",
+        "n": 50,
+        "auroc": 0.465,
+        "mean_resolved": 5.081,
+        "mean_unresolved": 5.769
+      },
+      {
+        "feature": "files_written",
+        "n": 50,
+        "auroc": 0.469,
+        "mean_resolved": 6.216,
+        "mean_unresolved": 6.692
+      },
+      {
+        "feature": "test_runs",
+        "n": 50,
+        "auroc": 0.527,
+        "mean_resolved": 4.568,
+        "mean_unresolved": 4.154
+      },
+      {
+        "feature": "tracebacks",
+        "n": 50,
+        "auroc": 0.474,
+        "mean_resolved": 3.892,
+        "mean_unresolved": 3.923
+      },
+      {
+        "feature": "first_test_frac",
+        "n": 41,
+        "auroc": 0.477,
+        "mean_resolved": 0.63,
+        "mean_unresolved": 0.643
+      },
+      {
+        "feature": "edit_actions",
+        "n": 50,
+        "auroc": 0.479,
+        "mean_resolved": 2.0,
+        "mean_unresolved": 2.846
+      },
+      {
+        "feature": "test_runs_passed",
+        "n": 50,
+        "auroc": 0.518,
+        "mean_resolved": 2.73,
+        "mean_unresolved": 2.615
+      },
+      {
+        "feature": "timeouts",
+        "n": 50,
+        "auroc": 0.514,
+        "mean_resolved": 0.216,
+        "mean_unresolved": 0.231
+      },
+      {
+        "feature": "revert_actions",
+        "n": 50,
+        "auroc": 0.509,
+        "mean_resolved": 0.514,
+        "mean_unresolved": 0.231
+      },
+      {
+        "feature": "test_runs_failed",
+        "n": 50,
+        "auroc": 0.509,
+        "mean_resolved": 1.838,
+        "mean_unresolved": 1.538
+      },
+      {
+        "feature": "first_edit_frac",
+        "n": 50,
+        "auroc": 0.505,
+        "mean_resolved": 0.413,
+        "mean_unresolved": 0.397
+      },
+      {
+        "feature": "format_errors",
+        "n": 50,
+        "auroc": 0.5,
+        "mean_resolved": 0.0,
+        "mean_unresolved": 0.0
+      }
+    ],
+    "gemini": [
+      {
+        "feature": "time_to_first_test_s",
+        "n": 31,
+        "auroc": 0.304,
+        "mean_resolved": 108.58,
+        "mean_unresolved": 151.693
+      },
+      {
+        "feature": "files_inspected",
+        "n": 50,
+        "auroc": 0.308,
+        "mean_resolved": 4.541,
+        "mean_unresolved": 5.692
+      },
+      {
+        "feature": "reasoning_tokens",
+        "n": 50,
+        "auroc": 0.31,
+        "mean_resolved": 15496.757,
+        "mean_unresolved": 20807.923
+      },
+      {
+        "feature": "completion_tokens",
+        "n": 50,
+        "auroc": 0.324,
+        "mean_resolved": 21053.243,
+        "mean_unresolved": 27442.462
+      },
+      {
+        "feature": "max_prompt_tokens",
+        "n": 50,
+        "auroc": 0.349,
+        "mean_resolved": 37816.514,
+        "mean_unresolved": 46333.846
+      },
+      {
+        "feature": "edit_actions",
+        "n": 50,
+        "auroc": 0.352,
+        "mean_resolved": 5.432,
+        "mean_unresolved": 8.0
+      },
+      {
+        "feature": "failed_run_then_edit",
+        "n": 50,
+        "auroc": 0.357,
+        "mean_resolved": 0.27,
+        "mean_unresolved": 0.615
+      },
+      {
+        "feature": "first_test_frac",
+        "n": 31,
+        "auroc": 0.363,
+        "mean_resolved": 0.581,
+        "mean_unresolved": 0.68
+      },
+      {
+        "feature": "runtime_s",
+        "n": 50,
+        "auroc": 0.368,
+        "mean_resolved": 214.062,
+        "mean_unresolved": 268.238
+      },
+      {
+        "feature": "time_to_submit_s",
+        "n": 50,
+        "auroc": 0.368,
+        "mean_resolved": 213.808,
+        "mean_unresolved": 268.238
+      },
+      {
+        "feature": "prompt_tokens",
+        "n": 50,
+        "auroc": 0.37,
+        "mean_resolved": 1253534.595,
+        "mean_unresolved": 1876996.769
+      },
+      {
+        "feature": "cost_usd",
+        "n": 50,
+        "auroc": 0.374,
+        "mean_resolved": 0.269,
+        "mean_unresolved": 0.352
+      },
+      {
+        "feature": "revert_actions",
+        "n": 50,
+        "auroc": 0.393,
+        "mean_resolved": 1.541,
+        "mean_unresolved": 1.923
+      },
+      {
+        "feature": "steps",
+        "n": 50,
+        "auroc": 0.396,
+        "mean_resolved": 61.919,
+        "mean_unresolved": 73.769
+      },
+      {
+        "feature": "actions",
+        "n": 50,
+        "auroc": 0.396,
+        "mean_resolved": 61.919,
+        "mean_unresolved": 73.769
+      },
+      {
+        "feature": "test_runs",
+        "n": 50,
+        "auroc": 0.604,
+        "mean_resolved": 2.649,
+        "mean_unresolved": 1.692
+      },
+      {
+        "feature": "api_calls",
+        "n": 50,
+        "auroc": 0.397,
+        "mean_resolved": 61.946,
+        "mean_unresolved": 73.769
+      },
+      {
+        "feature": "test_runs_passed",
+        "n": 50,
+        "auroc": 0.6,
+        "mean_resolved": 1.27,
+        "mean_unresolved": 0.769
+      },
+      {
+        "feature": "time_to_first_edit_s",
+        "n": 49,
+        "auroc": 0.404,
+        "mean_resolved": 68.722,
+        "mean_unresolved": 111.119
+      },
+      {
+        "feature": "first_edit_frac",
+        "n": 49,
+        "auroc": 0.406,
+        "mean_resolved": 0.349,
+        "mean_unresolved": 0.41
+      },
+      {
+        "feature": "test_runs_failed",
+        "n": 50,
+        "auroc": 0.593,
+        "mean_resolved": 1.378,
+        "mean_unresolved": 0.923
+      },
+      {
+        "feature": "first_edit_step",
+        "n": 49,
+        "auroc": 0.41,
+        "mean_resolved": 21.111,
+        "mean_unresolved": 25.692
+      },
+      {
+        "feature": "inspect_actions",
+        "n": 50,
+        "auroc": 0.419,
+        "mean_resolved": 29.459,
+        "mean_unresolved": 33.385
+      },
+      {
+        "feature": "first_test_step",
+        "n": 31,
+        "auroc": 0.429,
+        "mean_resolved": 36.917,
+        "mean_unresolved": 42.143
+      },
+      {
+        "feature": "tracebacks",
+        "n": 50,
+        "auroc": 0.57,
+        "mean_resolved": 5.892,
+        "mean_unresolved": 4.769
+      },
+      {
+        "feature": "search_actions",
+        "n": 50,
+        "auroc": 0.449,
+        "mean_resolved": 5.351,
+        "mean_unresolved": 5.231
+      },
+      {
+        "feature": "script_runs_passed",
+        "n": 50,
+        "auroc": 0.456,
+        "mean_resolved": 11.919,
+        "mean_unresolved": 18.923
+      },
+      {
+        "feature": "nonzero_returncodes",
+        "n": 50,
+        "auroc": 0.457,
+        "mean_resolved": 8.784,
+        "mean_unresolved": 9.231
+      },
+      {
+        "feature": "script_runs",
+        "n": 50,
+        "auroc": 0.458,
+        "mean_resolved": 17.162,
+        "mean_unresolved": 23.462
+      },
+      {
+        "feature": "timeouts",
+        "n": 50,
+        "auroc": 0.528,
+        "mean_resolved": 0.243,
+        "mean_unresolved": 0.154
+      },
+      {
+        "feature": "script_runs_failed",
+        "n": 50,
+        "auroc": 0.52,
+        "mean_resolved": 5.243,
+        "mean_unresolved": 4.538
+      },
+      {
+        "feature": "format_errors",
+        "n": 50,
+        "auroc": 0.514,
+        "mean_resolved": 0.027,
+        "mean_unresolved": 0.0
+      },
+      {
+        "feature": "edit_run_cycles",
+        "n": 50,
+        "auroc": 0.51,
+        "mean_resolved": 2.73,
+        "mean_unresolved": 3.462
+      },
+      {
+        "feature": "helper_files_written",
+        "n": 50,
+        "auroc": 0.509,
+        "mean_resolved": 9.189,
+        "mean_unresolved": 9.231
+      },
+      {
+        "feature": "files_written",
+        "n": 50,
+        "auroc": 0.504,
+        "mean_resolved": 10.27,
+        "mean_unresolved": 10.385
+      },
+      {
+        "feature": "actions_per_step",
+        "n": 50,
+        "auroc": 0.5,
+        "mean_resolved": 1.0,
+        "mean_unresolved": 1.0
+      }
+    ],
+    "minimax": [
+      {
+        "feature": "reasoning_tokens",
+        "n": 50,
+        "auroc": 0.193,
+        "mean_resolved": 3236.059,
+        "mean_unresolved": 6557.125
+      },
+      {
+        "feature": "test_runs_failed",
+        "n": 50,
+        "auroc": 0.208,
+        "mean_resolved": 1.088,
+        "mean_unresolved": 3.5
+      },
+      {
+        "feature": "max_prompt_tokens",
+        "n": 50,
+        "auroc": 0.228,
+        "mean_resolved": 24390.471,
+        "mean_unresolved": 42630.875
+      },
+      {
+        "feature": "cost_usd",
+        "n": 50,
+        "auroc": 0.241,
+        "mean_resolved": 0.047,
+        "mean_unresolved": 0.117
+      },
+      {
+        "feature": "completion_tokens",
+        "n": 50,
+        "auroc": 0.243,
+        "mean_resolved": 9693.735,
+        "mean_unresolved": 17711.938
+      },
+      {
+        "feature": "prompt_tokens",
+        "n": 50,
+        "auroc": 0.248,
+        "mean_resolved": 820434.118,
+        "mean_unresolved": 2488845.875
+      },
+      {
+        "feature": "search_actions",
+        "n": 50,
+        "auroc": 0.256,
+        "mean_resolved": 3.941,
+        "mean_unresolved": 8.0
+      },
+      {
+        "feature": "steps",
+        "n": 50,
+        "auroc": 0.259,
+        "mean_resolved": 51.735,
+        "mean_unresolved": 86.812
+      },
+      {
+        "feature": "api_calls",
+        "n": 50,
+        "auroc": 0.259,
+        "mean_resolved": 51.765,
+        "mean_unresolved": 86.812
+      },
+      {
+        "feature": "actions",
+        "n": 50,
+        "auroc": 0.259,
+        "mean_resolved": 51.735,
+        "mean_unresolved": 86.812
+      },
+      {
+        "feature": "runtime_s",
+        "n": 50,
+        "auroc": 0.261,
+        "mean_resolved": 214.988,
+        "mean_unresolved": 373.973
+      },
+      {
+        "feature": "time_to_submit_s",
+        "n": 50,
+        "auroc": 0.261,
+        "mean_resolved": 214.988,
+        "mean_unresolved": 373.973
+      },
+      {
+        "feature": "inspect_actions",
+        "n": 50,
+        "auroc": 0.268,
+        "mean_resolved": 15.176,
+        "mean_unresolved": 30.688
+      },
+      {
+        "feature": "first_edit_step",
+        "n": 50,
+        "auroc": 0.315,
+        "mean_resolved": 18.029,
+        "mean_unresolved": 30.938
+      },
+      {
+        "feature": "first_test_step",
+        "n": 46,
+        "auroc": 0.327,
+        "mean_resolved": 32.333,
+        "mean_unresolved": 51.5
+      },
+      {
+        "feature": "test_runs",
+        "n": 50,
+        "auroc": 0.331,
+        "mean_resolved": 5.765,
+        "mean_unresolved": 9.5
+      },
+      {
+        "feature": "time_to_first_test_s",
+        "n": 46,
+        "auroc": 0.344,
+        "mean_resolved": 129.834,
+        "mean_unresolved": 210.403
+      },
+      {
+        "feature": "nonzero_returncodes",
+        "n": 50,
+        "auroc": 0.349,
+        "mean_resolved": 5.324,
+        "mean_unresolved": 9.875
+      },
+      {
+        "feature": "time_to_first_edit_s",
+        "n": 50,
+        "auroc": 0.353,
+        "mean_resolved": 77.304,
+        "mean_unresolved": 127.396
+      },
+      {
+        "feature": "script_runs",
+        "n": 50,
+        "auroc": 0.36,
+        "mean_resolved": 14.794,
+        "mean_unresolved": 23.375
+      },
+      {
+        "feature": "files_inspected",
+        "n": 50,
+        "auroc": 0.369,
+        "mean_resolved": 3.382,
+        "mean_unresolved": 4.688
+      },
+      {
+        "feature": "revert_actions",
+        "n": 50,
+        "auroc": 0.38,
+        "mean_resolved": 0.676,
+        "mean_unresolved": 2.188
+      },
+      {
+        "feature": "script_runs_passed",
+        "n": 50,
+        "auroc": 0.383,
+        "mean_resolved": 10.765,
+        "mean_unresolved": 17.0
+      },
+      {
+        "feature": "helper_files_written",
+        "n": 50,
+        "auroc": 0.383,
+        "mean_resolved": 3.765,
+        "mean_unresolved": 8.562
+      },
+      {
+        "feature": "files_written",
+        "n": 50,
+        "auroc": 0.384,
+        "mean_resolved": 4.912,
+        "mean_unresolved": 9.625
+      },
+      {
+        "feature": "script_runs_failed",
+        "n": 50,
+        "auroc": 0.392,
+        "mean_resolved": 4.029,
+        "mean_unresolved": 6.375
+      },
+      {
+        "feature": "tracebacks",
+        "n": 50,
+        "auroc": 0.395,
+        "mean_resolved": 5.088,
+        "mean_unresolved": 7.625
+      },
+      {
+        "feature": "first_test_frac",
+        "n": 46,
+        "auroc": 0.594,
+        "mean_resolved": 0.631,
+        "mean_unresolved": 0.582
+      },
+      {
+        "feature": "test_runs_passed",
+        "n": 50,
+        "auroc": 0.426,
+        "mean_resolved": 4.676,
+        "mean_unresolved": 6.0
+      },
+      {
+        "feature": "edit_actions",
+        "n": 50,
+        "auroc": 0.433,
+        "mean_resolved": 3.5,
+        "mean_unresolved": 6.25
+      },
+      {
+        "feature": "edit_run_cycles",
+        "n": 50,
+        "auroc": 0.456,
+        "mean_resolved": 2.088,
+        "mean_unresolved": 3.25
+      },
+      {
+        "feature": "failed_run_then_edit",
+        "n": 50,
+        "auroc": 0.46,
+        "mean_resolved": 0.382,
+        "mean_unresolved": 0.75
+      },
+      {
+        "feature": "timeouts",
+        "n": 50,
+        "auroc": 0.473,
+        "mean_resolved": 0.265,
+        "mean_unresolved": 0.188
+      },
+      {
+        "feature": "format_errors",
+        "n": 50,
+        "auroc": 0.515,
+        "mean_resolved": 0.029,
+        "mean_unresolved": 0.0
+      },
+      {
+        "feature": "first_edit_frac",
+        "n": 50,
+        "auroc": 0.489,
+        "mean_resolved": 0.349,
+        "mean_unresolved": 0.372
+      },
+      {
+        "feature": "actions_per_step",
+        "n": 50,
+        "auroc": 0.5,
+        "mean_resolved": 1.0,
+        "mean_unresolved": 1.0
+      }
+    ],
+    "pooled": [
+      {
+        "feature": "max_prompt_tokens",
+        "n": 150,
+        "auroc": 0.308,
+        "mean_resolved": 30681.583,
+        "mean_unresolved": 42655.095
+      },
+      {
+        "feature": "runtime_s",
+        "n": 150,
+        "auroc": 0.32,
+        "mean_resolved": 210.872,
+        "mean_unresolved": 312.145
+      },
+      {
+        "feature": "time_to_submit_s",
+        "n": 149,
+        "auroc": 0.327,
+        "mean_resolved": 210.785,
+        "mean_unresolved": 303.928
+      },
+      {
+        "feature": "prompt_tokens",
+        "n": 150,
+        "auroc": 0.333,
+        "mean_resolved": 956296.352,
+        "mean_unresolved": 1881070.548
+      },
+      {
+        "feature": "actions",
+        "n": 150,
+        "auroc": 0.337,
+        "mean_resolved": 51.185,
+        "mean_unresolved": 71.69
+      },
+      {
+        "feature": "completion_tokens",
+        "n": 150,
+        "auroc": 0.341,
+        "mean_resolved": 13708.593,
+        "mean_unresolved": 19905.5
+      },
+      {
+        "feature": "search_actions",
+        "n": 150,
+        "auroc": 0.35,
+        "mean_resolved": 4.491,
+        "mean_unresolved": 6.619
+      },
+      {
+        "feature": "time_to_first_test_s",
+        "n": 118,
+        "auroc": 0.351,
+        "mean_resolved": 131.112,
+        "mean_unresolved": 189.738
+      },
+      {
+        "feature": "steps",
+        "n": 150,
+        "auroc": 0.355,
+        "mean_resolved": 49.843,
+        "mean_unresolved": 69.167
+      },
+      {
+        "feature": "api_calls",
+        "n": 150,
+        "auroc": 0.355,
+        "mean_resolved": 49.861,
+        "mean_unresolved": 69.167
+      },
+      {
+        "feature": "reasoning_tokens",
+        "n": 150,
+        "auroc": 0.361,
+        "mean_resolved": 7470.657,
+        "mean_unresolved": 10534.214
+      },
+      {
+        "feature": "files_inspected",
+        "n": 150,
+        "auroc": 0.366,
+        "mean_resolved": 3.815,
+        "mean_unresolved": 4.762
+      },
+      {
+        "feature": "first_test_step",
+        "n": 118,
+        "auroc": 0.372,
+        "mean_resolved": 30.624,
+        "mean_unresolved": 42.242
+      },
+      {
+        "feature": "inspect_actions",
+        "n": 150,
+        "auroc": 0.373,
+        "mean_resolved": 19.926,
+        "mean_unresolved": 27.714
+      },
+      {
+        "feature": "script_runs",
+        "n": 150,
+        "auroc": 0.373,
+        "mean_resolved": 13.787,
+        "mean_unresolved": 20.976
+      },
+      {
+        "feature": "script_runs_passed",
+        "n": 150,
+        "auroc": 0.373,
+        "mean_resolved": 9.722,
+        "mean_unresolved": 16.119
+      },
+      {
+        "feature": "first_edit_step",
+        "n": 149,
+        "auroc": 0.393,
+        "mean_resolved": 18.0,
+        "mean_unresolved": 24.762
+      },
+      {
+        "feature": "time_to_first_edit_s",
+        "n": 149,
+        "auroc": 0.398,
+        "mean_resolved": 80.917,
+        "mean_unresolved": 115.82
+      },
+      {
+        "feature": "nonzero_returncodes",
+        "n": 150,
+        "auroc": 0.414,
+        "mean_resolved": 6.259,
+        "mean_unresolved": 8.167
+      },
+      {
+        "feature": "edit_actions",
+        "n": 150,
+        "auroc": 0.421,
+        "mean_resolved": 3.648,
+        "mean_unresolved": 5.738
+      },
+      {
+        "feature": "test_runs_failed",
+        "n": 150,
+        "auroc": 0.424,
+        "mean_resolved": 1.444,
+        "mean_unresolved": 2.095
+      },
+      {
+        "feature": "revert_actions",
+        "n": 150,
+        "auroc": 0.427,
+        "mean_resolved": 0.917,
+        "mean_unresolved": 1.5
+      },
+      {
+        "feature": "cost_usd",
+        "n": 150,
+        "auroc": 0.436,
+        "mean_resolved": 0.393,
+        "mean_unresolved": 0.524
+      },
+      {
+        "feature": "script_runs_failed",
+        "n": 150,
+        "auroc": 0.447,
+        "mean_resolved": 4.065,
+        "mean_unresolved": 4.857
+      },
+      {
+        "feature": "helper_files_written",
+        "n": 150,
+        "auroc": 0.451,
+        "mean_resolved": 6.074,
+        "mean_unresolved": 7.905
+      },
+      {
+        "feature": "failed_run_then_edit",
+        "n": 150,
+        "auroc": 0.451,
+        "mean_resolved": 0.25,
+        "mean_unresolved": 0.476
+      },
+      {
+        "feature": "files_written",
+        "n": 150,
+        "auroc": 0.453,
+        "mean_resolved": 7.194,
+        "mean_unresolved": 8.952
+      },
+      {
+        "feature": "test_runs",
+        "n": 150,
+        "auroc": 0.462,
+        "mean_resolved": 4.287,
+        "mean_unresolved": 5.429
+      },
+      {
+        "feature": "first_edit_frac",
+        "n": 149,
+        "auroc": 0.466,
+        "mean_resolved": 0.371,
+        "mean_unresolved": 0.391
+      },
+      {
+        "feature": "edit_run_cycles",
+        "n": 150,
+        "auroc": 0.476,
+        "mean_resolved": 2.046,
+        "mean_unresolved": 2.833
+      },
+      {
+        "feature": "tracebacks",
+        "n": 150,
+        "auroc": 0.481,
+        "mean_resolved": 4.954,
+        "mean_unresolved": 5.595
+      },
+      {
+        "feature": "test_runs_passed",
+        "n": 150,
+        "auroc": 0.484,
+        "mean_resolved": 2.843,
+        "mean_unresolved": 3.333
+      },
+      {
+        "feature": "first_test_frac",
+        "n": 118,
+        "auroc": 0.512,
+        "mean_resolved": 0.616,
+        "mean_unresolved": 0.622
+      },
+      {
+        "feature": "format_errors",
+        "n": 150,
+        "auroc": 0.509,
+        "mean_resolved": 0.019,
+        "mean_unresolved": 0.0
+      },
+      {
+        "feature": "actions_per_step",
+        "n": 150,
+        "auroc": 0.498,
+        "mean_resolved": 1.039,
+        "mean_unresolved": 1.058
+      },
+      {
+        "feature": "timeouts",
+        "n": 150,
+        "auroc": 0.502,
+        "mean_resolved": 0.241,
+        "mean_unresolved": 0.19
+      }
+    ]
+  }
+}
