@@ -13,10 +13,16 @@ then reports, per model and on the tasks we graded:
 And the leaderboard's own cross-model overlap and oracle on our 100 tasks.
 
 Reads our side from per_task.csv (scripts/analyze_three_model.py output).
+With --baseline-per-task (e.g. r1's per_task.csv when reporting r2), also
+compares ours to that earlier run on the tasks both graded.
 
 Usage:
     python scripts/compare_three_model_leaderboard.py \
         --per-task docs/runs/three-model-verified/per_task-interim.csv
+    python scripts/compare_three_model_leaderboard.py \
+        --per-task data/outputs/runs/three-model-verified-r2/analysis/per_task.csv \
+        --tasks-file configs/three_model_tasks_r2.json \
+        --baseline-per-task docs/runs/three-model-verified/per_task-interim.csv
     python scripts/compare_three_model_leaderboard.py --trajectories --cache-dir /tmp/lb
 """
 
@@ -71,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tasks-file", type=Path, default=Path("configs/three_model_tasks.json"))
     parser.add_argument("--cache-dir", type=Path, default=Path("data/raw/leaderboard"))
     parser.add_argument("--trajectories", action="store_true", help="also fetch + compare trajectories (~200 MB)")
+    parser.add_argument("--baseline-per-task", type=Path, default=None,
+                        help="an earlier run's per_task.csv to compare against (paired)")
     parser.add_argument("--out", type=Path, default=None, help="write the markdown report here")
     args = parser.parse_args(argv)
 
@@ -89,12 +97,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: leaderboard missing ids: {missing}", file=sys.stderr)
         return 1
 
+    n = len(ids)
     L: list[str] = ["# Three-model run vs. SWE-bench leaderboard", ""]
     L += ["Leaderboard entries (mini-SWE-agent, bash only, reasoning effort **high**): "
           + ", ".join(f"`{e}`" for e in ENTRIES.values()) + ".", ""]
 
     L += ["## Resolved rate, per model", "",
-          "| model | leaderboard on our 100 | tasks we graded | ours | leaderboard | agreement | κ | ours-only / lb-only | McNemar p |",
+          f"| model | leaderboard on our {n} | tasks we graded | ours | leaderboard | agreement | κ | ours-only / lb-only | McNemar p |",
           "|---|---|---|---|---|---|---|---|---|"]
     detail: list[str] = []
     for m in ENTRIES:
@@ -106,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
         oo = sum(a and not b for a, b in zip(o, l))
         lo_ = sum(b and not a for a, b in zip(o, l))
         L.append(
-            f"| {m} | {sum(l100)}/100 ({100*lo:.0f}–{100*hi:.0f}) | {len(both)} | {sum(o)} ({100*sum(o)/len(both):.1f}%) | "
+            f"| {m} | {sum(l100)}/{n} ({100*lo:.0f}–{100*hi:.0f}) | {len(both)} | {sum(o)} ({100*sum(o)/len(both):.1f}%) | "
             f"{sum(l)} ({100*sum(l)/len(both):.1f}%) | {100*sum(a == b for a, b in zip(o, l))/len(both):.1f}% | "
             f"{cohen_kappa(o, l):.2f} | {oo} / {lo_} | {mcnemar_exact(oo, lo_):.3f} |"
         )
@@ -151,13 +160,36 @@ def main(argv: list[str] | None = None) -> int:
             L.append(f"| {m} | leaderboard model config | | `{cfg['model_name']}` {json.dumps(cfg.get('model_kwargs'))} |")
         L.append("")
 
-    L += ["## Leaderboard's own cross-model view on our 100", ""]
+    if args.baseline_per_task:
+        base = load_ours(args.baseline_per_task)
+        L += [f"## Ours vs. baseline run (`{args.baseline_per_task}`)", "",
+              "| model | tasks both graded | ours | baseline | agreement | ours-only / baseline-only | McNemar p | cost/task ours / baseline | calls/task ours / baseline |",
+              "|---|---|---|---|---|---|---|---|---|"]
+        for m in ENTRIES:
+            both = [i for i in ids if (m, i) in ours and (m, i) in base]
+            if not both:
+                L.append(f"| {m} | 0 | | | | | | | |")
+                continue
+            o = [ours[(m, i)]["resolved"] == "True" for i in both]
+            b = [base[(m, i)]["resolved"] == "True" for i in both]
+            oo = sum(x and not y for x, y in zip(o, b))
+            bo = sum(y and not x for x, y in zip(o, b))
+            cost = [st.mean(_f(r[(m, i)]["cost_usd"]) or 0 for i in both) for r in (ours, base)]
+            calls = [st.mean(_f(r[(m, i)]["api_calls"]) or 0 for i in both) for r in (ours, base)]
+            L.append(
+                f"| {m} | {len(both)} | {sum(o)} ({100*sum(o)/len(both):.1f}%) | {sum(b)} ({100*sum(b)/len(both):.1f}%) | "
+                f"{100*sum(x == y for x, y in zip(o, b))/len(both):.1f}% | {oo} / {bo} | {mcnemar_exact(oo, bo):.3f} | "
+                f"${cost[0]:.3f} / ${cost[1]:.3f} | {calls[0]:.1f} / {calls[1]:.1f} |"
+            )
+        L.append("")
+
+    L += [f"## Leaderboard's own cross-model view on our {n}", ""]
     solved = {i: {m for m in ENTRIES if lb[m][i]["resolved"]} for i in ids}
     oracle = sum(min(lb[m][i]["cost"] for m in ([m for m in ENTRIES if lb[m][i]["resolved"]] or ENTRIES)) for i in ids)
     L += [f"- All three: {sum(len(s) == 3 for s in solved.values())}; none: {sum(not s for s in solved.values())}; only one: "
           + ", ".join(f"{m} {sum(s == {m} for s in solved.values())}" for m in ENTRIES),
-          f"- Oracle (cheapest resolving model): {sum(bool(s) for s in solved.values())}% for ${oracle:.2f}; "
-          + ", ".join(f"always-{m} {sum(lb[m][i]['resolved'] for i in ids)}% for ${sum(lb[m][i]['cost'] for i in ids):.2f}" for m in ENTRIES)]
+          f"- Oracle (cheapest resolving model): {sum(bool(s) for s in solved.values())}/{n} for ${oracle:.2f}; "
+          + ", ".join(f"always-{m} {sum(lb[m][i]['resolved'] for i in ids)}/{n} for ${sum(lb[m][i]['cost'] for i in ids):.2f}" for m in ENTRIES)]
     for a, b in combinations(ENTRIES, 2):
         va = [lb[a][i]["resolved"] for i in ids]
         vb = [lb[b][i]["resolved"] for i in ids]

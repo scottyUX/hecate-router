@@ -7,6 +7,10 @@
 #   bash scripts/launch_three_model.sh start       # 3 tmux sessions, one per model
 #   bash scripts/launch_three_model.sh status      # progress + spend per model
 #
+# EXPERIMENT=r2 selects the leaderboard-matched rerun (specs/018-three-model-r2):
+# its task file, run root, config and caps all come from the r2 preset in
+# scripts/run_three_model.py. Default is r1.
+#
 # Pre-pulling first means the three agent processes never race each other for
 # the same image, an image-pull failure shows up here instead of as an
 # instant empty submission, and disk exhaustion is caught before any spend.
@@ -14,8 +18,18 @@ set -euo pipefail
 
 ROOT="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
-TASKS=configs/three_model_tasks.json
-RUN_ROOT=data/outputs/runs/three-model-verified
+EXPERIMENT="${EXPERIMENT:-r1}"
+case "${EXPERIMENT}" in
+  r1) TASKS=configs/three_model_tasks.json
+      RUN_ROOT=data/outputs/runs/three-model-verified
+      SESSION=3m
+      MINI_VERSION=2.4.6 ;;
+  r2) TASKS=configs/three_model_tasks_r2.json
+      RUN_ROOT=data/outputs/runs/three-model-verified-r2
+      SESSION=3m-r2
+      MINI_VERSION=2.0.0 ;;
+  *) echo "unknown EXPERIMENT=${EXPERIMENT} (r1|r2)" >&2; exit 2 ;;
+esac
 WORKERS="${WORKERS:-4}"
 MODELS=(opus gemini minimax)
 # ~2-4 GB per image; refuse to start the pull below this much free space.
@@ -60,7 +74,17 @@ preflight() {
   grep -q '^OPENROUTER_API_KEY=.\+' .env && echo "    OK" || { echo "ERROR: missing in .env" >&2; exit 1; }
   echo "==> tmux / python"
   command -v tmux >/dev/null || { echo "ERROR: install tmux" >&2; exit 1; }
-  .venv/bin/python -c "import minisweagent; print('    mini-swe-agent', minisweagent.__version__)"
+  local have
+  have=$(.venv/bin/python -c "import minisweagent; print(minisweagent.__version__)" 2>/dev/null | tail -1)
+  if [[ "${have}" != "${MINI_VERSION}" ]]; then
+    echo "ERROR: ${EXPERIMENT} needs mini-swe-agent ${MINI_VERSION}, installed: ${have:-none}" >&2
+    exit 1
+  fi
+  echo "    OK: mini-swe-agent ${have}"
+  if [[ "${EXPERIMENT}" == r2 ]]; then
+    echo "==> Config vs leaderboard"
+    .venv/bin/python scripts/check_leaderboard_config.py --experiment r2 | grep -E "FAIL|RESULT"
+  fi
 }
 
 pull() {
@@ -85,24 +109,25 @@ pull() {
 start() {
   mkdir -p "${RUN_ROOT}"
   for m in "${MODELS[@]}"; do
-    if tmux has-session -t "3m-${m}" 2>/dev/null; then
-      echo "tmux session 3m-${m} already running; skipping"
+    if tmux has-session -t "${SESSION}-${m}" 2>/dev/null; then
+      echo "tmux session ${SESSION}-${m} already running; skipping"
       continue
     fi
-    tmux new-session -d -s "3m-${m}" \
+    tmux new-session -d -s "${SESSION}-${m}" \
       "cd ${ROOT} && source .venv/bin/activate && \
-       python scripts/run_three_model.py --model ${m} --workers ${WORKERS} \
-       2>&1 | tee -a ${RUN_ROOT}/${m}.log"
-    echo "started 3m-${m} (log: ${RUN_ROOT}/${m}.log)"
+       python scripts/run_three_model.py --experiment ${EXPERIMENT} --model ${m} \
+         --workers ${WORKERS} 2>&1 | tee -a ${RUN_ROOT}/${m}.log"
+    echo "started ${SESSION}-${m} (log: ${RUN_ROOT}/${m}.log)"
   done
-  echo "Attach: tmux attach -t 3m-opus   |   status: bash $0 status"
+  echo "Attach: tmux attach -t ${SESSION}-opus   |   status: EXPERIMENT=${EXPERIMENT} bash $0 status"
 }
 
 status() {
   for m in "${MODELS[@]}"; do
-    python3 - "${RUN_ROOT}/${m}" "$m" <<'EOF'
+    python3 - "${RUN_ROOT}/${m}" "$m" "${TASKS}" <<'EOF'
 import json, sys, pathlib
 d, m = pathlib.Path(sys.argv[1]), sys.argv[2]
+n = len(json.loads(pathlib.Path(sys.argv[3]).read_text())["tasks"])
 preds = json.loads((d / "preds.json").read_text()) if (d / "preds.json").exists() else {}
 cost, done, notraj, exits = 0.0, 0, 0, {}
 for iid in preds:
@@ -115,10 +140,10 @@ for iid in preds:
     done += 1
     s = info.get("exit_status") or "?"
     exits[s] = exits.get(s, 0) + 1
-print(f"{m:8s} done={done:3d}/100 no_traj={notraj:2d} cost=${cost:7.2f} exits={exits}")
+print(f"{m:8s} done={done:3d}/{n} no_traj={notraj:2d} cost=${cost:7.2f} exits={exits}")
 EOF
   done
-  tmux ls 2>/dev/null | grep '^3m-' || echo "(no 3m-* tmux sessions running)"
+  tmux ls 2>/dev/null | grep "^${SESSION}-[a-z]*:" || echo "(no ${SESSION}-* tmux sessions running)"
 }
 
 case "${1:-}" in

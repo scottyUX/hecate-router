@@ -1,0 +1,49 @@
+{
+  "entry": "20260217_mini-v2.0.0_minimax-2-5-high",
+  "instance_ids": [
+    "astropy__astropy-13033",
+    "django__django-10999",
+    "django__django-11149",
+    "django__django-12262",
+    "django__django-12754",
+    "django__django-13516",
+    "django__django-14034",
+    "django__django-14351",
+    "django__django-14608",
+    "django__django-15467",
+    "django__django-16100",
+    "matplotlib__matplotlib-14623",
+    "matplotlib__matplotlib-24970",
+    "psf__requests-6028",
+    "pydata__xarray-7393",
+    "scikit-learn__scikit-learn-14053",
+    "scikit-learn__scikit-learn-9288",
+    "sphinx-doc__sphinx-7910",
+    "sympy__sympy-13798",
+    "sympy__sympy-17630"
+  ],
+  "calls": {
+    "Novita": 577,
+    "Minimax": 462,
+    "Fireworks": 159,
+    "SiliconFlow": 29,
+    "AtlasCloud": 25
+  },
+  "call_share": {
+    "Novita": 0.4609,
+    "Minimax": 0.369,
+    "Fireworks": 0.127,
+    "SiliconFlow": 0.0232,
+    "AtlasCloud": 0.02
+  },
+  "tasks_touching": {
+    "Minimax": 18,
+    "Novita": 17,
+    "Fireworks": 14,
+    "SiliconFlow": 12,
+    "AtlasCloud": 10
+  },
+  "tasks_with_multiple_providers": 18,
+  "n_tasks": 20,
+  "n_calls": 1252
+}

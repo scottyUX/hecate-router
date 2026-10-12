@@ -203,7 +203,7 @@ def main(argv: list[str] | None = None) -> int:
             relevant_tasks,
             tiers={MODEL_SLUG: "small"},
             run_id=args.run_id,
-            scaffold_version="2.0.0",
+            scaffold_version=">=2,<3",
             require_complete=not args.allow_incomplete,
         )
     except MinisweConvertError as exc:
