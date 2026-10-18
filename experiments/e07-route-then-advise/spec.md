@@ -179,10 +179,15 @@ Known before this lock, so they are not the 49-issue result:
           one evaluate_sync. Trusted Docker score.
   _run-4  56-probe at --max_workers 4. Errors 52/56. OpenRouter HTTP 402
           in_flight_budget_exhausted. Infrastructure, not a student 0%.
-          A sequential retry is _run-5 (--max_workers 1). Do not use
-          _run-4 as the Monday gate.
+  _run-5  Same probe at --max_workers 1. Errors 45/56, same 402.
+          Remaining credit is too low for even one in-flight call to
+          clear reliably. Not the Monday gate. Top up OpenRouter before
+          any further probe. _run-3 is the only trusted row.
 
 A100 quota in us-central1, us-east1, us-east4, us-west1, us-west4, and
 europe-west4 is 0 for NVIDIA_A100_80GB_GPUS, the preemptible counterpart,
-A2_CPUS, and PREEMPTIBLE_CPUS. Global GPUS_ALL_REGIONS is 1. No
-gpu-advisor disk until a quota increase lands. Zone is chosen then.
+A2_CPUS, and PREEMPTIBLE_CPUS. Global GPUS_ALL_REGIONS is 1. A new
+increase request on 2026-10-17 was rejected: the project is already at
+its daily Quota Increase Requests cap, and a GPUS-ALL-REGIONS preference
+from 2026-08-26 is still the only one on file. No gpu-advisor disk until
+a quota increase lands. Zone is chosen then.
