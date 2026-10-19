@@ -9,6 +9,15 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-10-19-e07-week1-student-baselines",
+    title: "Experiment 7: Flash-Lite baselines and an efficiency prompt",
+    date: "2026-10-19",
+    status: "student rows done · advisor not started",
+    summary:
+      "Flash-Lite alone 22/49 (44.9%), 23.8 steps. The efficiency sentence solved 14/49 (28.6%) in 26.6 steps, and 16.5 steps on the issues it still solved. Flash harness check 31/49, 19.4 steps. Training probe 17/56 passes. Tuesday compares the untrained advisor with 23.8, not 26.6.",
+    archiveEntryId: "2026-10-19-e07-week1-student-baselines",
+  },
+  {
     href: "/journal/2026-09-15-e02-specialist-django-smoke",
     title: "Experiment 2: django in-distribution router, seed 0",
     date: "2026-09-15",
