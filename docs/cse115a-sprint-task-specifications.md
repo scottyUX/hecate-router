@@ -104,6 +104,7 @@ git add docs/tasks/sprint-1/US-1-T-1.md
 git commit -m "US-1-T-1: task spec"
 ```
 - No implementation code in this commit, spec only.
+- Run `git status` before committing. Only the task file should be listed under "Changes to be committed". If your IDE asked "Add file to Git?" when you created another file, and you clicked Add, that file is staged and will go into this commit too. Unstage it with `git restore --staged <file>`.
 
 **4. Tag and push the spec commit, before writing any code**
 ```bash
