@@ -77,13 +77,6 @@ Serves US-1 (log in with a university email). This task covers the rejection pat
 ## Tests
 File: `tests/US-1-T-1_login_email` (use your framework’s extension)
 Setup for all: start the app with an empty user store and send requests to `/api/login`.
-
-| Test name | Setup | Asserts | Criterion |
-|---|---|---|---|
-| US-1-T-1 rejects a non-university email | POST `student@gmail.com` | status 400; error is "Use your university email" | 1 |
-| US-1-T-1 sets no session cookie on rejection | same request | no `Set-Cookie` header | 2 |
-| US-1-T-1 does not reject a ucsc.edu email in any case | POST `student@ucsc.edu`, then `student@UCSC.EDU` | status is not 400 for either | 3 |
-| US-1-T-1 rejects a lookalike domain | POST `student@ucsc.edu.evil.com` | status 400 | 4 |
 ```
 
 ## Workflow
