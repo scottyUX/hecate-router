@@ -110,8 +110,8 @@ git push origin task/US-1-T-1 US-1-T-1-base
 **5. Implement**
 - Add the implementation and its tests on the same branch.
 - Do not weaken a test to make it pass.
-- One task per pull request: the PR adds only this task's task file. Open a separate pull request for each task.
-- Reorganizing files from earlier tasks (for example, moving the tests folder) is its own change. Do it in a separate pull request that you don't submit in the app, merge it, then run `git merge main` on your task branch (don't rebase). Moving this task's own new files is fine.
+- **Required:** One task per pull request: the PR adds only this task's task file. Open a separate pull request for each task.
+- **Recommended:** Reorganizing files from earlier tasks (for example, moving the tests folder) is its own change. Do it in a separate pull request that you don't submit in the app, merge it, then run `git merge main` on your task branch (don't rebase). Moving this task's own new files is fine.
 
 **6. Open a pull request**
 - Open it from your own GitHub account.
