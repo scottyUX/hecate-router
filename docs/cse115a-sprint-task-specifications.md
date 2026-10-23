@@ -77,13 +77,6 @@ Serves US-1 (log in with a university email). This task covers the rejection pat
 ## Tests
 File: `tests/US-1-T-1_login_email` (use your framework’s extension)
 Setup for all: start the app with an empty user store and send requests to `/api/login`.
-
-| Test name | Setup | Asserts | Criterion |
-|---|---|---|---|
-| US-1-T-1 rejects a non-university email | POST `student@gmail.com` | status 400; error is "Use your university email" | 1 |
-| US-1-T-1 sets no session cookie on rejection | same request | no `Set-Cookie` header | 2 |
-| US-1-T-1 does not reject a ucsc.edu email in any case | POST `student@ucsc.edu`, then `student@UCSC.EDU` | status is not 400 for either | 3 |
-| US-1-T-1 rejects a lookalike domain | POST `student@ucsc.edu.evil.com` | status 400 | 4 |
 ```
 
 ## Workflow
@@ -117,6 +110,8 @@ git push origin task/US-1-T-1 US-1-T-1-base
 **5. Implement**
 - Add the implementation and its tests on the same branch.
 - Do not weaken a test to make it pass.
+- **Required:** One task per pull request: the PR adds only this task's task file. Open a separate pull request for each task.
+- **Recommended:** Reorganizing files from earlier tasks (for example, moving the tests folder, or updating an earlier task's task file to match) is its own change. Do it in a separate pull request that you don't submit in the app, merge it, then run `git fetch origin` and `git merge origin/main` on your task branch (don't rebase). If it ends up in a task's pull request anyway, the app still accepts it, and the earlier task's grade doesn't change. Moving this task's own new files is fine.
 
 **6. Open a pull request**
 - Open it from your own GitHub account.
