@@ -9,6 +9,15 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-10-23-e07-untrained-advisor",
+    title: "Experiment 7: untrained advisor does not clear the step gate",
+    date: "2026-10-23",
+    status: "stop · do not train",
+    summary:
+      "Untrained Qwen2.5-7B on Flash-Lite, 49 test issues: 7/49 (14.3%), 21.86 steps, 0 errors. Gap versus Flash-Lite alone (22/49, 23.8 steps) is 1.94 steps, under the cutoff of 2. GRPO was not started.",
+    archiveEntryId: "2026-10-23-e07-untrained-advisor",
+  },
+  {
     href: "/journal/2026-10-19-e07-week1-student-baselines",
     title: "Experiment 7: Flash-Lite baselines and an efficiency prompt",
     date: "2026-10-19",
