@@ -191,3 +191,69 @@ increase request on 2026-10-17 was rejected: the project is already at
 its daily Quota Increase Requests cap, and a GPUS-ALL-REGIONS preference
 from 2026-08-26 is still the only one on file. No gpu-advisor disk until
 a quota increase lands. Zone is chosen then.
+
+6 Check 1, recorded 2026-10-23 after seeing run-3
+-------------------------------------------------
+
+This section was written after the numbers below were already known.
+It is not a pre-registration. `_run-N` here is an attempt number on a
+full run id. It is not the repeat index in §5. The 56-probe rows named
+`_run-4` and `_run-5` in §5 are `split-tenacitytrain`. They are not
+the 49-test files below.
+
+Run-3 (untrained, short context) finished 7/49 resolved, 21.86 mean
+steps, 0 errors in its own file, $3.16. Student-alone
+`exp-07_arm-weakalone_split-tenacityval_seed-0_run-5` is 22/49, 23.8
+steps. The unpaired step gap is 1.94. Those two files had not been
+joined when this section was written.
+
+Check 1 is `scripts/compare_swe_arms.py` on these six files only.
+Per-issue means. An issue that errored in any file is dropped from
+both arms. A mean step gap still under 2 is a final stop. No fourth
+pass. No GRPO. An incomplete series (credit stops the set before all
+six exist) is no decision: not a stop and not a pass. Top up, then
+finish the remaining named passes on the same commit.
+
+  student-alone
+    exp-07_arm-weakalone_split-tenacityval_seed-0_run-5
+    exp-07_arm-weakalone_split-tenacityval_seed-0_run-6
+    exp-07_arm-weakalone_split-tenacityval_seed-0_run-7
+  untrained
+    exp-07_arm-untrained_split-tenacityval_seed-0_run-3
+    exp-07_arm-untrained_split-tenacityval_seed-0_run-4
+    exp-07_arm-untrained_split-tenacityval_seed-0_run-5
+
+Does not count: student-alone `split-tenacityval` `_run-4` (49 errors,
+empty balance); the unsuffixed untrained attempt (26 errors); untrained
+`_run-2` (price file missing). A failed pass is not replaced unless
+this section is edited to name the replacement.
+
+Order of the four new passes: alone `_run-6`, untrained `_run-4`,
+alone `_run-7`, untrained `_run-5`. All four use one commit. Run-5
+(student-alone, 18 October) is the checkout that was on the worker
+then, `3ada694`, before the 404 retry. Run-3 was scored from the
+uncommitted tree that is now `93678ef` (`scott/train-2xa100`). That
+SHA difference inside the three-pass set is known. Do not rerun
+run-5 to erase it. Record the SHA of each new pass in its run dir.
+
+Advisor eval context, every advisor arm including a later trained
+arm: task, last advice, latest observation, 1,024-token reply reserve,
+observation tail capped at 60,000 characters. Training still uses the
+whole conversation, up to 28,672 prompt tokens and 4,096 reply tokens.
+Do not change the eval between arms. A stop under this section is a
+stop for the short context. It does not say what a full-history
+untrained advisor would have done. No full-history pass is part of
+check 1.
+
+Efficiency prompt already ran: 14/49, 26.6 steps, 0 errors, $3.41.
+It is a fourth arm. It is not in the six-file gate and it is not the
+step baseline.
+
+If check 1 later passes and training starts, non-inferiority is
+18/49 (36.7%). 17/49 is 34.7% and fails. The lower 95% bound is
+reported and is not the gate. Training keeps
+`max_generate_length=4096` and `zero_reward_on_non_stop=true`. The
+one-step smoke records the fraction of rollouts that die at that cap.
+If nearly all do, stop and revisit this line before the 18 epochs.
+GRPO does not start until the worker OpenRouter key shows about $500
+still unused.
