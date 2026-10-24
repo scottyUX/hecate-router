@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   PaperAbstract,
   PaperCite,
@@ -42,7 +44,7 @@ export async function E07UntrainedAdvisorPaper() {
       title="Experiment 7: untrained advisor does not clear the step gate"
       authors={
         <>
-          Scott Davis · <a href="/">Hecate Lab</a>
+          Scott Davis · <Link href="/">Hecate Lab</Link>
         </>
       }
       affiliations="SWE-smith Tenacity · 49 test issues · Flash-Lite student · 23 October 2026"
@@ -52,11 +54,21 @@ export async function E07UntrainedAdvisorPaper() {
         "Machine Learning (cs.LG)",
         "Artificial Intelligence (cs.AI)",
       ]}
-      updated="2026-10-23"
+      updated="2026-10-24"
       tags="e7 · untrained advisor · flash-lite · qwen2.5-7b · tenacity · stop"
       toc={toc}
     >
       <PaperAbstract>
+        <p>
+          <strong>Update, 24 October 2026.</strong> This entry reads one pass
+          per arm. The spec was then amended to decide check 1 on three passes
+          per arm, and the six-file join passed (step gap 3.7, resolve gap 20.6
+          points). See{" "}
+          <Link href="/journal/2026-10-24-e07-check1-three-pass">
+            Experiment 7: three passes per arm clear the step gate
+          </Link>
+          . The text below is unchanged.
+        </p>
         <p>
           The untrained Qwen2.5-7B-Instruct advisor was run once on the 49
           Tenacity test issues, with Gemini 2.5 Flash-Lite as the student and

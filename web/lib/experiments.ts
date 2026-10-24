@@ -9,10 +9,19 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-10-24-e07-check1-three-pass",
+    title: "Experiment 7: three passes per arm clear the step gate",
+    date: "2026-10-24",
+    status: "check 1 pass · train next",
+    summary:
+      "Three passes per arm, joined on 47 of 49 issues: Flash-Lite alone 34.0%, 25.7 steps; untrained advisor 13.5%, 22.0 steps. Step gap 3.7 [+0.6, +6.7], resolve gap 20.6 points. Check 1 passes on the point estimate; the three-pass rule was recorded after the one-pass 1.94. Next: GRPO on 2×A100 on-demand.",
+    archiveEntryId: "2026-10-24-e07-check1-three-pass",
+  },
+  {
     href: "/journal/2026-10-23-e07-untrained-advisor",
     title: "Experiment 7: untrained advisor does not clear the step gate",
     date: "2026-10-23",
-    status: "stop · do not train",
+    status: "one pass · superseded by 24 Oct",
     summary:
       "Untrained Qwen2.5-7B on Flash-Lite, 49 test issues: 7/49 (14.3%), 21.86 steps, 0 errors. Gap versus Flash-Lite alone (22/49, 23.8 steps) is 1.94 steps, under the cutoff of 2. GRPO was not started.",
     archiveEntryId: "2026-10-23-e07-untrained-advisor",
