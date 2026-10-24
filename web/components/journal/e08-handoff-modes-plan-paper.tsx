@@ -9,6 +9,7 @@ import {
   PaperShell,
   type PaperTocItem,
 } from "@/components/paper/paper-shell";
+import { HandoffModesFigure } from "@/components/paper/handoff-modes";
 import { PaperTable } from "@/components/paper/paper-table";
 import { requireJournalPage } from "@/lib/auth";
 
@@ -91,14 +92,20 @@ export async function E08HandoffModesPlanPaper() {
           for the least time and money, and which passes on the cheap model’s
           mistakes?
         </p>
+        <p>
+          Each mode works in both directions: small → large to escalate, large
+          → small to hand down. Figure 1 lays out all six; E8 tests the
+          escalation row.
+        </p>
+        <HandoffModesFigure />
         <PaperTable
           id="table-modes"
-          caption="Table 1. The three handoff modes."
-          headers={["Mode", "What the strong model gets", "Expected trade-off"]}
+          caption="Table 1. The three modes side by side. Numbers from Heo et al., Tables 1, 3–5 and Fig. 4; latency is Qwen3 14B↔32B at 8K tokens on H100."
+          headers={["Mode", "Receiver prefill", "What the receiver sees", "Model pairs", "Infra", "Evidence"]}
           rows={[
-            ["Full text", "Every step the cheap model took, re-read (prefilled)", "Complete; re-reading costs time and money"],
-            ["Summary", "A note of at most 400 tokens written by the cheap model", "Cheap; details get lost"],
-            ["KV transfer", "The cheap model’s KV cache, mapped to the strong model’s layers", "Reads nothing; quality is the open question"],
+            ["1 · Verbatim", "All T tokens", "Everything, exactly", "Any pair, any family", "Works through any API", "Upper bound on quality; baseline cost"],
+            ["2 · Summary", "Issue + ≤400 tokens", "A lossy compression written by the sender or the policy", "Any pair, any family", "Works through any API", "E7 as specified; Advisor Models B.2 names truncation as an open issue"],
+            ["3 · KV transfer", "None: decode starts on the mapped cache", "Full context, with linear-mapper error in the keys and values", "Same family, same tokenizer, matched KV heads and head size, dense attention", "Self-hosted both models; vLLM/SGLang with cache injection; mapper weights 4–12 GB", "S→L: 73–98% retention on 4 of 6 pairs. L→S: HellaSwag and CoQA only. Never tested on agent runs"],
           ]}
         />
       </PaperSection>
