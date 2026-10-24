@@ -69,3 +69,40 @@ Paper, same 49 test issues, Flash, repeated-run average: 61.2% and 19.1 steps. T
 | untrained | `exp-07_arm-untrained_split-tenacityval_seed-0_run-3` | 0 | 7/49 (14.3%) | 21.9 | 15.9 |
 
 Paired difference, weakalone minus untrained: resolve +30.6% [+16.3%, +44.9%], steps +1.9 [−3.3, +7.1]. The script's check-1 step gap is 1.94. That is one pair of passes, not the six-file mean. Code: run-5 is `3ada694`. Run-3 was the uncommitted tree later committed as `93678ef`. The `CODE_SHA` file in that run directory was written after the pass, once that commit existed. It does not mean run-3 executed a checkout of `93678ef` at the time. Untrained cost on run-3 was $3.16. The unsuffixed untrained attempt (26 errors) and untrained `_run-2` are not in this join. Maps for run-3 and student-alone run-6 are in `gs://whatsapp-sales-agent-hecate-artifacts/runs/`.
+
+## Check 1, six-file join, 24 Oct 2026
+
+`compare_swe_arms.py` on the six files named in `spec.md` (three-pass rule, recorded before the extra passes). Student: `openrouter/google/gemini-2.5-flash-lite`. Advisor (untrained): base `Qwen/Qwen2.5-7B-Instruct`, short-context eval (task, last advice, latest observation, 1,024-token replies). `--max_workers 1`, one pass per file.
+
+| arm | file | CODE_SHA | errors in file | resolved | mean steps | `$` |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| weakalone | `exp-07_arm-weakalone_split-tenacityval_seed-0_run-5` | `3ada694` | 0 | 22/49 | 23.8 | 2.97 |
+| weakalone | `exp-07_arm-weakalone_split-tenacityval_seed-0_run-6` | `93678ef` | 1 | 13/49 | 24.4 | 2.69 |
+| weakalone | `exp-07_arm-weakalone_split-tenacityval_seed-0_run-7` | `93678ef` | 1 | 13/49 | 27.2 | 3.24 |
+| untrained | `exp-07_arm-untrained_split-tenacityval_seed-0_run-3` | `93678ef` | 0 | 7/49 | 21.9 | 3.16 |
+| untrained | `exp-07_arm-untrained_split-tenacityval_seed-0_run-4` | `93678ef` | 0 | 6/49 | 21.5 | 2.85 |
+| untrained | `exp-07_arm-untrained_split-tenacityval_seed-0_run-5` | `93678ef` | 0 | 6/49 | 24.9 | 3.98 |
+
+Per-file mean steps here include errored rows; the join below drops them. Run-3's `CODE_SHA` was written after the pass (see above).
+
+Kept 47. Dropped 2, from both arms, because they errored in a student-alone file:
+
+- `jd__tenacity.0d40e76f.combine_file__1n8ql04e`: `_run-6`, "Agent step timeout after 600s"
+- `jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__6vzkm0lh`: `_run-7`, "Agent step timeout after 600s"
+
+Both are the agent server's 600 s idle-session cleanup on a single 40-step request (student-alone arm only), not student failures.
+
+Three-pass means on the 47 kept issues:
+
+| arm | repeats | resolve | mean steps | steps on resolved |
+| --- | ---: | ---: | ---: | ---: |
+| weakalone | 3 | 34.0% | 25.7 | 19.9 |
+| untrained | 3 | 13.5% | 22.0 | 16.8 |
+
+Paired difference, weakalone minus untrained (bootstrap over issues): resolve +20.6% [+12.1%, +29.8%], steps +3.7 [+0.6, +6.7].
+
+**Verdict: check 1 passes.** Rule (`spec.md` §5 and the three-pass amendment): the untrained mean is at least 2 steps below student-alone (3.7) and untrained resolve is below student-alone (−20.6 points). The step gap's lower 95% bound (+0.6) is under 2; the rule is on the point estimate. This is a pass for the short eval context only.
+
+Untrained `_run-5` is attempt 3. Attempt 1 was stopped by hand at 22/49 (VM stop, 23 Oct 23:00 PDT). Attempt 2 was preempted at 43/49 (Spot, 24 Oct 01:09 PDT). Attempt 3 ran all 49 on on-demand provisioning, same commit and flags, exit 0. Attempt logs are kept as `eval.attempt1.log` and `eval.attempt2.log` in that run dir. Only attempt 3's map is a gate file.
+
+Artifacts: the six maps are in `gs://whatsapp-sales-agent-hecate-artifacts/runs/<run_id>/` (student-alone `_run-5` as `exp-07_arm-weakalone_split-tenacityval_seed-0_run-5.json` in its run dir). Join output: `gs://whatsapp-sales-agent-hecate-artifacts/runs/exp-07_check1_split-tenacityval_seed-0/check1.json` and `check1_stdout.txt`. After the join, `gpu-advisor` and `hecate-worker` were stopped. Training has not started.
