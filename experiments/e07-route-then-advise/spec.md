@@ -228,6 +228,27 @@ empty balance); the unsuffixed untrained attempt (26 errors); untrained
 `_run-2` (price file missing). A failed pass is not replaced unless
 this section is edited to name the replacement.
 
+Untrained `_run-5` replacement (recorded 2026-10-24 ~02:00 PDT, before
+attempt 3 starts). Attempt 1 stopped at 22/49 when the GPU VM was
+stopped by hand (23:00 PDT 23 Oct). Attempt 2 stopped at 43/49 when
+the Spot VM was preempted (01:09 PDT 24 Oct); a Spot restart at 01:27
+was preempted again within a minute. Both are infrastructure stops,
+not results; neither wrote a session map. Their logs are kept as
+`eval.attempt1.log` and `eval.attempt2.log` in the run dir. Attempt 3
+is a full rerun of all 49 issues under the same run id, commit
+`93678ef` and flags, on on-demand provisioning (same a2-ultragpu-1g,
+same zone and boot disk). Only attempt 3's session map is the gate
+file. If attempt 3 is also interrupted, the completed issues are
+recovered from its log, only the remaining issues are run on the same
+commit and flags, and the two are merged into one map.
+
+Non-inferiority bar (clarification, recorded before any trained
+number exists): "student-alone minus 10 points" means the student-alone
+three-pass mean from the six-file join, as `compare_swe_arms.py`
+computes it (trained minus student-alone at least -0.10 on the joined
+issues). The 18/49 figure further down was derived from run-5 alone
+and is superseded by this rule.
+
 Order of the four new passes: alone `_run-6`, untrained `_run-4`,
 alone `_run-7`, untrained `_run-5`. All four use one commit. Run-5
 (student-alone, 18 October) is the checkout that was on the worker
