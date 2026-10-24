@@ -405,3 +405,27 @@ unchanged by the GPU count. LoRA is not used: this SkyRL's FSDP worker does
 not pass a LoRA rank, and it would change the recipe.
 
 The Monday interim (above) is unchanged.
+
+Smoke 4 passed; training started; 4-GPU request (recorded 2026-10-24 ~14:30 PDT)
+---------------------------------------------------------------------------------
+
+Smoke 4 (`..._trainsmoke_..._run-4`, `MAX_TURNS=9 SEQ_PARALLEL=2
+CPU_OFFLOAD=1`, `6ae79d9`) passed: exit 0, no OOM, 17/32 rewarded, 0
+zeroed, mean reward 0.45, 0 errors, 10/32 stopped at the input limit. One
+step took 16.1 min (rollouts 3.7, forward 1.5, update 10.8), above the 15
+min line. The 18-epoch run `exp-07_arm-trained_split-tenacitytrain_seed-0`
+started at 14:06 PDT with those settings on 2 x A100 (flex-start). The 16.1
+min step is a recorded deviation from the 15 min line; the run continues.
+
+A 4 x A100 machine was requested to shorten training (on-demand was out of
+stock in us-central1-a and -c; a flex-start request `gpu-advisor-4` is queued
+in us-central1-c on disk `gpu-advisor-4`, made from snapshot
+`gpu-advisor-20261022`; spot/flex A100-80GB quota raised to 6). If it starts:
+setup to `6ae79d9`, then a smoke-only run
+`exp-07_arm-trainsmoke_split-tenacitytrain_seed-0_run-5` with `NUM_GPUS=4
+MAX_TURNS=9 SEQ_PARALLEL=2 CPU_OFFLOAD=0`, same 4 issues and pass rules.
+Switching the training run to 4 GPUs is the user's decision after that
+smoke. If switched, the 4-GPU run is a fresh run named
+`exp-07_arm-trained_split-tenacitytrain_seed-0_run-2` from step 0 (it does
+not resume the 2-GPU checkpoint), and the 2-GPU run is stopped and recorded
+as superseded. Global batch 4 x 8, learning rate and reward are unchanged.
