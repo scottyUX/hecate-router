@@ -319,3 +319,39 @@ The trained arm is scored with the short eval above, on the highest
 `global_step_*` export only (`sort -V`). Check 3's bar is the
 student-alone three-pass mean minus 10 points on the joined issues,
 per the clarification above (24.0% on the current join).
+
+Smoke 1 failed; max_turns deviation and Monday interim (recorded 2026-10-24 ~12:00 PDT, before smoke 2)
+--------------------------------------------------------------------------------------------------------
+
+Smoke 1 (`exp-07_arm-trainsmoke_split-tenacitytrain_seed-0`, released
+settings) failed the length rule: 30/32 rollouts stopped at the 4,096
+response cap; 10 rollouts had raw reward > 0 and 8 of them were zeroed
+by `zero_reward_on_non_stop`. Exit 0, no OOM, 0 errors. Mean reward
+0.273 before zeroing, 0.057 after.
+
+Deviation from the released code: training uses `generator.max_turns=9`
+(fork commit `8809f18`, `MAX_TURNS=9`). Only the 28,672-token prompt cap
+then binds, and a resolved rollout keeps the paper's stated reward,
+0.5 + 0.5 x (40 - steps)/40. Everything else in the recipe is unchanged.
+Reason: the paper describes that reward and never mentions the response
+cap; under the released setting most resolved Flash-Lite rollouts score 0.
+
+Smoke 2: `exp-07_arm-trainsmoke_split-tenacitytrain_seed-0_run-2`, same 4
+issues and pass rules, `MAX_TURNS=9`. If it passes, the 18-epoch run
+`exp-07_arm-trained_split-tenacitytrain_seed-0` starts from the launcher
+with `MAX_TURNS=9` and `CKPT_INTERVAL=14`.
+
+Deferred, diagnostic only (does not change this decision): a Flash-student
+smoke under the released setting, to measure how often the cap hits the
+paper's student; and a question to the authors about their settings.
+
+Monday interim (fixed now, before any trained number): around 22:00 PDT
+Sunday 25 Oct, after the latest per-epoch checkpoint, training is paused.
+That checkpoint's HF export is served with vLLM on the same GPUs and
+scored with one pass of the short-context advisor eval on the 49 test
+issues, run id `exp-07_arm-trainedinterim_split-tenacityval_seed-0`.
+It is joined against the three-pass student-alone and untrained files
+and reported as interim: one pass, partial training, epoch named. It is
+not check 2 or check 3. Training then resumes from that checkpoint. The
+checks are decided only on the final checkpoint of the full run, three
+passes, as above.
