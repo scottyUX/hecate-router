@@ -278,3 +278,44 @@ one-step smoke records the fraction of rollouts that die at that cap.
 If nearly all do, stop and revisit this line before the 18 epochs.
 GRPO does not start until the worker OpenRouter key shows about $500
 still unused.
+
+Training run (recorded 2026-10-24, after check 1 passed, before the smoke)
+--------------------------------------------------------------------------
+
+Check 1 passed on the six-file join (results.md, 24 Oct). Training
+settings, fixed before any training step runs:
+
+  Code        fork `scott/train-2xa100` at `fc2c988` on the GPU VM
+              (adds a logging-only rollout metric and the launcher);
+              worker agent/eval servers at `93678ef` (same server code)
+  Launcher    `scripts/e07_smoke_then_train.sh`
+  Machine     gpu-advisor as a2-ultragpu-2g, on-demand (not Spot: two
+              preemptions on 24 Oct); hecate-worker as n2-standard-32
+  Student     openrouter/google/gemini-2.5-flash-lite (same as all arms)
+  Recipe      unchanged from §5: 18 epochs, batch 4, group 8, LR 1e-6,
+              28,672 prompt / 4,096 generation, max_turns 1,
+              zero_reward_on_non_stop=true
+  Checkpoint  every epoch (CKPT_INTERVAL=14), not every 2. Does not
+              change training; limits loss on interruption
+  Run name    exp-07_arm-trained_split-tenacitytrain_seed-0
+              (smoke: exp-07_arm-trainsmoke_split-tenacitytrain_seed-0,
+              no checkpoint written)
+
+Smoke: 4 training issues (func_basic__fyidz2ap, pr_425,
+func_basic__wx2vx0ly, combine_file__4gcf36bk), 8 samples, 1 step.
+It passes only if all hold: exit 0; no CUDA out-of-memory; at least
+one rollout with raw environment reward > 0 before zeroing; error
+lines / rollouts <= 0.25; rollouts ended by the length cap / rollouts
+<= 0.9. If the length-cap fraction is above 0.9, stop and decide on
+max_turns before the 18 epochs. The full run starts only if the smoke
+passes.
+
+Abort the full run (stop the GPU) on: OpenRouter 402; Flash-Lite 404s
+that survive the retries; more than about 25% of a step's rollouts
+errored; two consecutive all-zero-reward steps; CUDA OOM; no
+checkpoint by step 14.
+
+The trained arm is scored with the short eval above, on the highest
+`global_step_*` export only (`sort -V`). Check 3's bar is the
+student-alone three-pass mean minus 10 points on the joined issues,
+per the clarification above (24.0% on the current join).
