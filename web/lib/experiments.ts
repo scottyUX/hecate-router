@@ -9,6 +9,15 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-10-24-e07-reward-cap-smokes",
+    title: "Experiment 7: the released config zeroes most resolved training rollouts",
+    date: "2026-10-24",
+    status: "smokes · training not started",
+    summary:
+      "One-step GRPO smokes before training. Released settings (max_turns 1): 30/32 rollouts hit a 4,096-token cap on the whole conversation and 8 of 10 resolved rollouts scored 0. With max_turns 9: 11 rewarded, 0 zeroed, but CUDA out of memory in the update. Next: sequence parallelism across the two A100s.",
+    archiveEntryId: "2026-10-24-e07-reward-cap-smokes",
+  },
+  {
     href: "/journal/2026-10-24-e07-check1-three-pass",
     title: "Experiment 7: three passes per arm clear the step gate",
     date: "2026-10-24",
