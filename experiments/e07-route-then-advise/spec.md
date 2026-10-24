@@ -429,3 +429,45 @@ smoke. If switched, the 4-GPU run is a fresh run named
 `exp-07_arm-trained_split-tenacitytrain_seed-0_run-2` from step 0 (it does
 not resume the 2-GPU checkpoint), and the 2-GPU run is stopped and recorded
 as superseded. Global batch 4 x 8, learning rate and reward are unchanged.
+
+2-GPU run lost to host maintenance; 4-GPU run; Monday report (recorded 2026-10-24 ~15:25 PDT, before any trained number)
+--------------------------------------------------------------------------------------------------------------------------
+
+The 4-GPU smoke (`..._trainsmoke_..._run-5`, `16dc841`, `NUM_GPUS=4
+MAX_TURNS=9 SEQ_PARALLEL=2 CPU_OFFLOAD=0`) passed: exit 0, no OOM, 13/32
+rewarded, 0 zeroed, mean reward 0.345, 0 errors, 7/32 stopped at the input
+limit, one step 7.5 min (rollouts 5.4 while sharing the worker with the
+2-GPU run, forward 0.7, update 1.2).
+
+At 14:59 PDT Compute Engine terminated `gpu-advisor` for host maintenance
+(local SSD not recovered; automatic restart with no trainer). The 2-GPU run
+`exp-07_arm-trained_split-tenacitytrain_seed-0` had finished 3 of 252 steps
+and had no checkpoint. It is recorded as lost, not resumed; `gpu-advisor`
+is stopped.
+
+The 18-epoch run is `exp-07_arm-trained_split-tenacitytrain_seed-0_run-2`
+on `gpu-advisor-4` (4 x A100-80GB, flex-start), fork `16dc841`, from step
+0, started 15:16 PDT with `NUM_GPUS=4 MAX_TURNS=9 SEQ_PARALLEL=2
+CPU_OFFLOAD=0 CKPT_INTERVAL=14`. Global batch 4 x 8, learning rate, KL and
+reward are unchanged from the earlier amendments. A `@reboot` hook reruns
+the same command, so a maintenance restart resumes from the latest
+per-epoch checkpoint (`resume_mode=latest`); steps after that checkpoint
+are redone. Every 15 min the VM writes `steps.csv` (one row per step:
+rollout counts, rewards, pass@8, lengths, loss, KL, entropy, grad norm,
+timings; `scripts/e07_steps_csv.py`, fork `3e47010`) and copies it and
+`train.log` to `gs://whatsapp-sales-agent-hecate-artifacts/runs/<run>/`.
+
+Final evaluation (checks 2 and 3), unchanged in substance: the highest
+`global_step` export (`sort -V`), three passes, run ids
+`exp-07_arm-trained_split-tenacityval_seed-0`, `_run-2`, `_run-3`, the same
+short-context eval flags as the untrained arm. The only change is
+infrastructure: the three passes run at the same time, each against its own
+vLLM on its own GPU (ports 8000–8002). They are then joined with the six
+check-1 files (`compare_swe_arms.py`, nine files) into
+`runs/exp-07_final_split-tenacityval_seed-0/`.
+
+Monday report: if at Sunday 21:50 PDT training is expected to finish by
+Monday 01:00 PDT, the Sunday interim is skipped and the Monday report uses
+the final three-pass evaluation. Otherwise the interim runs as written
+(pause after the latest checkpoint, one pass, labelled interim, resume),
+on one GPU while the other three stay idle, and the report is interim.
