@@ -378,3 +378,30 @@ memory, stop; the next option (CPU offload of policy weights and
 optimizer state) is recorded here before it is tried.
 
 The Monday interim (above) is unchanged.
+
+Smoke 3 result, CPU offload, and a 4-GPU fallback (recorded 2026-10-24 ~13:45 PDT, before smoke 4)
+---------------------------------------------------------------------------------------------------
+
+Smoke 3 (`..._trainsmoke_..._run-3`, `MAX_TURNS=9 SEQ_PARALLEL=2`,
+`175853a`): 19/32 rollouts rewarded, 0 zeroed by length, mean reward
+0.490, 0 errors, 5/32 stopped at the input limit, rollouts 7.2 min. The
+policy update ran about 100 s and then ran out of GPU memory. Cause: fp32
+weights, gradients and Adam state of the 7B policy take about 50-55 GB per
+A100 on 2 GPUs, leaving too little for ~31k-token sequences.
+
+Smoke 4: `exp-07_arm-trainsmoke_split-tenacitytrain_seed-0_run-4`, same 4
+issues and pass rules, `MAX_TURNS=9 SEQ_PARALLEL=2 CPU_OFFLOAD=1` (fork
+`6ae79d9`; FSDP2 CPUOffloadPolicy for the policy). Memory placement only:
+algorithm, batch, learning rate, reward unchanged. If it passes and the
+step takes 15 minutes or less, the 18-epoch run starts with these settings
+and `CKPT_INTERVAL=14`.
+
+Fallback, if smoke 4 fails or a step takes more than 15 minutes: an
+a2-ultragpu-4g (4 x A100-80GB) on the same boot disk, flex-start,
+`NUM_GPUS=4 MAX_TURNS=9`, CPU offload off, sequence parallelism chosen in
+that smoke's spec entry. Quota for it was approved on 24 Oct (A100-80GB
+spot and on-demand 4, A2 and preemptible CPUs 96). Global batch 4 x 8 is
+unchanged by the GPU count. LoRA is not used: this SkyRL's FSDP worker does
+not pass a LoRA rank, and it would change the recipe.
+
+The Monday interim (above) is unchanged.
