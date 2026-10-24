@@ -9,6 +9,15 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-10-24-e07-smoke3-memory",
+    title: "Experiment 7: rewards are right, the update does not fit in two GPUs",
+    date: "2026-10-24",
+    status: "smoke 3 OOM · smoke 4 queued",
+    summary:
+      "Smoke 3 (max_turns 9 + sequence parallelism): 19/32 rollouts rewarded, 0 zeroed, mean reward 0.490, but the policy update ran out of memory after ~100 s. Full fine-tuning's fixed memory is ~50–55 GB per A100 on two GPUs. Smoke 4 adds CPU offload; fallback is four A100s (quota approved). LoRA not used.",
+    archiveEntryId: "2026-10-24-e07-smoke3-memory",
+  },
+  {
     href: "/journal/2026-10-24-e07-reward-cap-smokes",
     title: "Experiment 7: the released config zeroes most resolved training rollouts",
     date: "2026-10-24",
