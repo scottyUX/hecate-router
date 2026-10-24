@@ -9,6 +9,15 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-10-24-e08-handoff-modes-plan",
+    title: "Experiment 8: three ways to hand a coding task to a stronger model",
+    date: "2026-10-24",
+    status: "plan · not started",
+    summary:
+      "Plan for comparing full-text, summary and KV-cache-transfer handoffs from Qwen3-8B to Qwen3-14B mid-run on 100 non-django SWE-bench Verified tasks: quality, latency, cost, and inherited mistakes. About $100 on one L4, with a day-5 go/no-go quick test.",
+    archiveEntryId: "2026-10-24-e08-handoff-modes-plan",
+  },
+  {
     href: "/journal/2026-10-24-e07-smoke3-memory",
     title: "Experiment 7: rewards are right, the update does not fit in two GPUs",
     date: "2026-10-24",
