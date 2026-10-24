@@ -355,3 +355,26 @@ and reported as interim: one pass, partial training, epoch named. It is
 not check 2 or check 3. Training then resumes from that checkpoint. The
 checks are decided only on the final checkpoint of the full run, three
 passes, as above.
+
+Smoke 2 result and sequence parallelism (recorded 2026-10-24 ~13:00 PDT, before smoke 3)
+----------------------------------------------------------------------------------------
+
+Smoke 2 (`..._trainsmoke_..._run-2`, `MAX_TURNS=9`, `8809f18`): 11/32
+rollouts rewarded, 0 zeroed by length, mean reward 0.285, 0 errors,
+8/32 stopped at the 28,672 input limit (all unresolved). Rollouts took
+9.1 min. The policy update ran out of GPU memory (CUDA OOM on GPU 0).
+
+Change for smoke 3 and training: `SEQ_PARALLEL=2` (fork `175853a`),
+i.e. `trainer.policy.sequence_parallel_size=2` and
+`trainer.ref.sequence_parallel_size=2` (Ulysses). This is a parallelism
+change only: the algorithm, batch (4 x 8), learning rate, reward and
+max_turns 9 are unchanged. Data parallelism on 2 GPUs becomes 1.
+
+Smoke 3: `exp-07_arm-trainsmoke_split-tenacitytrain_seed-0_run-3`, same
+4 issues and pass rules, `MAX_TURNS=9 SEQ_PARALLEL=2`. If it passes, the
+18-epoch run `exp-07_arm-trained_split-tenacitytrain_seed-0` starts with
+the same settings and `CKPT_INTERVAL=14`. If it still runs out of
+memory, stop; the next option (CPU offload of policy weights and
+optimizer state) is recorded here before it is tried.
+
+The Monday interim (above) is unchanged.
