@@ -19,6 +19,7 @@ You own at least two tasks each sprint. Each task must meet all of these:
 
 - You are the only assignee. You write the task file (you will discuss and clarify it with your team members), the tests, and the implementation. Teammates may review. They do not commit to your task branch.
 - Your two tasks are different slices. A revision, rename, or follow-up fix of the first is not a second task.
+- Each task ID is used only once in your team's repository, in any sprint. Agree on task IDs with your team, because the ID also names your git tags.
 - Estimated at 2 hours or more, and it changes behavior a user or another part of the system can observe.
 - Small enough that one person can finish within 2–3 days, including review.
 - The task file is created before any implementation code.
@@ -92,6 +93,7 @@ git add docs/tasks/sprint-1/US-1-T-1.md
 git commit -m "US-1-T-1: task spec"
 ```
 - No implementation code in this commit, spec only.
+- Run `git status` before committing. Only the task file should be listed under "Changes to be committed". If your IDE asked "Add file to Git?" when you created another file, and you clicked Add, that file is staged and will go into this commit too. Unstage it with `git restore --staged <file>`.
 
 **4. Tag and push the spec commit, before writing any code**
 ```bash
@@ -99,6 +101,7 @@ git tag US-1-T-1-base
 git push origin task/US-1-T-1 US-1-T-1-base
 ```
 - This commit must stay the first commit on the branch. Do not rebase, amend, or force-push it after tagging.
+- If `git push` says the tag already exists, a teammate is probably using this task ID. Don't force-push it; pick a new ID and redo steps 1–4.
 - If this commit isn't first, or you changed it after tagging, see [Fixing mistakes](#fixing-mistakes).
 
 **5. Implement**
@@ -114,6 +117,8 @@ git push origin task/US-1-T-1 US-1-T-1-base
 
 - Put tests in a `tests/` folder or name them like `*.test.ts` so the app can find them.
 - Do not weaken a test to make it pass.
+- **Required:** One task per pull request: the PR adds only this task's task file. Open a separate pull request for each task.
+- **Recommended:** Reorganizing files from earlier tasks (for example, moving the tests folder, or updating an earlier task's task file to match) is its own change. Do it in a separate pull request that you don't submit in the app, merge it, then run `git fetch origin` and `git merge origin/main` on your task branch (don't rebase). If it ends up in a task's pull request anyway, the app still accepts it, and the earlier task's grade doesn't change. Moving this task's own new files is fine.
 
 **6. Open a pull request**
 - Open it from your own GitHub account.
@@ -182,6 +187,8 @@ git tag -f US-1-T-1-base <first commit sha>
 git push -f origin US-1-T-1-base
 ```
 Then press **Re-check** in the app.
+
+If the task card says the tag is on someone else's commit, a teammate is probably using the same task ID. Don't move it, because that turns their spec-first check red; ask a TA.
 
 **If the first commit isn't your task file alone** (code came first, or the spec commit also contains code), it can't be fixed on that branch. What to do next depends on whether the PR is merged.
 
