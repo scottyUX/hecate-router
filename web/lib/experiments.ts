@@ -9,6 +9,15 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-10-25-e09-route-or-advise-plan",
+    title: "Experiment 9: route or advise",
+    date: "2026-10-25",
+    status: "plan · not started",
+    summary:
+      "Plan for a per-task router over four treatments on the 49 Tenacity test issues: Flash-Lite alone, Flash-Lite with E7's trained advisor, Gemini 2.5 Flash, and a premium model. Pilot data show Flash costs only ~1.4x Flash-Lite per issue, so the advisor must earn its place against Flash. Route-AUC against the best fixed mix; about $75–200, no new training.",
+    archiveEntryId: "2026-10-25-e09-route-or-advise-plan",
+  },
+  {
     href: "/journal/2026-10-24-e08-handoff-modes-plan",
     title: "Experiment 8: three ways to hand a coding task to a stronger model",
     date: "2026-10-24",
