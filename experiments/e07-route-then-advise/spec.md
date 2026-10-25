@@ -471,3 +471,37 @@ Monday 01:00 PDT, the Sunday interim is skipped and the Monday report uses
 the final three-pass evaluation. Otherwise the interim runs as written
 (pause after the latest checkpoint, one pass, labelled interim, resume),
 on one GPU while the other three stay idle, and the report is interim.
+
+Crash and resume; disk; exploratory epoch-10 pass (recorded 2026-10-25 ~13:45 PDT, before any trained test number)
+-------------------------------------------------------------------------------------------------------------------
+
+Infrastructure, no recipe change. At 06:15 UTC on 25 Oct a policy worker
+died at step 58 (`could not unlink the shared memory file`): an automatic
+`systemd-logind` restart plus a closing cron session ran `RemoveIPC` and
+deleted the trainer's shared memory. `RemoveIPC=no` and linger were set on
+both VMs, and the same run resumed from `global_step_56` at 06:20 UTC;
+steps 57–58 were redone. HF exports are 29 GB, not 15; exports older than
+the newest two are moved to
+`gs://whatsapp-sales-agent-hecate-artifacts/exports/<run>/` (local copy
+deleted only after the uploaded byte count matches).
+
+Overfitting check, exploratory. From epoch 8 the training KL to the
+reference rose faster (0.044 → 0.127 by epoch 12) while training reward
+was flat through epoch 11. Advice did not converge per issue (within-issue
+3-gram Jaccard ~0.07 at epochs 1–2 and 10–12) and named fewer files.
+Training rollouts cannot separate learning from fitting the 56 training
+issues, so one extra held-out pass is added:
+
+  Checkpoint  `global_step_140` export (end of epoch 10)
+  Run id      `exp-07_arm-trainedep10_split-tenacityval_seed-0`
+  Recipe      identical to the final passes (49 test issues, short-context
+              eval, temperature 0.7, top_p 0.8, top_k 20, min_p 0), on GPU 3
+              alongside the three final passes
+  Join        its own file `ep10.json` next to `final.json`: weakalone ×3,
+              untrained ×3, trainedep10 ×1
+
+This pass is exploratory and labelled as such. It is not check 2 or check
+3, it does not replace or select the checkpoint for them (the final
+checkpoint, three passes, stays the only gate), and it is one pass, so it is
+read against the final arm's per-pass spread, not as a significance test.
+No other epoch is evaluated before the Monday report.
