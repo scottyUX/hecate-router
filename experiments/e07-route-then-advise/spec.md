@@ -543,3 +543,49 @@ Joins: `final.json` (gate, 3 passes), `ep10.json` (3 passes),
 `ep18.json` (1 pass), each with the six check-1 files. vLLM servers start
 one at a time with a health check and up to three retries. After the
 joins are copied to the bucket, both VMs shut down.
+
+Exploratory Flash transfer test (recorded 2026-10-26 ~12:05 PDT, before any Flash pass of this test)
+--------------------------------------------------------------------------------------------------
+
+Known when this was written: the gate result (`final.json` numbers from
+`_run`, `_run-2`, `_run-4`: check 3 pass, check 2 fail, trained minus
+student-alone +0.6 steps), the step-252 pass, and the first epoch-10 pass.
+The other two epoch-10 passes were still running. Nothing below changes
+checks 1–3 or their verdicts.
+
+Question (exploratory, not a gate). Advisor Models reports the trained SWE
+advisor carrying over to a stronger student of the same family (Gemini
+2.5 Flash → Gemini 3 Pro: same resolve rate, 31.7 → 26.3 steps). Here the
+advisor was trained with Flash-Lite. Does the step-295 advisor, unchanged,
+keep Gemini 2.5 Flash's resolve rate and cut its steps on the 49 test
+issues? This also tests one explanation for the check-2 failure: that
+Flash-Lite's unresolved runs, which mostly hit the 40-step cap, hide a step
+saving (exploratory: resolved runs are 16.7 steps with advice against 19.9
+alone).
+
+Arms, same 49 issues and eval flags as the final passes:
+  - `exp-07_arm-flashtrained_split-tenacityval_seed-0`, `_run-2`, `_run-3`:
+    Flash (`openrouter/google/gemini-2.5-flash`) with the
+    `global_step_295` advisor, short-context eval, temperature 0.7, top_p
+    0.8, top_k 20, min_p 0, `--max_workers 1`, on gpu-advisor-4 against
+    the GPU-0 server already serving step 295.
+  - `exp-07_arm-flash_split-tenacityval_seed-0_run-3`, `_run-4`, `_run-5`:
+    Flash alone via `eval_swe_smith`, on hecate-worker at fork `93678ef`
+    (the commit of student-alone `_run-6`/`_run-7`). The earlier Flash
+    passes (`exp-07_arm-flash_split-tenacityval_seed-0`, `_run-2`) are on
+    older commits and are kept as a check only.
+Join: `flash.json` with `compare_swe_arms.py`, flash ×3 against
+flashtrained ×3, plus the six check-1 files for reference.
+
+Reading rule, fixed now: "keeps resolve and cuts steps" needs flashtrained
+minus flash steps < 0 with the 95% upper bound < 0, and resolve difference
+with a 95% lower bound above −10 points (the check-3 margin). Anything else
+is reported as not reproduced on Flash. One seed, 49 issues; exploratory
+either way.
+
+Epoch 10 on Flash: decided after the three-pass epoch-10 result is in. If
+added, it is one exploratory arm `exp-07_arm-flashtrainedep10_...`, read
+only next to the step-295 Flash arm, never in its place.
+
+Budget: about $25 OpenRouter (Flash ~$0.077 per issue × 294) and about 2
+extra A100-hours on gpu-advisor-4. Both VMs still shut down when done.
