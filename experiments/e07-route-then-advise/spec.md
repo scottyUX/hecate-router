@@ -589,3 +589,31 @@ only next to the step-295 Flash arm, never in its place.
 
 Budget: about $25 OpenRouter (Flash ~$0.077 per issue × 294) and about 2
 extra A100-hours on gpu-advisor-4. Both VMs still shut down when done.
+
+Exploratory open-model student pilot (recorded 2026-10-26 ~14:15 PDT, before any pass of it)
+---------------------------------------------------------------------------------------------
+
+Known when this was written: all gate, epoch-10, epoch-18 and Flash transfer
+results (Flash: advisor +5.7 points resolve [−1.4, +13.5], −0.4 steps
+[−3.0, +1.9]; not reproduced under the Flash reading rule).
+
+Question (exploratory, preliminary). Does the step-295 advisor, unchanged,
+carry over to a cheaper open-weight student, and does that student resolve
+enough (≥ ~50%) to be a candidate training student for a follow-up that tests
+the "Flash-Lite fails too often to teach speed" hypothesis?
+
+Student: `openrouter/qwen/qwen3-coder-30b-a3b-instruct`, priced in the
+worker's LiteLLM registry at $0.07/M input, $0.28/M output (OpenRouter list,
+26 Oct). Arms, 49 test issues:
+  - `exp-07_arm-qwencoder_split-tenacityval_seed-0`, `_run-2`: alone,
+    `eval_swe_smith`, on hecate-worker.
+  - `exp-07_arm-qwencodertrained_split-tenacityval_seed-0`, `_run-2`: with
+    the `global_step_295` advisor, same advisor flags as the final passes,
+    on gpu-advisor-4.
+Deviations, for time (a preliminary read before the 26 Oct 3 pm meeting):
+two passes per arm, not three, and `--max_workers 4`, not 1. The registry
+edit leaves the worker checkout dirty at `93678ef`.
+
+Reading: reported as preliminary, with the same paired table and bootstrap
+CIs as `flash.json`, into `qwencoder.json`. No gate, no claim. A follow-up
+that trains with an open-weight student needs its own spec.
