@@ -91,9 +91,10 @@ Setup for all: start the app with an empty user store and send requests to `/api
 Steps below use `US-1-T-1` (User Story 1, Task 1) as the example task id, swap in your own.
 
 **Team setup (once, before your first task)**
-- The repository owner or an admin installs the course GitHub App on the team repository. In the Repo Metrics app, click **Install the GitHub App** under any task's pull request box, choose the account that owns the team repository, pick **Only select repositories**, select it, and click **Install**. The app can only read that one repository and never changes it.
+- The repository owner or an admin installs the course GitHub App on the team repository. In the Repo Metrics app, click **Install the GitHub App** (it pops up when you open the dashboard, and the button stays above your tasks), choose the account that owns the team repository, pick **Only select repositories**, select it, and click **Install**. The app can only read that one repository and never changes it.
 - If the repository belongs to a GitHub organization and you see **Request** instead of **Install**, an organization owner approves it under the organization's **Settings → GitHub Apps**.
 - Every team member who submits tasks needs write access to the team repository.
+- Pull requests must come from the team repository, not a fork.
 
 **1. Create the task**
 - Write the task file at `docs/tasks/sprint-1/US-1-T-1.md` (use your sprint number, not the letter `N`).
