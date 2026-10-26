@@ -505,3 +505,41 @@ This pass is exploratory and labelled as such. It is not check 2 or check
 checkpoint, three passes, stays the only gate), and it is one pass, so it is
 read against the final arm's per-pass spread, not as a significance test.
 No other epoch is evaluated before the Monday report.
+
+Final eval wave 1; 21-epoch resume deviation; pass-3 replacement; exploratory wave 2 (recorded 2026-10-26 ~09:15 PDT)
+------------------------------------------------------------------------------------------------------------------------
+
+Wave 1 (12:07–15:06 UTC 26 Oct) evaluated `global_step_295` and the
+epoch-10 export as planned. `exp-07_arm-trained_split-tenacityval_seed-0`
+and `_run-2` completed with 0 errors. `_run-3` failed: its vLLM server on
+GPU 2 crashed at startup ("EngineCore failed to start"), so all 49 issues
+errored with a connection error. It is an infrastructure failure and does
+not count. The epoch-10 pass completed with 0 errors.
+
+Deviation, 21 epochs instead of 18. SkyRL's `train()` restores
+`global_step` and the dataloader on resume but restarts
+`for epoch in range(cfg.trainer.epochs)` at 0 with no stop at
+`total_training_steps`. After the step-58 crash the run resumed at 56 and
+trained 239 more steps, ending at step 295 (~21.1 epochs). Learning rate,
+batch, KL and reward are unchanged. The 18-epoch point, `global_step_252`,
+is kept in the artifacts bucket.
+
+Gate (unchanged in substance): checks 2 and 3 are decided on the final
+checkpoint of the run, `global_step_295`, three passes. The two wave-1
+passes have been seen (2-pass point estimates: check 3 pass, check 2 fail);
+the gate is not moved to another checkpoint because of them.
+
+Replacement, named here before it starts:
+`exp-07_arm-trained_split-tenacityval_seed-0_run-4` replaces `_run-3`,
+same checkpoint and flags. The gate join is `_run`, `_run-2`, `_run-4`.
+
+Exploratory wave 2, same eval flags, run alongside the replacement and
+never used as the gate or to pick a checkpoint:
+  - `exp-07_arm-trainedep10_split-tenacityval_seed-0_run-2` and `_run-3`:
+    two more passes of `global_step_140`, so epoch 10 has three passes.
+  - `exp-07_arm-trainedep18_split-tenacityval_seed-0`: one pass of
+    `global_step_252`, the as-designed 18-epoch checkpoint.
+Joins: `final.json` (gate, 3 passes), `ep10.json` (3 passes),
+`ep18.json` (1 pass), each with the six check-1 files. vLLM servers start
+one at a time with a health check and up to three retries. After the
+joins are copied to the bucket, both VMs shut down.
