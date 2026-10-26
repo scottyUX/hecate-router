@@ -79,6 +79,12 @@ Serves US-1 (log in with a university email). This task covers the rejection pat
 
 Steps below use `US-1-T-1` (User Story 1, Task 1) as the example task id, swap in your own.
 
+**Team setup (once, before your first task)**
+- The repository owner or an admin installs the course GitHub App on the team repository. In the Repo Metrics app, click **Install the GitHub App** (it pops up when you open the dashboard, and the button stays above your tasks), choose the account that owns the team repository, pick **Only select repositories**, select it, and click **Install**. The app can only read that one repository and never changes it.
+- If the repository belongs to a GitHub organization and you see **Request** instead of **Install**, an organization owner approves it under the organization's **Settings → GitHub Apps**.
+- Every team member who submits tasks needs write access to the team repository.
+- Pull requests must come from the team repository, not a fork.
+
 **1. Create the task**
 - Write the task file at `docs/tasks/sprint-1/US-1-T-1.md` (use your sprint number, not the letter `N`).
 - Add a card for it to your Scrum board (e.g. GitHub Projects).
@@ -153,7 +159,7 @@ Submit in the [Repo Metrics app](https://cse115a-repo-metrics-production.up.rail
 **First time only**
 1. Sign in with your UCSC Google account.
 2. Enter the course code from your instructor.
-3. Connect GitHub. If your team repository belongs to a GitHub organization, click **Grant** next to that organization on the GitHub screen, or the app cannot read your pull requests.
+3. Connect GitHub. This only shares your GitHub username, so the app can tell which pull requests are yours. Repository access comes from the GitHub App your team installed.
 
 **Every sprint**
 1. Open **Assignment N**, where `N` is the sprint number.
