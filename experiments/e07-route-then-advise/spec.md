@@ -617,3 +617,392 @@ edit leaves the worker checkout dirty at `93678ef`.
 Reading: reported as preliminary, with the same paired table and bootstrap
 CIs as `flash.json`, into `qwencoder.json`. No gate, no claim. A follow-up
 that trains with an open-weight student needs its own spec.
+
+Q7.1 confirmatory: Flash student, LoRA, on the DGX Spark (recorded 2026-10-26 ~evening PDT, DRAFT, not authorized)
+-----------------------------------------------------------------------------------------------------------------
+
+Status: DRAFT for review. Nothing below is authorized to run, and no code
+changes until this amendment is reviewed. Known when this was written: every
+result above (checks 1–3, epoch 10 and 18, the Flash transfer test, the
+Qwen3-Coder pilot). No Flash-student training number exists.
+
+Why. §2 0d says Q7.1 is judged only with the paper's student (Gemini 2.5
+Flash). The Flash-Lite run cannot headline. Leading explanation for check 2
+failing: Flash-Lite resolves ~34%, so few GRPO groups hold resolved runs with
+different step counts, and the reward rarely teaches speed. Flash resolves
+~60% here (60.3%, three passes; paper 61.2%), so it gives that signal.
+
+Question. With Flash as the training and test student, does a GRPO-trained
+Qwen2.5-7B advisor keep Flash's resolve rate and cut its steps on the 49 test
+issues?
+
+Hardware. The lab's own NVIDIA DGX Spark (GB10, 128 GB unified memory, ARM
+CPU) runs the trainer and the vLLM advisor. hecate-worker (x86) keeps the
+SWE-smith containers and the agent/eval servers (ports 8081/8082); the Spark
+reaches them through an SSH tunnel, with no new public firewall rule.
+`OPENROUTER_API_KEY` lives in a `.env` on the Spark, never in git or logs.
+To fill in before authorization: number of Sparks, OS and CUDA version, SSH
+host, and a one-week exclusive-use window.
+
+Method change: LoRA, not a full fine-tune. Full fine-tuning (~112 GB of
+weights, gradients and Adam state, plus the reference model and vLLM) does
+not fit in one Spark's 128 GB. This is a deviation from the Flash-Lite run
+and from the paper, recorded now:
+
+  Trainer     same SkyRL fork and launcher as the Flash-Lite run, plus a
+              LoRA patch: rank and alpha from config into the policy;
+              reference = base model with the adapter disabled (no
+              separate reference copy); adapter merged into the weights
+              before each sync to vLLM and before each HF export
+  LoRA        rank 32, alpha 32, dropout 0, all linear layers (attention
+              and MLP). Fixed, not tuned
+  LR          1e-5 (10x the full fine-tune's 1e-6, the usual LoRA/full
+              ratio for RL; Schulman et al., "LoRA Without Regret", 2025).
+              Fixed, not tuned
+  Unchanged   GRPO, batch 4 x group 8, KL on, reward, MAX_TURNS=9,
+              28,672 prompt / 4,096 generation, zero_reward_on_non_stop,
+              training temperature 1.0, the 56 training issues, and 295
+              steps (21 epochs, matching the Flash-Lite run's final
+              step-295 checkpoint, not the paper's 30)
+  Student     openrouter/google/gemini-2.5-flash (training and test)
+
+If SkyRL or vLLM will not build on the Spark, the fallback (OpenPipe ART) is
+not covered here; it needs its own amendment before use.
+
+Step time. On 2 x A100 the update, not the rollouts, dominated a step
+(smoke 4: rollouts 3.7 min, update 10.8 min with CPU offload). The Spark's
+step time is unknown. The smoke measures it; if the mean over the first 5
+full-run steps is above 30 min (about 6 days for 295 steps), stop and report
+before continuing.
+
+Order of work, each gated on the one before:
+
+  1. Spark setup: SkyRL and vLLM build; vLLM serves the base Qwen2.5-7B;
+     the Spark reaches the worker's 8081/8082 through the tunnel.
+  2. LoRA patch on a fork branch, unit-tested offline (merge round-trips
+     to the same logits as base + adapter).
+  3. Untrained control on Flash, three passes (the check-1 analogue):
+     `exp-07_arm-flashuntrained_split-tenacityval_seed-0`, `_run-2`,
+     `_run-3`, base Qwen2.5-7B advisor served on the Spark, same eval flags
+     as the final passes. Reported against the existing Flash-alone passes
+     (`exp-07_arm-flash_split-tenacityval_seed-0_run-3/4/5`). If untrained
+     steps are not at least 2 below Flash alone, training still runs, but
+     the result is labelled "no trade-off to recover", as in check 1.
+  4. Smoke: run `exp-07_arm-flashlorasmoke_split-tenacitytrain_seed-0`,
+     the same 4 issues and pass rules as the Flash-Lite smoke, plus peak
+     memory and step time recorded.
+  5. Full run: `exp-07_arm-flashlora_split-tenacitytrain_seed-0`, checkpoint
+     every epoch, merged HF export of each, copied to
+     `gs://whatsapp-sales-agent-hecate-artifacts/exports/<run>/`.
+  6. Eval: the step-295 merged export only, three passes,
+     `exp-07_arm-flashloratrained_split-tenacityval_seed-0`, `_run-2`,
+     `_run-3`. No checkpoint sweep on the 49.
+
+Abort rules (stop the trainer): the Flash-Lite run's rules (OpenRouter 402,
+404s surviving retries, >25% of a step's rollouts errored, two all-zero-reward
+steps, out of memory, no checkpoint by step 14), plus the step-time rule
+above, plus OpenRouter spend on the run above $800.
+
+Decision rules (Q7.1), fixed now, joined with `compare_swe_arms.py` into
+`flashlora.json`, flash ×3 vs flashuntrained ×3 vs flashloratrained ×3:
+
+  Reproduced   trained minus Flash alone: steps upper 95% bound < 0, and
+               resolve lower 95% bound > −10 points (the Flash reading
+               rule above)
+  Partial      steps point estimate < 0 and resolve held, but the steps
+               bound includes 0: "direction matches, not significant"
+  Not          anything else: "not reproduced with a Flash student
+  reproduced   (LoRA)"
+  Also         trained vs untrained on resolve and steps (check-3
+  reported     analogue), and the share of training groups with resolved
+               runs of different step counts, Flash vs Flash-Lite (the
+               speed-signal check)
+
+Bridge run, conditional and fixed now. If the result is "Reproduced" or
+"Partial", retrain the Flash-Lite advisor with the same LoRA settings
+(`exp-07_arm-litelora_split-tenacitytrain_seed-0`, then three test passes
+`exp-07_arm-liteloratrained_split-tenacityval_seed-0`, `_run-2`, `_run-3`)
+and compare it with the full fine-tune's final passes. It must land within
+±10 points of 31.9% resolved and show no step cut, or the student-strength
+reading is reported as confounded with LoRA. If the result is "Not
+reproduced", the bridge is skipped and the write-up states that LoRA is
+untested against a full fine-tune here, so a LoRA-specific failure is not
+ruled out.
+
+Budget (OpenRouter list prices, 26 Oct; GPU $0 on the Spark):
+
+  Untrained control, Flash, 3 x 49          ~$10
+  Smoke                                     ~$5
+  Training, 295 steps x 32 rollouts, Flash  ~$570–660 (cap $800)
+  Eval, 3 x 49, Flash + advisor             ~$15
+  hecate-worker (n2-standard-32), 3–7 days  ~$75–180
+  Total, Flash run                          ~$675–870
+  Bridge, if triggered                      +~$580 API, +2–6 days
+
+Time: setup and LoRA patch 1–3 days, control and smoke ~0.5 day, training
+2–6 days (step time unknown), eval ~0.5 day.
+
+Not authorized by this amendment: any Spark setup, code change, pass,
+training step or spend. Authorization comes after review, recorded below.
+
+Exploratory: a released SFT critic as the advisor (recorded 2026-10-26 ~evening PDT, DRAFT, not authorized)
+-----------------------------------------------------------------------------------------------------------
+
+Status: DRAFT for review. Nothing below is authorized. Known when this was
+written: every result above. No pass with this critic exists.
+
+Why. Advisor Models' trained advisor weights are not public (checked again
+26 Oct: none on Hugging Face under the authors or NovaSky-AI). The closest
+released model is the critic from Gandhi et al., "Steer, Don't Solve:
+Training Small Critic Models for Large Code Agents" (arXiv:2606.21811):
+`code-critic-model/Qwen3-8B-Critic-SFT`, Apache-2.0, not gated. It is
+Qwen3-8B fine-tuned (SFT, not RL) on Claude Opus 4.6 critiques of agent
+trajectories on 500 R2E-Gym tasks (matplotlib, moto, sympy), and it raised
+resolve rates for six agents on SWE-bench Verified (e.g. GPT-OSS-120B
+20.4 → 31.4). Our transfer results so far use an advisor that did not beat
+its own student (check 3: −2.1 points), so they cannot separate "advice
+does not transfer" from "this advice is weak". This critic works on the
+agents it was built for, so it is a cleaner transfer test, with no
+training.
+
+Question (exploratory, no gate). On the 49 Tenacity test issues, in our
+harness, does the released 8B critic change resolve rate and steps for
+Flash-Lite, Flash and Qwen3-Coder-30B, against each student alone and
+against our step-295 advisor with the same student?
+
+Fit with our harness. Their agent loop is a fork of mini-swe-agent, the
+scaffold family we use, and their critic fires every k = 5 agent steps,
+the same interval as our advisor (`max_steps_per_advisor_call = 5`). A
+`--advisor_mode critic` option in `eval_advisor.py` changes only what the
+advisor reads and when it first speaks:
+
+  Input       their multiturn format (`_build_prm_messages_multiturn` in
+              their `default_prm.py`): their system prompt, copied
+              verbatim from a training record of
+              `code-critic-model/critic-sft-cwm-qwen`; the task; the
+              agent's full message history; up to 5 previous critiques;
+              then the closing request line. Needs a read-only agent
+              server endpoint that returns the session's messages (our
+              observation is a rolling summary, not the trajectory)
+  First call  after the first 5 agent steps, not before step 1 (theirs)
+  Step-aware  their nudge at 27 of our 40 steps (their 100 of 150,
+  nudge       scaled), with step_limit 40
+  Sampling    temperature 0, top_p 1, thinking off
+              (`chat_template_kwargs: {enable_thinking: false}`),
+              max_tokens 1024
+  Serving     vLLM bf16, `--max-model-len 65536`, served name `critic`
+  Unchanged   how advice enters the agent's context (our agent server's
+              injection, the same for every advisor arm), the 40-step
+              cap, the student flags, the eval server, the join
+
+Recorded differences from their setup: our 40-step cap (theirs 150), our
+advice injection (theirs: a supervisor message carrying a condensed history
+of past critiques), no dedup or best-of-N (both off in their main config),
+and SWE-smith Tenacity rather than SWE-bench Verified.
+
+Arms, 49 test issues, `--max_workers 1`, three passes each:
+
+  Student      Alone (existing passes)               + critic (new)
+  Flash-Lite   weakalone run-5/6/7                   exp-07_arm-litecritic_split-tenacityval_seed-0{,_run-2,_run-3}
+  Flash        flash run-3/4/5                       exp-07_arm-flashcritic_split-tenacityval_seed-0{,_run-2,_run-3}
+  Qwen3-Coder  qwencoder, _run-2, + _run-3 (new)     exp-07_arm-qwencodercritic_split-tenacityval_seed-0{,_run-2,_run-3}
+
+Control on Flash only: the untrained base `Qwen/Qwen3-8B` in the same critic
+mode, three passes, `exp-07_arm-flashbasecritic_split-tenacityval_seed-0`
+`{,_run-2,_run-3}`, to separate "any critique" from the trained critic.
+
+Before any 49-issue pass: offline unit tests on fixture message histories
+(message builder output matches their builder; no provider call), then a
+1-issue smoke per student that must show at least one critique delivered,
+no context-length error, and a scored result.
+
+Reading. Joined per student with `compare_swe_arms.py` into
+`critic_<student>.json`. For each student, critic minus alone, with the
+Flash reading rule: "keeps resolve and cuts steps" needs the steps 95%
+upper bound < 0 and the resolve 95% lower bound > −10 points; "raises
+resolve" needs the resolve 95% lower bound > 0. Also reported: critic minus
+our step-295 advisor with the same student, critic minus base critic on
+Flash, cost per fix with the critic priced at a hosted Qwen3-8B rate, and
+critique count and length per issue. One repo, 49 issues: exploratory
+either way, and never a Q7.1 result.
+
+Hardware. The critic runs on the lab's DGX Spark (vLLM, bf16,
+`--max-model-len 65536`); no GPU is rented. When the Phase C trainer runs on
+the same Spark, the critic server is capped at about 35 GB
+(`--gpu-memory-utilization`), measured in the Phase C smoke. hecate-worker
+runs the containers, as before.
+
+Budget (OpenRouter list prices, 26 Oct):
+
+  Flash-Lite + critic, 3 x 49     ~$10
+  Flash + critic, 3 x 49          ~$10
+  Qwen3-Coder + critic, 3 x 49    ~$2, plus one alone pass ~$0.60
+  Flash + base Qwen3-8B, 3 x 49   ~$10
+  Smokes                          ~$2
+  hecate-worker, ~2 days          ~$50
+  GPU                             $0 (the lab's Spark)
+  Total                           ~$85 (cap $150)
+
+Time: code and tests ~1 day; passes ~2–3 h each, run one student at a time
+(13 passes, about 1.5–2 days on one critic server).
+
+Not authorized by this amendment: the code change, the agent server
+endpoint, any pass or spend. Authorization comes after review.
+
+Exploratory Codex harness pilot: GPT-5.4-nano alone, then with the step-295 advisor (recorded 2026-10-27, before any pass of it)
+------------------------------------------------------------------------------------------------------------------------------
+
+Known when this was written: every result above. No Codex pass exists. The
+two DRAFT amendments above stay unauthorized; this one is authorized by
+Scott (27 Oct), the second stage only under the rule below.
+
+Question (exploratory, no gate). Our advisor was trained with Flash-Lite in
+mini-swe-agent. Codex (OpenAI's open-source agent CLI) is a different
+harness: function-call tools, its own `apply_patch` edit format, its own
+plan tool and context compaction, and a system prompt written for GPT
+models. In Codex with a cheap GPT student, (a) does the pipeline work and
+does the student leave room for advice, and (b) if so, does the step-295
+advisor, unchanged, change resolve rate and steps? This moves the student
+and the harness together; it cannot say which one caused a difference
+(the 2x2 that separates them needs its own amendment).
+
+Student: `openai/gpt-5.4-nano` via OpenRouter, $0.20/M input, $0.02/M
+cached input, $1.25/M output (OpenRouter list, 27 Oct). Reasoning effort
+pinned to `medium` in the Codex config; no temperature control (reasoning
+model).
+
+Harness:
+  Codex       latest release on the day of setup, pinned by version and
+              SHA-256 of the static x86_64 Linux binary, both recorded in
+              each run dir. Run as `codex exec` inside each Tenacity
+              container with the approvals and sandbox bypass (the
+              container is the sandbox), repo at its usual path.
+  Task text   the problem statement plus a fixed one-line instruction
+              (fix the issue; do not edit tests), recorded verbatim.
+              Codex's own system prompt, unmodified.
+  Endpoint    Codex -> a local proxy -> OpenRouter Responses API, in
+              both arms. Alone, the proxy passes requests through
+              unchanged and only counts and logs; with the advisor, it
+              also inserts advice. So the only difference between arms is
+              the advice.
+  Step        one model request = one step. Cap: the proxy refuses
+              request 41 (HTTP 400, never sent to OpenRouter) and the
+              runner stops Codex; the diff at that point is graded, as at
+              mini-swe-agent's 40-step cap. Tool calls are also counted,
+              since one request can carry several. Timeout 45 min.
+  Patch       `git diff` of the container repo when Codex exits, graded
+              with the same SWE-smith grading as `eval_swe_smith`.
+
+Advisor arm, the same as our harness where it can be:
+  Calls       initial advice before the first request, then every 5
+              requests (`max_steps_per_advisor_call = 5`)
+  Input       `ADVISOR_TEMPLATE` task prompt, the previous advice, and
+              `build_advisor_observation` applied to the Codex history
+              mapped to `[role]: content` messages (assistant text and
+              tool calls with arguments as assistant, tool outputs as
+              user; reasoning items left out, as they are encrypted):
+              the last 10 messages in `ADVISOR_FOLLOWUP_TEMPLATE`, tail
+              60,000 chars, as in our harness
+  Delivery    mini-swe-agent's `add_advice` wrapper (`<advice>` block)
+              appended to the last input item's text, usually the last
+              tool output, as `add_advice` appends to the last message.
+              Codex resends its own history, so the proxy re-applies each
+              past advice to the same item on every later request, as it
+              stays in mini-swe-agent's history. Every delivery logged
+  Advisor     `global_step_295`, the same vLLM flags and sampling as the
+              final passes; served on the lab's Spark if it is reachable
+              from hecate-worker, else one GCP L4 (g2-standard-8).
+              Location does not change the weights or sampling.
+
+Before any pass: offline tests of the proxy (pass-through is byte-identical;
+cap; history rendering; advice insertion) on fixture requests, then a
+1-issue smoke that must end with a graded patch. Smokes use Tenacity train
+issues, never the 49 test issues. Codex runs the model under its own name
+(`gpt-5.4-nano`, so it uses its built-in model metadata) and the proxy
+rewrites the request model to OpenRouter's `openai/gpt-5.4-nano`; the first
+smoke ran without this (Codex warned it had no metadata) and is discarded.
+
+Students changed (recorded 2026-10-27, after the two train-issue smokes and
+before any pass on the 49 test issues). Codex 0.164.0 ships model metadata
+only for the GPT-5.5/5.6/6 families, so `gpt-5.4-nano` ran on Codex's
+fallback metadata in both smokes. GPT-5.4-nano is dropped. Two students
+instead, run in parallel on hecate-worker, `--max_workers 4` each:
+  - `google/gemini-2.5-flash-lite`: the advisor's training student, so
+    against E7's mini-swe-agent arms only the harness changes. Codex has no
+    metadata for it (fallback); `model_context_window = 1048576`; the
+    proxy strips `reasoning` and reasoning `include` entries so it runs
+    without thinking, as in E7. Run ids `exp-07_arm-codexlite_...` and,
+    with the advisor, `exp-07_arm-codexlitetrained_...`.
+  - `openai/gpt-6-luna` ($0.10/M input, $0.01/M cached, $0.50/M output,
+    OpenRouter list 27 Oct): a GPT student with Codex's own metadata, run
+    under Codex's defaults for it (no effort override). Run ids
+    `exp-07_arm-codexluna_...` and `exp-07_arm-codexlunatrained_...`.
+Everything else above holds per student: one train-issue smoke each, then
+stage 1 (one alone pass of the 49), and the stage-2 rule applied to each
+student separately (Scott chose conditional, 27 Oct). Codex's first request
+per run (model, reasoning, tools) is logged as the record of its settings.
+Proxy cost is computed from list prices because OpenRouter's Responses
+usage carries no cost; the pass total is checked against the key's
+OpenRouter usage before and after.
+
+Code: `advisor_models/swe_smith/codex_proxy.py`, `eval_codex.py` and
+`tests/test_codex_proxy.py` in the advisor-models fork, a separate path
+next to `eval_swe_smith`/`eval_advisor` (unchanged). Codex 0.164.0
+(`rust-v0.164.0`), binary SHA-256
+`b93f6811d3f653f0fb83be4050d857fb9abbb111dfa2ce160563327daff7f306`.
+
+Stage 1, alone: `exp-07_arm-codexnano_split-tenacityval_seed-0`, one pass
+over the 49 test issues.
+
+Rule for stage 2, fixed now. Run the advisor arm only if both hold:
+  - pipeline: at most 4 of 49 runs end in an infrastructure error
+    (provider error, container failure, no gradeable outcome), and
+  - headroom: GPT-5.4-nano alone resolves 10–39 of 49 (about 20–80%).
+Also reported, not part of the rule: failure types from a read of the
+unresolved runs (wrong localization, wrong fix, malformed or no patch, cap
+hit), edits made by `apply_patch` vs shell, compactions per run.
+
+Stage 2, if the rule holds:
+  - `exp-07_arm-codexnanotrained_split-tenacityval_seed-0`, `_run-2`,
+    `_run-3`: with the step-295 advisor.
+  - `exp-07_arm-codexnano_split-tenacityval_seed-0_run-2`, `_run-3`:
+    two more alone passes, for three per arm.
+Join: `codexnano.json` with `compare_swe_arms.py`. Reading rule, the Flash
+one: "keeps resolve and cuts steps" needs the steps 95% upper bound < 0
+and the resolve 95% lower bound > −10 points; "raises resolve" needs the
+resolve 95% lower bound > 0. Also reported: rescues vs harms per issue,
+advice deliveries per run, tool calls, tokens, cost. One repo, 49 issues,
+one advisor seed: exploratory either way, never a Q7.1 result. The 44
+unused Tenacity issues with problem statements are not touched here.
+
+If the rule fails: stop and report stage 1. A switch to another student or
+benchmark needs its own amendment.
+
+Budget (OpenRouter list, 27 Oct; ~$0.15–0.30 per run):
+  Stage 1, 49 runs                ~$7–15
+  Stage 2, 245 runs               ~$37–75
+  Smokes                          ~$2
+  hecate-worker, ~2–3 days        ~$75–110
+  Advisor GPU, stage 2 only       $0 on the Spark, ~$20 on an L4
+  Total                           ~$120–220 (cap $250; stage 1 alone
+                                  cap $40)
+
+Stage 1 result (27 Oct; runs copied to `gs://hecate-506120-artifacts/runs/`):
+
+  Student      Resolved       Infra errors  Mean steps  Empty diff  API cost
+  Flash-Lite   5 of 42 graded 7             9.4         29 of 42    $0.13
+  gpt-6-luna   42 of 49       0             6.2         0           $0.15
+  OpenRouter key usage over both passes: $146.95 -> $147.23 ($0.28).
+
+Rule applied as written: neither student goes to stage 2.
+  - gpt-6-luna fails headroom (42 > 39 of 49): too strong on Tenacity.
+  - Flash-Lite fails the pipeline condition (7 > 4 errors). All 7 are
+    OpenRouter routing requests to a Google endpoint that returns 404 for
+    `gemini-2.5-flash-lite` ("no longer available to new users"), the
+    transient 404 E7 handled with retries; the proxy does not retry.
+    Separately from the errors, Flash-Lite in Codex mostly stops early: a
+    reply without a tool call ends a Codex run (10 of 42 runs used 3 steps
+    or fewer, 29 left no diff), where mini-swe-agent keeps it going to its
+    submit command or the 40-step cap.
+Any rerun (a proxy retry for provider 404s and a rerun of the 7 errored
+issues, or another student) is a new decision, recorded before it runs.
