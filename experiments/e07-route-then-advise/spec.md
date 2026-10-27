@@ -1071,3 +1071,50 @@ pass; the `codexlitefix` pass was already running):
     The step-295 advisor was trained on Flash-Lite without thinking; a
     reasoning GPT student is a transfer case, so stage 2 would be read as
     exploratory transfer, not as Q7.1.
+
+GPT-5-nano stage 1 result and stage 2 setup (recorded 2026-10-28, before any advised pass):
+
+Stage 1, `exp-07_arm-codex5nano_split-tenacityval_seed-0`: 32 of 49
+resolved, 0 errors, 11.2 mean steps (median 10, none ≤ 3 steps, no cap
+hit), 7 empty diffs, `apply_patch` used in 42 runs, $0.54. The rule holds
+(0 ≤ 4 errors; 10 ≤ 32 ≤ 39), so stage 2 runs. Same harness as
+`codexlitefix` (7/49, 0 errors, 18 runs ≤ 3 steps, no `apply_patch`).
+
+Flash-Lite rerun, causes (exploratory, from the logs): Codex's
+`apply_patch` is an OpenAI custom tool. Through OpenRouter Gemini receives
+it only as text and writes `print(apply_patch(...))` instead of a call (a
+direct test outside Codex reproduces this). The gpt-5.5 instructions tell
+it to use `apply_patch`, so it prints patches for the user or says it
+cannot. 5 runs hit refused `sandbox_permissions` escalations, and 4 ended
+on a text-form tool call at step 1.
+
+Stage 2 advisor host: `global_step_295` was only on `gpu-advisor-4`'s disk
+(exports up to step 280 were in GCS). A clone of that disk
+(`advisor-ckpt-clone`, us-central1-c, pd-ssd) is attached read-only to a
+new `advisor-l4` (g2-standard-8, 1× L4, on-demand). `gpu-advisor-4` is
+untouched. The export is now also in
+`gs://whatsapp-sales-agent-hecate-artifacts/exports/exp-07_arm-trained_split-tenacitytrain_seed-0_run-2/global_step_295/global_step_295/`.
+Serving matches the E7 final passes: vLLM 0.9.2, dtype auto (bf16 in the
+log), `--max-model-len 32768`, seed 0, served name `advisor`. Recorded
+difference: L4 instead of A100 (same weights and sampling), and
+`transformers` pinned to 4.53.2 because vLLM 0.9.2 fails with the current
+release. KV cache: 77,312 tokens.
+
+Stage 2 runs (49 test issues each, `--max_workers 4`, all in parallel on
+hecate-worker):
+  - `exp-07_arm-codex5nanotrained_split-tenacityval_seed-0`, `_run-2`,
+    `_run-3`: `--advisor_model hosted_vllm/advisor --advisor_api_base
+    http://10.128.0.15:8000/v1`, temperature 0.7, top_p 0.8, top_k 20,
+    min_p 0 (the E7 final-pass sampling).
+  - `exp-07_arm-codex5nano_split-tenacityval_seed-0_run-2`, `_run-3`:
+    alone.
+Before them: a 2-issue train smoke with the advisor, which must end with
+graded patches and advice deliveries logged. Join: three alone vs three
+advised with `compare_swe_arms.py`. Reading rule as above (Flash rule:
+"keeps resolve and cuts steps" needs steps 95% upper bound < 0 and
+resolve 95% lower bound > −10 points; "raises resolve" needs resolve 95%
+lower bound > 0). Also reported: advice deliveries, advice lost to
+compaction, rescues vs harms. Exploratory transfer (a reasoning GPT
+student; the advisor was trained on Flash-Lite), never Q7.1. Budget:
+~$3 API, ~$3 L4, ~$5 worker. The L4 and worker stop when done; the clone
+disk and L4 VM are deleted only on Scott's yes.
