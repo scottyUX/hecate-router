@@ -1050,3 +1050,24 @@ Tenacity test issues, one pass, Flash-Lite alone. Stage-2 rule unchanged
 (at most 4 of 49 errors, 10–39 resolved); if it holds, stage 2 is
 `codexlitefixtrained` plus two more alone passes, as written above.
 `codexlite` stays as recorded. Budget: ~$0.25 API, worker a few hours.
+
+GPT-5-nano added as a second Codex student (recorded 2026-10-28, before its
+pass; the `codexlitefix` pass was already running):
+  - Why: gpt-6-luna (42/49) is too strong for the advisor to matter. GPT-5-nano
+    is the cheapest GPT-5 model ($0.05 in / $0.005 cached / $0.40 out per
+    1M on OpenRouter) and the most likely to land in the 10–39 band. Picked
+    over gpt-4.1-nano (no reasoning, closer to Flash-Lite, but likely under
+    10 and without custom-tool support for `apply_patch`).
+  - Settings: reasoning effort medium; context window 400,000; a catalog
+    entry copied from gpt-5.5 like Flash-Lite's, but it keeps gpt-5.5's
+    reasoning fields (efforts limited to low/medium/high, default medium).
+    Same proxy retries and error rule.
+  - Smoke (3 train issues, `runs/smoke-codex5nano`): 1 of 3 resolved,
+    0 errors, 11–20 steps, $0.01; it calls `apply_patch` (2 of 3 runs).
+  - Run: `exp-07_arm-codex5nano_split-tenacityval_seed-0`, the 49 Tenacity
+    test issues, one pass, alone. Same stage-2 rule (at most 4 errors,
+    10–39 resolved); stage 2 would be `codex5nanotrained` plus two more
+    alone passes, recorded and costed before it runs. Budget: under $1 API.
+    The step-295 advisor was trained on Flash-Lite without thinking; a
+    reasoning GPT student is a transfer case, so stage 2 would be read as
+    exploratory transfer, not as Q7.1.
