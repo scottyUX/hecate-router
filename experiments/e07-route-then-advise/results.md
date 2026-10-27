@@ -106,3 +106,14 @@ Paired difference, weakalone minus untrained (bootstrap over issues): resolve +2
 Untrained `_run-5` is attempt 3. Attempt 1 was stopped by hand at 22/49 (VM stop, 23 Oct 23:00 PDT). Attempt 2 was preempted at 43/49 (Spot, 24 Oct 01:09 PDT). Attempt 3 ran all 49 on on-demand provisioning, same commit and flags, exit 0. Attempt logs are kept as `eval.attempt1.log` and `eval.attempt2.log` in that run dir. Only attempt 3's map is a gate file.
 
 Artifacts: the six maps are in `gs://whatsapp-sales-agent-hecate-artifacts/runs/<run_id>/` (student-alone `_run-5` as `exp-07_arm-weakalone_split-tenacityval_seed-0_run-5.json` in its run dir). Join output: `gs://whatsapp-sales-agent-hecate-artifacts/runs/exp-07_check1_split-tenacityval_seed-0/check1.json` and `check1_stdout.txt`. After the join, `gpu-advisor` and `hecate-worker` were stopped. Training has not started.
+
+## Codex harness, GPT-5-nano with the step-295 advisor, 28 Oct 2026
+
+Exploratory transfer, not Q7.1. Student `openai/gpt-5-nano` (medium reasoning) in Codex CLI 0.164.0 through the E7 proxy (40-step cap, mini-swe-agent's `<advice>` wrapper, advice every 5 requests). Advisor `global_step_295` on one L4 (vLLM 0.9.2, bf16, E7 sampling). 49 Tenacity test issues, three passes per arm, 0 errors. Details and rule: `spec.md`, "GPT-5-nano stage 2 result".
+
+| arm | resolved per pass | resolve | mean steps | steps on resolved |
+| --- | --- | ---: | ---: | ---: |
+| alone | 32, 25, 29 | 58.5% | 11.1 | 10.5 |
+| advised | 32, 35, 32 | 67.3% | 10.1 | 9.3 |
+
+Advised minus alone: resolve +8.8 points [+2.7, +15.6], steps −0.94 [−1.93, +0.05]. "Raises resolve" holds; "cuts steps" does not. Earlier Codex students: gpt-6-luna 42/49 (too strong), Flash-Lite 7/49 after the harness fixes (too weak in Codex; `apply_patch` does not reach Gemini as a callable tool). Artifacts: `gs://hecate-506120-artifacts/runs/` and `gs://whatsapp-sales-agent-hecate-artifacts/runs/` (`exp-07_arm-codex5nano*`, `exp-07_codex5nano_split-tenacityval_seed-0`). VMs `advisor-l4` and `hecate-worker` stopped; disk `advisor-ckpt-clone` kept.

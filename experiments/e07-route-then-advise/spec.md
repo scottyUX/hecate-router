@@ -1118,3 +1118,25 @@ compaction, rescues vs harms. Exploratory transfer (a reasoning GPT
 student; the advisor was trained on Flash-Lite), never Q7.1. Budget:
 ~$3 API, ~$3 L4, ~$5 worker. The L4 and worker stop when done; the clone
 disk and L4 VM are deleted only on Scott's yes.
+
+GPT-5-nano stage 2 result (28 Oct; join `runs/exp-07_codex5nano_split-tenacityval_seed-0/codex5nano.json`, copied to both buckets):
+
+  Arm       Passes  Resolved per pass  Resolve  Mean steps  Steps on resolved
+  alone     3       32, 25, 29         58.5%    11.1        10.5
+  advised   3       32, 35, 32         67.3%    10.1         9.3
+  Kept 49, dropped 0; 0 errors in all six files.
+
+Advised minus alone (bootstrap over issues): resolve +8.8 points
+[+2.7, +15.6]; steps −0.94 [−1.93, +0.05].
+Reading rule as written: "raises resolve" holds (lower bound +2.7 > 0).
+"Keeps resolve and cuts steps" does not (steps upper bound +0.05 ≥ 0).
+Per issue (resolves out of 3): advised higher on 16, lower on 5, equal on
+28; 4 issues never resolved alone were resolved at least once advised.
+Advice: 2.44 advisor calls and deliveries per run, 0 runs with advice lost
+to compaction. Student API cost per resolved issue: $0.0163 alone,
+$0.0087 advised (per-pass cost varies $0.15–0.54, so treat cost as noisy);
+the advisor ran on one L4 (~$0.85/h) for about 1.3 h.
+Reading: exploratory transfer to a different student family and harness,
+one advisor seed, one repo, 49 issues. It is not Q7.1. The alone arm
+includes the stage-1 pass that triggered stage 2 (32/49); the other two
+alone passes resolved 25 and 29.
