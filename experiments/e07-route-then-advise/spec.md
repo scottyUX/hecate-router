@@ -1006,3 +1006,47 @@ Rule applied as written: neither student goes to stage 2.
     submit command or the 40-step cap.
 Any rerun (a proxy retry for provider 404s and a rerun of the 7 errored
 issues, or another student) is a new decision, recorded before it runs.
+
+Flash-Lite rerun with harness fixes (recorded 2026-10-28, before the pass):
+
+Log review of `codexlite` found three problems, two of them in our setup:
+  - Provider 404s hit 90 of 424 requests (21%) in 17 issues, not only the
+    7 counted as errors. Two more runs (`func_basic__q99obeha`,
+    `func_pm_ctrl_shuffle__6vzkm0lh`) were cut off by a 404 and a third
+    (`func_basic__9b67b0zh`) by a dropped stream; all three were graded
+    as unresolved. Codex retries 5 times with almost no wait, then ends
+    the run.
+  - Codex has no metadata for `google/gemini-2.5-flash-lite`, so Flash-Lite
+    got Codex's fallback setup: no `apply_patch` tool, an `exec_command`
+    with a `sandbox_permissions` escalation option that approval "never"
+    refuses, and `request_user_input`. Many early stops are the model
+    asking for escalation or saying it cannot apply a patch.
+  - Flash-Lite sometimes writes a tool call as text (`<ctrl42>call
+    print(default_api.exec_command(...`) or prints a patch as markdown.
+    Codex treats any reply without a tool call as the end; mini-swe-agent
+    answers it with a format error and goes on. This is the harness and
+    is not changed.
+
+Fixes (advisor-models `codex_proxy.py`, `eval_codex.py`):
+  - The proxy retries 404/408/409/429/5xx and connection errors, up to 8
+    attempts with 2 s doubling backoff (cap 30 s). One Codex request is
+    still one step.
+  - A run is an infrastructure error if any request still failed after
+    the retries, or Codex reports `turn.failed` for any reason but the
+    step cap.
+  - Flash-Lite gets a one-model `model_catalog_json`: Codex's built-in
+    `gpt-5.5` entry (plain Responses, no Code Mode) with slug, context
+    window (1,048,576) and reasoning/search/image/speed-tier fields
+    changed (`CATALOG_OVERRIDES`). It now has `apply_patch` (freeform, the
+    only type Codex 0.164 accepts) and gpt-5.5's instructions.
+    `exec_command` keeps its escalation option and `request_user_input`
+    stays; Codex ignores `unified_exec = false`.
+  Smoke (3 train issues, `runs/smoke-codexlitefix`): 0 of 3 resolved,
+  0 errors, 2–13 steps; 404s retried and absorbed; no `apply_patch` use
+  (edits by `sed` and heredocs).
+
+Run: `exp-07_arm-codexlitefix_split-tenacityval_seed-0`, the same 49
+Tenacity test issues, one pass, Flash-Lite alone. Stage-2 rule unchanged
+(at most 4 of 49 errors, 10–39 resolved); if it holds, stage 2 is
+`codexlitefixtrained` plus two more alone passes, as written above.
+`codexlite` stays as recorded. Budget: ~$0.25 API, worker a few hours.
