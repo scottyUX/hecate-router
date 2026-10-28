@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "validation_error",
+    "message": "task_text must be non-empty",
+    "request_id": "4e8c2b90-1df6-4a75-b3e2-0c95d7f16a48"
+  }
+}
