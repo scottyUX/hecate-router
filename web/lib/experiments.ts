@@ -14,7 +14,7 @@ export const EXPERIMENT_REPORTS: ExperimentReport[] = [
     date: "2026-11-12",
     status: "plan · not started",
     summary:
-      "Plan to train a Qwen2.5-7B LoRA advisor twice, with GRPO and with PPO (1.5B critic), for a local Qwen3-Coder-30B student on SWE-smith Tenacity (56 train / 49 test issues). Everything runs on the lab's DGX Spark, including the student and ARM-rebuilt test containers, so no paid inference: capped at $50. Every training rollout is saved as state, action and reward. Predicted no detectable PPO–GRPO difference.",
+      "Plan to train a Qwen2.5-7B LoRA advisor three ways for a local Qwen3-Coder-30B student on SWE-smith Tenacity (56 train / 49 test issues): GRPO, PPO with a 1.5B LLM critic, and PPO with a small critic on Sagnik's six progress features, which also serve as an offline critic baseline. Everything runs on the lab's DGX Spark, so no paid inference: capped at $50. Every rollout is saved as state, action and reward. Predicted no detectable differences.",
     archiveEntryId: "2026-11-12-e10-ppo-vs-grpo-advisor-plan",
   },
   {
