@@ -10,11 +10,11 @@ export type ExperimentReport = {
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
     href: "/journal/2026-11-11-e10-ppo-vs-grpo-plan",
-    title: "Experiment 10: PPO vs GRPO for the router",
+    title: "Experiment 10: PPO vs GRPO for the advisor, with LoRA",
     date: "2026-11-11",
     status: "plan · not started",
     summary:
-      "Plan to train one Qwen2.5-Coder-7B LoRA router four ways on Experiment 2's django split (165 train / 46 holdout), changing only the loss: label cross-entropy, full-information expected reward, GRPO and PPO. The route is one token, so sampling is free and all arms share one trainer. Predicted full-info ≥ GRPO ≥ PPO on Route-AUC; a full fine-tune follows only if PPO wins. On the lab's Spark, under $10, about 1–1.5 weeks.",
+      "Plan to retrain Experiment 7's Qwen2.5-7B advisor twice on the lab's DGX Spark, once with GRPO and once with PPO, both with LoRA, keeping E7's recipe: Flash-Lite student, 56 Tenacity training issues, 4 × 8 rollouts, 295 steps. Same student calls per step; only the advantage and PPO's critic differ. Predicted no detectable difference on the 49 test issues; LoRA GRPO should land near E7's 31.9%. About $1,500–1,750, mostly student API, 3–4 weeks.",
     archiveEntryId: "2026-11-11-e10-ppo-vs-grpo-plan",
   },  {
     href: "/journal/2026-10-25-e09-route-or-advise-plan",

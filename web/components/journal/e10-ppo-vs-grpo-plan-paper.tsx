@@ -16,7 +16,7 @@ const SLUG = "2026-11-11-e10-ppo-vs-grpo-plan";
 
 const toc: PaperTocItem[] = [
   { href: "#question", label: "Question" },
-  { href: "#known", label: "What is already known" },
+  { href: "#known", label: "What Experiment 7 showed" },
   { href: "#design", label: "Design" },
   { href: "#rules", label: "Decision rules" },
   { href: "#budget", label: "Budget and time" },
@@ -28,18 +28,18 @@ const toc: PaperTocItem[] = [
 const references = [
   {
     id: 1,
+    href: "https://arxiv.org/abs/2510.02453",
+    text: "Asawa, P., Zhu, A., O’Neill, A., Zaharia, M., Dimakis, A. G., and Gonzalez, J. E. (2026). How to Train Your Advisor: Steering Black-Box LLMs with Advisor Models. arXiv:2510.02453.",
+  },
+  {
+    id: 2,
     href: "https://arxiv.org/abs/1707.06347",
     text: "Schulman, J., Wolski, F., Dhariwal, P., Radford, A., and Klimov, O. (2017). Proximal Policy Optimization Algorithms. arXiv:1707.06347.",
   },
   {
-    id: 2,
+    id: 3,
     href: "https://arxiv.org/abs/2402.03300",
     text: "Shao, Z., Wang, P., Zhu, Q., Xu, R., Song, J., Bi, X., Zhang, H., Zhang, M., Li, Y. K., Wu, Y., and Guo, D. (2024). DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models. arXiv:2402.03300.",
-  },
-  {
-    id: 3,
-    href: "/journal/2026-09-15-e02-specialist-django-smoke",
-    text: "Davis, S. (2026). Experiment 2: django in-distribution router, seed 0. Hecate Lab journal, 15 September 2026.",
   },
   {
     id: 4,
@@ -53,13 +53,13 @@ export async function E10PpoVsGrpoPlanPaper() {
 
   return (
     <PaperShell
-      title="Experiment 10: PPO vs GRPO for the router"
+      title="Experiment 10: PPO vs GRPO for the advisor, with LoRA"
       authors={
         <>
           Scott Davis · <Link href="/">Hecate Lab</Link>
         </>
       }
-      affiliations="SWE-bench Verified · django specialist split (165 train / 20 val / 46 holdout) · four objectives · plan · 11 November 2026"
+      affiliations="SWE-smith Tenacity · Flash-Lite student · Qwen2.5-7B advisor, LoRA · DGX Spark · plan · 11 November 2026"
       date="November 11, 2026"
       subjects={[
         "Machine Learning (cs.LG)",
@@ -67,187 +67,172 @@ export async function E10PpoVsGrpoPlanPaper() {
         "Artificial Intelligence (cs.AI)",
       ]}
       updated="2026-11-11"
-      tags="e10 · routing · ppo · grpo · reinforcement learning · lora · route-auc · plan"
+      tags="e10 · advisor models · ppo · grpo · reinforcement learning · lora · dgx spark · plan"
       toc={toc}
     >
       <PaperAbstract>
         <p>
-          Hecate’s routers are trained with cross-entropy on “did the cheap
-          model solve it”. Experiment 7 trained its advisor with GRPO{" "}
-          <PaperCite n={2} />. Experiment 10 asks, on one fixed router problem,
-          whether the training objective matters: the same Qwen2.5-Coder-7B
-          LoRA policy, split, input and reward, trained four ways — label
-          cross-entropy, a full-information expected-reward loss, GRPO, and PPO
-          with a learned critic <PaperCite n={1} />.
+          Experiment 7 trained a Qwen2.5-7B advisor with GRPO, following
+          Advisor Models <PaperCite n={1} />, to advise Gemini 2.5 Flash-Lite
+          on SWE-smith Tenacity. GRPO <PaperCite n={3} /> drops PPO’s learned
+          critic <PaperCite n={2} /> and scores each run against the average
+          of 8 runs on the same issue. The advisor recovered most of what
+          untrained advice lost, but did not beat Flash-Lite alone{" "}
+          <PaperCite n={4} />.
         </p>
         <p>
-          The router’s action is one token, and both models’ outcomes and costs
-          are known for every training task. That makes this the simplest
-          setting in which to compare PPO and GRPO, and it makes the
-          full-information arm the natural ceiling. This entry records the
-          plan before any run: on the lab’s DGX Spark, no API spend, under $10
-          in cash, about 1–1.5 weeks.
+          Experiment 10 retrains that advisor twice on the lab’s DGX Spark,
+          once with GRPO and once with PPO, both with LoRA, and keeps
+          everything else from Experiment 7’s recipe. This entry records the
+          plan before any run: about $1,500–1,750, almost all of it student
+          API calls, and 3–4 weeks.
         </p>
       </PaperAbstract>
 
       <PaperSection id="question" number="1" title="Question">
         <PaperTable
           id="table-questions"
-          caption="Table 1. Pre-registered questions."
-          headers={["ID", "Question"]}
+          caption="Table 1. Pre-registered questions, with the predictions recorded before any run."
+          headers={["ID", "Question", "Prediction"]}
           rows={[
-            ["Q10.1", "Does GRPO (group-mean baseline) or PPO (learned critic) give the better router on Route-AUC, at the same sample budget?"],
-            ["Q10.2", "Does either RL objective beat the full-information expected-reward loss, which uses both known outcomes and samples nothing?"],
-            ["Q10.3", "Does a cost-aware objective beat Experiment 2-style label cross-entropy? (Diagnostic.)"],
-            ["Q10.4", "Does any arm reach always-Opus quality on the holdout (33/46) with fewer than 46 Opus calls? Experiment 2’s K=0 LoRA did not."],
-            ["Q10.5", "What does each objective cost to train: GPU-hours and peak memory?"],
+            ["Q10.1", "With LoRA, does the PPO advisor beat the GRPO advisor on resolve or steps on the 49 test issues?", "No detectable difference"],
+            ["Q10.2", "Does either LoRA advisor beat Flash-Lite alone?", "No"],
+            ["Q10.3", "Does LoRA GRPO land where Experiment 7’s full fine-tune did (31.9% resolved, no step cut)?", "Yes, within ±10 points"],
+            ["Q10.4", "Training: reward, KL, share of zero-signal groups, critic quality, time and memory per step.", "PPO has fewer zero-signal updates and costs more per step"],
           ]}
         />
-        <PaperCallout label="Predictions, recorded before any run">
+        <PaperCallout label="Why PPO might help here">
           <p>
-            Full-information ≥ GRPO ≥ PPO on Route-AUC; PPO costs more compute
-            than GRPO; most seeds of every arm still need all 46 Opus calls to
-            match always-Opus, because the input is the same issue text that
-            never found a cheaper 33 in Experiment 2.
+            Flash-Lite resolves about a third of the training issues, so many
+            groups of 8 runs contain no resolved run. In GRPO such a group has
+            zero spread and gives no learning signal. PPO’s critic predicts
+            the final reward from the conversation so far, so each turn of
+            advice gets its own score, even in a group where every run
+            failed. Whether that turns into a better advisor is the question.
           </p>
         </PaperCallout>
       </PaperSection>
 
-      <PaperSection id="known" number="2" title="What is already known">
+      <PaperSection id="known" number="2" title="What Experiment 7 showed">
         <PaperTable
-          id="table-known"
-          caption="Table 2. Experiment 2 holdout, seed 0, 46 django issues."
-          headers={["Policy", "Resolved", "Opus calls to reach 33", "Route-AUC"]}
+          id="table-e07"
+          caption="Table 2. Experiment 7, Flash-Lite student, 49 Tenacity test issues, three passes per arm."
+          headers={["Arm", "Resolve", "Mean steps", "Steps on resolved"]}
           rows={[
-            ["Always Qwen3-Coder (M1)", "27/46 ($8.97)", "—", "—"],
-            ["Always Claude 4 Opus (M2)", "33/46 ($49.75)", "46", "—"],
-            ["Oracle", "37/46 ($19.72)", "10", "—"],
-            ["E2 frozen logreg", "—", "46", "0.373"],
-            ["E2 K=0 LoRA (score head)", "—", "46", "0.489"],
-            ["E2 K=1 LoRA (diagnostic)", "—", "36", "0.583"],
+            ["Flash-Lite alone", "34.0%", "25.7", "19.9"],
+            ["+ untrained Qwen2.5-7B", "13.5%", "22.0", "16.8"],
+            ["+ GRPO advisor, full fine-tune, step 295", "31.9%", "26.3", "16.7"],
+            ["+ GRPO advisor, epoch 10", "27.7%", "26.4", "15.4"],
           ]}
-          highlight={(row) => row[0].startsWith("E2 K=0")}
+          highlight={(row) => row[0].startsWith("+ GRPO advisor, full")}
         />
         <p>
-          Both models resolve 23 issues, only Qwen 4, only Opus 10, neither 9,
-          so every number turns on about 10–14 issues <PaperCite n={3} />.
-          Experiment 7’s GRPO was a full fine-tune of a 7B advisor on 4× A100{" "}
-          <PaperCite n={4} />. A full fine-tune with a critic needs about
-          240 GB, more than the Spark’s 128 GB, so Experiment 10 uses LoRA
-          throughout and says nothing about PPO versus GRPO for full
-          fine-tuning or for the advisor.
+          The trained advisor against Flash-Lite alone: resolve −2.1 points
+          [−11.3, +7.1], steps +0.6 [−2.3, +3.6]. Experiment 7’s GRPO was a
+          full fine-tune on four A100s. A full fine-tune with a critic does
+          not fit on one Spark, so Experiment 10 uses LoRA for both arms and
+          checks, through Q10.3, whether LoRA alone changes the GRPO result.
         </p>
       </PaperSection>
 
       <PaperSection id="design" number="3" title="Design">
-        <p>
-          <strong>Policy.</strong> Qwen2.5-Coder-7B-Instruct in bf16 with
-          Experiment 2’s LoRA shape (r 32, alpha 64). The input is the issue
-          text as Experiment 2 builds it, then an instruction to answer A
-          (cheap model) or B (strong model). Logits are restricted to those
-          two tokens, so there are no invalid outputs, and π(A | issue) is the
-          score Hecate’s Route-AUC already sweeps. Both actions’
-          log-probabilities come from one forward pass, so sampling several
-          actions per issue costs no extra passes.
-        </p>
-        <p>
-          <strong>Reward.</strong> r = solved − μ · cost / mean Opus cost, with
-          μ = 0.5 fixed. Qwen costs about 0.18× Opus per issue here, so any μ
-          between 0 and about 1.2 makes the best choice the oracle route; μ
-          sets the margin, not the answer.
-        </p>
         <PaperTable
           id="table-arms"
-          caption="Table 3. Arms. One trainer, one prompt, one split; only the loss differs. Up to 10 epochs, early stopping on the 20 validation issues (patience 2), seeds 0–4."
-          headers={["Arm", "Objective", "LR", "Early stopping on"]}
+          caption="Table 3. Arms. Shared: Qwen2.5-7B-Instruct, LoRA rank 32 on all linear layers, LR 1e-5, Flash-Lite student, the 56 training issues, batch 4 issues × 8 rollouts, KL 0.001, 9 advice turns, 295 steps, Experiment 7’s reward, one seed."
+          headers={["Arm", "Advantage", "Extra model"]}
           rows={[
-            ["A", "Label cross-entropy (target A iff Qwen resolves)", "5e-5", "Val CE"],
-            ["B", "Full information: exact expected-reward gradient over both actions, no sampling", "5e-5", "Val expected reward"],
-            ["C", "GRPO: 4 sampled actions per issue, group-normalized advantage, clip 0.2, KL 0.001", "1e-5", "Val expected reward"],
-            ["D", "PPO: the same 4 samples, advantage r − V(x) from a LoRA critic, clip 0.2, KL 0.001", "1e-5 (critic 5e-5)", "Val expected reward"],
+            ["G: GRPO", "Run reward minus its group’s mean, divided by the group’s spread; the same value on every advice token of the run", "None"],
+            ["P: PPO", "Final reward minus a critic’s estimate at each advice turn (γ = 1, λ = 1)", "A second Qwen2.5-7B with its own LoRA and a value head"],
           ]}
-          highlight={(row) => row[0] === "C" || row[0] === "D"}
         />
         <p>
-          C and D see the same sampled actions, so they differ only in the
-          baseline: group mean against learned critic. The trainer is new
-          (<code>src/hecate/router/rl_route.py</code>), not SkyRL: with a
-          one-token action there is nothing to generate, and SkyRL’s LoRA path
-          on aarch64 is unverified.
+          Both arms draw the same 32 student runs per training step, so they
+          cost the same in API calls and see the same amount of data. Only
+          the advantage, and PPO’s critic, differ.
         </p>
         <p>
-          <strong>Metric.</strong> Route-AUC on the 46 holdout issues, mean over
-          seeds, with a paired bootstrap over issues (10,000 resamples).
-          Secondary: the fewest Opus calls that reach 33 and their dollar cost.
-          Diagnostic: AUROC, Brier, and for GRPO the share of groups with zero
-          spread.
+          <strong>Evaluation.</strong> Each arm’s step-295 checkpoint, three
+          passes on the 49 test issues, with Experiment 7’s short-context
+          eval and sampling. Flash-Lite alone reuses Experiment 7’s three
+          passes. Comparisons use paired bootstrap intervals over issues.
+        </p>
+        <p>
+          <strong>Infrastructure.</strong> Training and the vLLM advisor run
+          on the Spark. The SWE-smith containers, agent server and eval
+          server stay on the x86 worker, reached over an SSH tunnel.
         </p>
       </PaperSection>
 
       <PaperSection id="rules" number="4" title="Decision rules">
         <PaperTable
           id="table-rules"
-          caption="Table 4. Fixed before any Experiment 10 run."
-          headers={["Question", "Rule"]}
+          caption="Table 4. Fixed before any Experiment 10 run, using Experiment 7’s reading rule for a difference X − Y."
+          headers={["Outcome", "Rule"]}
           rows={[
-            ["Q10.1", "“GRPO better” if C − D > 0 with 95% lower bound > 0; “PPO better” if < 0 with upper bound < 0; otherwise “no detectable difference at n = 46”, not a positive result for either"],
-            ["Q10.2", "For C and for D separately against B: “RL beats full information” only if the lower bound > 0; “full information beats RL” if the upper bound < 0"],
-            ["Q10.3", "B − A: signed gap and interval, no pass/fail"],
-            ["Q10.4, Q10.5", "Descriptive"],
-            ["Path 2", "A full fine-tune on 4× A100 (~$200–400) gets its own spec only if Q10.1 returns “PPO better”; any other outcome closes the question for the router"],
+            ["X raises resolve", "Resolve 95% lower bound > 0"],
+            ["X keeps resolve and cuts steps", "Steps 95% upper bound < 0 and resolve 95% lower bound > −10 points"],
+            ["Otherwise", "“No detectable difference at n = 49, one training seed”"],
+            ["Q10.1", "PPO − GRPO, either reading, in either direction"],
+            ["Q10.2", "Each arm − Flash-Lite alone"],
+            ["Q10.3", "LoRA GRPO within ±10 points of 31.9% with no step cut; if not, any PPO − GRPO result is read as a LoRA result only"],
+            ["Next step", "A full-fine-tune PPO run gets its own spec only if PPO trains a better advisor"],
           ]}
-          highlight={(row) => row[0] === "Path 2"}
         />
       </PaperSection>
 
       <PaperSection id="budget" number="5" title="Budget and time">
         <PaperTable
           id="table-budget"
-          caption="Table 5. Spark time, scaled from Experiment 6’s L4 epoch (about 15–17 min per supervised epoch here), assuming the Spark is about as fast as an L4. The timing smoke replaces these."
-          headers={["Arm", "Per epoch vs CE", "Per seed", "5 seeds"]}
+          caption="Table 5. Estimated cost. Student calls dominate: 32 Flash-Lite runs per step at about $0.062 each, for 295 steps per arm."
+          headers={["Item", "GRPO", "PPO"]}
           rows={[
-            ["A label CE", "1×", "~1–1.5 h", "~5–8 h"],
-            ["B full-info", "1×", "~1–1.5 h", "~5–8 h"],
-            ["C GRPO", "~1.7×", "~1.5–5 h", "~8–24 h"],
-            ["D PPO", "~2.5×", "~2–7 h", "~10–35 h"],
-            ["Total Spark", "", "", "~30–75 h"],
+            ["Student API, training", "~$585", "~$585"],
+            ["Student API, eval and smokes", "~$25", "~$25"],
+            ["x86 worker", "~$110–230", "~$140–290"],
+            ["Spark GPU", "$0", "$0"],
+            ["Per arm", "~$720–840", "~$750–900"],
+            ["Total", "~$1,470–1,740", ""],
           ]}
-          highlight={(row) => row[0] === "Total Spark"}
+          highlight={(row) => row[0] === "Total"}
         />
         <p>
-          Cash: $0 GPU (lab-owned), about $2–5 of electricity, $0 API, cents a
-          month of storage. Engineering 2–3 days for the trainer, tests and
-          Spark setup. About 1–1.5 weeks in all after review.
+          Caps: $900 per arm and $1,800 in total. The OpenRouter key’s limit
+          has to be raised before the timing smoke. Step time on the Spark is
+          unknown until that smoke; assuming 10–20 minutes per step, training
+          takes 2–4 days for GRPO and 3–6 for PPO. With setup, evaluation and
+          write-up, about 3–4 weeks from approval.
         </p>
       </PaperSection>
 
       <PaperSection id="risks" number="6" title="Risks and scope">
         <p>
-          With 46 test issues, 10 of them Opus-only, the likely Q10.1 result is
-          “no detectable difference”; the compute comparison is the low-noise
-          result. Issue text alone never beat always-Opus at matched quality in
-          Experiment 2, so every arm may tie there. Results are about LoRA and a
-          one-token decision; they do not carry to full fine-tuning or to
-          Experiment 7’s advisor, where a critic could matter more.
+          One training seed per arm and 49 test issues, with passes that vary
+          by up to 19 points: “no detectable difference” is the most likely
+          outcome, and the training curves are the lower-noise result.
+          SkyRL’s LoRA path and PPO critic are unverified on the Spark’s ARM
+          CPU, and there is no PPO fallback outside SkyRL. If PPO’s critic
+          does not fit beside the policy and vLLM, a 1.5B critic is the
+          recorded fallback. OpenRouter has intermittently refused{" "}
+          <code>gemini-2.5-flash-lite</code> since late October; if the model
+          becomes unavailable, the experiment pauses.
         </p>
         <p>
-          Out of scope: the step-level escalate decision (needs Experiment 8),
-          λ-conditioned policies, other repos, and a small MLP policy on fixed
-          features.
+          Out of scope: the M1/M2 router (an earlier draft of this
+          experiment), other students, repos or harnesses, and full
+          fine-tuning.
         </p>
       </PaperSection>
 
       <PaperSection id="notes" number="7" title="Notes">
         <p>
-          Spec: <code>experiments/e10-ppo-vs-grpo-router/spec.md</code>,
-          including a constitution check. Nothing is authorized to run until
-          review. Gates: G0, the Spark environment (aarch64 wheels or an NGC
-          container, one update per arm, peak memory, and a route for copying
-          run directories to <code>gs://hecate-506120-artifacts</code>, since
-          the Spark has no GCP credentials); G1, a one-epoch timing smoke for
-          GRPO and PPO with no holdout scoring, cutting to three seeds if the
-          projection exceeds 100 Spark hours; G2, offline tests. No cross-arm
-          comparison is computed until every planned run has finished.
+          Spec: <code>experiments/e10-ppo-vs-grpo-advisor/spec.md</code>{" "}
+          (rev 2), including a constitution check. Rev 1 planned a router
+          experiment instead and was withdrawn before any code or run.
+          Nothing is authorized to run until review. Gates before any full
+          run: the Spark stack and memory (G0), a 3-step timing and cost
+          smoke (G1), offline tests (G2), and the artifact copy off the
+          Spark (G3). The GRPO arm is the same run as the “Does advice
+          transfer?” proposal’s Phase C bridge, and is run only once.
         </p>
       </PaperSection>
 
