@@ -15,6 +15,7 @@ import { requireJournalPage } from "@/lib/auth";
 const SLUG = "2026-11-12-e10-ppo-vs-grpo-advisor-plan";
 
 const toc: PaperTocItem[] = [
+  { href: "#motivation", label: "Motivation" },
   { href: "#question", label: "Question" },
   { href: "#known", label: "What Experiment 7 showed" },
   { href: "#design", label: "Design" },
@@ -99,10 +100,63 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         </p>
       </PaperAbstract>
 
-      <PaperSection id="question" number="1" title="Question">
+      <PaperSection id="motivation" number="1" title="Motivation">
+        <p>
+          Experiment 7’s GRPO advisor did not beat its student: Flash-Lite
+          resolved 34.0% alone and 31.9% with the trained advisor{" "}
+          <PaperCite n={4} />. Training did teach something, since untrained
+          advice dropped Flash-Lite to 13.5%. One likely cause is how GRPO
+          gives credit. It compares each run with the mean of the 8 runs on
+          the same issue. Flash-Lite solves about a third of issues, so often
+          all 8 runs fail, every reward is 0, and that issue teaches nothing.
+          GRPO also gives every advice turn in a run the same credit, whether
+          that advice helped or not.
+        </p>
+        <p>
+          PPO gets its signal another way. A critic predicts, after each
+          advice turn, how the run will end, and each turn is credited by how
+          much the run beat that prediction. PPO can therefore learn even when
+          all 8 runs fail, and it credits each turn separately. Experiment 10
+          tests whether that matters, with the same advisor, student, issues
+          and budget for every arm, all on the Spark, so any difference comes
+          from the training method.
+        </p>
+        <PaperCallout label="Two caveats">
+          <p>
+            The student is stronger than Experiment 7’s (58.5% alone), which
+            gives GRPO more mixed groups and makes this a harder test for PPO
+            to win. A tie is still informative: if PPO does not beat GRPO here,
+            the critic is not worth its extra memory and complexity for this
+            task.
+          </p>
+        </PaperCallout>
+        <p>
+          The critic’s input is the second question. Sagnik’s six-feature
+          state and Experiment 10’s own state describe the same moment very
+          differently.
+        </p>
+        <PaperTable
+          id="table-states"
+          caption="Table 1. The two states. The advisor always reads the text; only what the critic reads changes between P and P6."
+          headers={["", "Six-feature state (P6, offline model)", "Text state (G, P)"]}
+          rows={[
+            ["What it is", "7 numbers in [0, 1]: steps used, steps left, failing tests and a no-tests flag, command failure rate, steps without progress, advice turn", "The advisor’s prompt: the issue and the student’s conversation so far, its commands and their outputs, up to 28,672 tokens"],
+            ["Read by", "P6’s MLP critic (7 → 64 → 64 → 1); a ridge model offline", "The 7B advisor in every arm; P’s 1.5B LLM critic"],
+            ["Tells the model", "How the run is going", "What the student is doing and why it is stuck"],
+            ["Used as", "Critic input only, never the advisor’s", "The advisor’s input, and P’s critic input"],
+          ]}
+        />
+        <p>
+          Writing useful advice needs the text, so the advisor always reads
+          it. If six numbers predict the final reward as well as the 1.5B
+          critic does (Q10.4, Q10.6), the critic is not using the text.
+        </p>
+      </PaperSection>
+
+      <PaperSection id="question" number="2" title="Question">
         <PaperTable
           id="table-questions"
-          caption="Table 1. Pre-registered questions, with the predictions recorded before any run."
+          caption="Table 2. Pre-registered questions, with the predictions recorded before any run."
           headers={["ID", "Question", "Prediction"]}
           rows={[
             ["Q10.1", "Does the PPO advisor (LLM critic) beat the GRPO advisor on resolve or steps on the 49 test issues?", "No detectable difference"],
@@ -113,21 +167,12 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
             ["Q10.4", "Training curves, memory, and critic quality: does the 1.5B critic predict the final reward better than a six-feature model fitted offline?", "No"],
           ]}
         />
-        <PaperCallout label="Why PPO might help here">
-          <p>
-            When every run in a group of 8 fails, or every run succeeds in the
-            same number of steps, the group has zero spread and GRPO learns
-            nothing from it. PPO’s critic predicts the final reward from the
-            conversation so far, so each turn of advice gets its own score
-            even then. Whether that makes a better advisor is the question.
-          </p>
-        </PaperCallout>
       </PaperSection>
 
-      <PaperSection id="known" number="2" title="What Experiment 7 showed">
+      <PaperSection id="known" number="3" title="What Experiment 7 showed">
         <PaperTable
           id="table-e07"
-          caption="Table 2. Experiment 7, 49 Tenacity test issues, 40-step cap. Flash-Lite three passes; Qwen3-Coder-30B two passes through OpenRouter (pilot)."
+          caption="Table 3. Experiment 7, 49 Tenacity test issues, 40-step cap. Flash-Lite three passes; Qwen3-Coder-30B two passes through OpenRouter (pilot)."
           headers={["Student", "Arm", "Resolve", "Mean steps"]}
           rows={[
             ["Flash-Lite", "Alone", "34.0%", "25.7"],
@@ -148,10 +193,10 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         </p>
       </PaperSection>
 
-      <PaperSection id="design" number="3" title="Design">
+      <PaperSection id="design" number="4" title="Design">
         <PaperTable
           id="table-setup"
-          caption="Table 3. Setup, shared by both trained arms."
+          caption="Table 4. Setup, shared by both trained arms."
           headers={["Part", "Choice"]}
           rows={[
             ["Task", "SWE-smith Tenacity: 56 training issues, 49 test issues, mini-SWE-agent, 40-step cap, advice every 5 steps"],
@@ -164,7 +209,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         />
         <PaperTable
           id="table-arms"
-          caption="Table 4. Arms. All three trained arms draw the same 32 student runs per step; only the advantage, and the PPO critics, differ."
+          caption="Table 5. Arms. All three trained arms draw the same 32 student runs per step; only the advantage, and the PPO critics, differ."
           headers={["Arm", "What it is", "Extra model"]}
           rows={[
             ["G: GRPO", "Run reward minus its group’s mean, divided by the group’s spread; the same value on every advice token", "None"],
@@ -187,7 +232,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         </p>
       </PaperSection>
 
-      <PaperSection id="features" number="4" title="Six-feature critic">
+      <PaperSection id="features" number="5" title="Six-feature critic">
         <p>
           The features come from Sagnik’s proposal for an SB3 PPO router that
           decides when to escalate, whose state is six numbers per
@@ -199,7 +244,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         </p>
         <PaperTable
           id="table-features"
-          caption="Table 5. The six features (seven inputs), each scaled to [0, 1]. Feature 6 replaces Sagnik’s cumulative cost, which is a function of steps here because the student runs locally."
+          caption="Table 6. The six features (seven inputs), each scaled to [0, 1]. Feature 6 replaces Sagnik’s cumulative cost, which is a function of steps here because the student runs locally."
           headers={["#", "Feature", "Definition"]}
           rows={[
             ["1", "Steps used", "Student steps so far / 40"],
@@ -221,7 +266,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         </p>
       </PaperSection>
 
-      <PaperSection id="trajectories" number="5" title="Saved trajectories">
+      <PaperSection id="trajectories" number="6" title="Saved trajectories">
         <p>
           Every training rollout of all three arms is saved, so the training data
           can be re-analysed, or reused for offline RL, without rerunning.
@@ -230,7 +275,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         </p>
         <PaperTable
           id="table-trajectories"
-          caption="Table 6. What each advice-turn record holds."
+          caption="Table 7. What each advice-turn record holds."
           headers={["Field", "Contents"]}
           rows={[
             ["State", "The advisor’s full input at that turn: the issue and the student’s conversation so far"],
@@ -243,10 +288,10 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         />
       </PaperSection>
 
-      <PaperSection id="rules" number="6" title="Decision rules">
+      <PaperSection id="rules" number="7" title="Decision rules">
         <PaperTable
           id="table-rules"
-          caption="Table 7. Fixed before any Experiment 10 run, using Experiment 7’s reading rule for a difference X − Y. The three trained-arm comparisons use Bonferroni-adjusted 98.33% intervals; comparisons with the untrained arms use 95%, unadjusted."
+          caption="Table 8. Fixed before any Experiment 10 run, using Experiment 7’s reading rule for a difference X − Y. The three trained-arm comparisons use Bonferroni-adjusted 98.33% intervals; comparisons with the untrained arms use 95%, unadjusted."
           headers={["Outcome", "Rule"]}
           rows={[
             ["X raises resolve", "Resolve lower bound > 0"],
@@ -259,10 +304,10 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         />
       </PaperSection>
 
-      <PaperSection id="cost" number="7" title="Cost">
+      <PaperSection id="cost" number="8" title="Cost">
         <PaperTable
           id="table-cost"
-          caption="Table 8. Estimated cost. No paid inference: the student and the advisor run on the Spark. The third arm adds Spark time, not money."
+          caption="Table 9. Estimated cost. No paid inference: the student and the advisor run on the Spark. The third arm adds Spark time, not money."
           headers={["Item", "Cost"]}
           rows={[
             ["Student and advisor inference", "$0 (local)"],
@@ -277,7 +322,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         />
       </PaperSection>
 
-      <PaperSection id="risks" number="8" title="Risks and scope">
+      <PaperSection id="risks" number="9" title="Risks and scope">
         <p>
           One training seed per arm and 49 test issues, with passes that vary
           by up to about 19 points, and three adjusted comparisons: “no
@@ -297,7 +342,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         </p>
       </PaperSection>
 
-      <PaperSection id="notes" number="9" title="Notes">
+      <PaperSection id="notes" number="10" title="Notes">
         <p>
           Spec: <code>experiments/e10-ppo-vs-grpo-advisor/spec.md</code> (rev
           5), including the exact feature definitions and a constitution

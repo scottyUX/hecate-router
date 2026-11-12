@@ -69,6 +69,50 @@ Q10.4  Training: reward, KL, share of zero-signal groups, peak memory per
        critic and P6's MLP against an offline six-feature model fitted to
        the saved trajectories (§4).
 
+Motivation
+----------
+E7's GRPO advisor did not beat its student: Flash-Lite resolved 34.0% alone
+and 31.9% with the trained advisor. Training did teach something, since
+untrained advice dropped Flash-Lite to 13.5%. One likely cause is how GRPO
+gives credit. It compares each run with the mean of the 8 runs on the same
+issue. Flash-Lite solves about a third of issues, so often all 8 runs fail,
+every reward is 0, and that issue teaches nothing. GRPO also gives every
+advice turn in a run the same credit, whether that advice helped or not.
+
+PPO gets its signal another way. A critic predicts, after each advice turn,
+how the run will end, and each turn is credited by how much the run beat
+that prediction. PPO can therefore learn even when all 8 runs fail, and it
+credits each turn separately. E10 tests whether that matters, with the same
+advisor, student, issues and budget for every arm, all on the Spark, so any
+difference comes from the training method.
+
+Two caveats. The student is stronger than E7's (58.5% alone), which gives
+GRPO more mixed groups and makes E10 a harder test for PPO to win. A tie is
+still informative: if PPO does not beat GRPO here, the critic is not worth
+its extra memory and complexity for this task.
+
+The critic's input is the second question. Sagnik's six-feature state (§3.1)
+and E10's own state describe the same moment very differently:
+
+                Six-feature state (P6, offline F)   E10 text state (G, P)
+  What it is    7 numbers in [0, 1]: steps used,    the advisor's prompt: the
+                steps left, failing tests + a       issue text and the
+                no-tests flag, command failure      student's conversation so
+                rate, steps without progress,       far (commands and their
+                advice turn index                   outputs), up to 28,672
+                                                    tokens
+  Read by       P6's MLP critic (7→64→64→1);        the 7B advisor (policy);
+                ridge model F offline               P's 1.5B LLM critic
+  Says          how the run is going                what the student is doing
+                                                    and why it is stuck
+  Used as       critic input only, never the        the policy's input (all
+                policy's                            arms) and P's critic input
+
+The advisor always reads the text, because writing useful advice needs it.
+What changes between P and P6 is only what the critic reads. If six numbers
+predict the final reward as well as the 1.5B critic does (Q10.4, Q10.6), the
+critic is not using the text.
+
 1 What is already known
 -----------------------
 
