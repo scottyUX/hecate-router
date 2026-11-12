@@ -1,27 +1,29 @@
-Experiment 10 — PPO vs GRPO for the E7 advisor, with LoRA
+Experiment 11 — PPO vs GRPO for the E7 advisor, with LoRA
 Hecate Lab
-Retrain the Experiment 7 advisor twice on the DGX Spark: GRPO and PPO · rev 2 — PLANNED
+Retrain the Experiment 7 advisor twice on the DGX Spark: GRPO and PPO · rev 1 — PLANNED
 November 11, 2026
 
 Status: PLANNED. Nothing in this document is authorized to run.
 
-Rev 2 (11 Nov, before any code or run): at Scott's direction E10 is about
-the E7 advisor, not the M1/M2 router. Rev 1 (commit `f9d6f42`, directory
-`e10-ppo-vs-grpo-router/`) trained a one-token router four ways on E2's
-django split; it is withdrawn in full and nothing from it was built or run.
-The directory is renamed to `e10-ppo-vs-grpo-advisor/`.
+Origin (11 Nov, before any code or run): this plan was written as E10 rev 2
+(commit `12a141e`, `experiments/e10-ppo-vs-grpo-advisor/`). The same day
+E10 was redefined as the router PPO-vs-GRPO study, which can run on the
+Spark in days at no API cost, and this plan moved here unchanged except for
+its number, question IDs and run ids. It starts after E10, using E10's
+Spark setup.
 
-Position in slate: Experiment 10. Does not start, stop, or overwrite E1–E9.
+Position in slate: Experiment 11. Does not start, stop, or overwrite E1–E10.
 
   E7  Route-then-Advise: trained this advisor with GRPO (full fine-tune)
   E8  Handoff modes (plan, not yet in `experiments/`)
   E9  Route or Advise (plan)
-  E10 PPO vs GRPO for the E7 advisor, with LoRA (this document)
+  E10 PPO vs GRPO for the M1/M2 router, on the Spark
+  E11 PPO vs GRPO for the E7 advisor, with LoRA (this document)
 
 Relation to the E7 follow-up proposal ("Does advice transfer?", 26 Oct):
 that proposal's Phase C bridge retrains the Flash-Lite advisor with LoRA
-GRPO. E10's GRPO arm is exactly that run. If both are approved, the run is
-done once, under E10's run id, and both documents read it.
+GRPO. E11's GRPO arm is exactly that run. If both are approved, the run is
+done once, under E11's run id, and both documents read it.
 
 Abstract
 --------
@@ -34,22 +36,22 @@ GRPO drops PPO's learned critic and scores each run against the average of
 about a third of issues, so many groups of 8 hold no resolved run and give
 GRPO no signal.
 
-E10 asks whether PPO, with a critic that scores each turn of advice, trains
+E11 asks whether PPO, with a critic that scores each turn of advice, trains
 a better advisor than GRPO under the same budget. Both arms use LoRA on the
 lab's DGX Spark, because a full fine-tune with a critic does not fit there.
 Everything else is E7's recipe: the same base model, student, training
 issues, reward, turns, token limits, group of 8 rollouts per issue and 295
 steps.
 
-Q10.1  With LoRA, does the PPO advisor beat the GRPO advisor? Advised-by-PPO
+Q11.1  With LoRA, does the PPO advisor beat the GRPO advisor? Advised-by-PPO
        against advised-by-GRPO, on resolve and steps, on the 49 test issues.
-Q10.2  Does each LoRA advisor beat Flash-Lite alone (E7's check 2 and 3
+Q11.2  Does each LoRA advisor beat Flash-Lite alone (E7's check 2 and 3
        question, asked again)?
-Q10.3  Does LoRA GRPO land where E7's full-fine-tune GRPO did (31.9%
+Q11.3  Does LoRA GRPO land where E7's full-fine-tune GRPO did (31.9%
        resolved, 26.3 steps)? This is the proposal's bridge question; it
        says whether LoRA, rather than the algorithm, could explain a
        difference.
-Q10.4  Training: reward, KL and the share of zero-signal groups per step,
+Q11.4  Training: reward, KL and the share of zero-signal groups per step,
        critic quality (explained variance), wall time and peak memory per
        arm. Descriptive.
 
@@ -139,9 +141,9 @@ rules. Step 140 (epoch 10) of each arm may be evaluated as an exploratory
 pass, as in E7, labelled as such.
 
 Run ids (`hecate.utils.run_ids`):
-  Training  `exp-10_arm-grpolora_split-tenacitytrain_seed-0`,
-            `exp-10_arm-ppolora_split-tenacitytrain_seed-0`
-  Eval      `exp-10_arm-grpolora_split-tenacityval_seed-0`, `_run-2`,
+  Training  `exp-11_arm-grpolora_split-tenacitytrain_seed-0`,
+            `exp-11_arm-ppolora_split-tenacitytrain_seed-0`
+  Eval      `exp-11_arm-grpolora_split-tenacityval_seed-0`, `_run-2`,
             `_run-3`; the same for `ppolora`
   Flash-Lite alone: E7's three passes (`exp-07_arm-weakalone_split-
   tenacityval_seed-0_run-5/6/7`), reused, not rerun; their commits are
@@ -156,17 +158,17 @@ steps on resolved issues, student API cost, advice deliveries.
 Paired comparisons with `compare_swe_arms.py` (bootstrap over issues,
 95% intervals). An issue that errors in any pass of any arm in a join is
 dropped from that join. Joins:
-  P vs G             (Q10.1)
-  G vs alone, P vs alone   (Q10.2)
-  G vs E7 full-FT GRPO     (Q10.3)
+  P vs G             (Q11.1)
+  G vs alone, P vs alone   (Q11.2)
+  G vs E7 full-FT GRPO     (Q11.3)
 
-Training (Q10.4), per step, from SkyRL's logs and `steps.csv`
+Training (Q11.4), per step, from SkyRL's logs and `steps.csv`
 (`scripts/e07_steps_csv.py`): mean reward, share of rollouts resolved,
 share of groups with zero reward std (no GRPO signal), KL, policy entropy,
 for P the critic's value loss and explained variance, and wall time per
 step; peak Spark memory per arm.
 
-5 Decision rules (fixed before any E10 run)
+5 Decision rules (fixed before any E11 run)
 -------------------------------------------
 
 Reading rule (E7's Flash rule) for a difference X − Y:
@@ -175,16 +177,16 @@ Reading rule (E7's Flash rule) for a difference X − Y:
   95% lower bound > −10 points.
   Anything else: no detectable difference at n = 49.
 
-  1. Q10.1 (P − G). "PPO trains a better advisor" if either reading holds
+  1. Q11.1 (P − G). "PPO trains a better advisor" if either reading holds
      for P − G. "GRPO trains a better advisor" if either holds for G − P.
      Otherwise "no detectable difference at n = 49, one training seed".
-  2. Q10.2. Each arm against Flash-Lite alone with the same reading rule;
+  2. Q11.2. Each arm against Flash-Lite alone with the same reading rule;
      reported for both arms whatever rule 1 says.
-  3. Q10.3. LoRA GRPO "lands with E7" if its resolve is within ±10 points
+  3. Q11.3. LoRA GRPO "lands with E7" if its resolve is within ±10 points
      of 31.9% and its steps show no cut versus alone (the proposal's bridge
      criterion). If it does not, any P − G result is read as a LoRA result
      only, and the write-up says LoRA changed the GRPO outcome.
-  4. Q10.4 is descriptive. A prediction is not a rule.
+  4. Q11.4 is descriptive. A prediction is not a rule.
   5. Predictions, recorded now: no detectable P − G difference; neither arm
      beats Flash-Lite alone; P's share of non-zero advantages is higher than
      G's (by construction) without a resolve gain; P takes more wall time
@@ -207,7 +209,7 @@ follow-up by amendment, not a reinterpretation.
       servers. Peak memory recorded. If PPO's policy + critic + vLLM do not
       fit, the critic drops to Qwen2.5-1.5B-Instruct (SkyRL's PPO example)
       by amendment before any full run. If SkyRL cannot run on the Spark,
-      E10 stops: the E7 proposal's fallback (OpenPipe ART) has no PPO.
+      E11 stops: the E7 proposal's fallback (OpenPipe ART) has no PPO.
   G1  Timing and cost smoke: 3 full training steps per arm. Measured step
       time and student cost per step replace §8's estimates. If either arm
       projects over its cap (§8), stop and amend.
@@ -298,19 +300,19 @@ critic's final LoRA for P, and per eval pass the session map. All copied to
 
   - One seed per arm, 49 test issues, passes varying by up to 19 points:
     expect "no detectable difference" (rule 1); the training curves
-    (Q10.4) are the lower-noise result.
+    (Q11.4) are the lower-noise result.
   - LoRA, not full fine-tuning: rule 3 checks whether LoRA GRPO lands
     with E7; if not, the comparison is a LoRA result only.
   - Student availability: OpenRouter has returned 404 for
     `gemini-2.5-flash-lite` on some requests since late October ("no longer
     available to new users"). E7's harness retries; if the model becomes
-    unavailable, E10 pauses. Changing the student mid-experiment breaks the
+    unavailable, E11 pauses. Changing the student mid-experiment breaks the
     comparison with E7 and needs an amendment.
   - Spark stack: SkyRL, its LoRA patch and the PPO critic are unverified
     on aarch64 (G0). There is no PPO fallback outside SkyRL.
   - Memory: PPO adds a 7B critic beside the policy and vLLM; G0 measures
     it, with a 1.5B critic as the recorded fallback.
-  - Out of scope: the M1/M2 router (rev 1), other students or repos, other
+  - Out of scope: the M1/M2 router (E10), other students or repos, other
     harnesses, advise-or-escalate (Q7.2), full fine-tuning.
 
 12 Not authorized by this document
