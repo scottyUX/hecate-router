@@ -1,28 +1,33 @@
 import type { Metadata } from "next";
-import { Figtree, Fraunces, IBM_Plex_Mono, Source_Serif_4 } from "next/font/google";
+import localFont from "next/font/local";
 
 import "./globals.css";
 
-const figtree = Figtree({
+// Self-hosted so builds don't fetch from Google Fonts; see fonts/README.md.
+const figtree = localFont({
   variable: "--font-figtree",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  src: "./fonts/figtree-latin-wght-normal.woff2",
+  weight: "300 900",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
+const ibmPlexMono = localFont({
   variable: "--font-ibm-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  src: [
+    { path: "./fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400" },
+    { path: "./fonts/ibm-plex-mono-latin-500-normal.woff2", weight: "500" },
+  ],
 });
 
-const sourceSerif = Source_Serif_4({
+const sourceSerif = localFont({
   variable: "--font-source-serif",
-  subsets: ["latin"],
+  src: "./fonts/source-serif-4-latin-wght-normal.woff2",
+  weight: "200 900",
 });
 
-const fraunces = Fraunces({
+const fraunces = localFont({
   variable: "--font-fraunces",
-  subsets: ["latin"],
+  src: "./fonts/fraunces-latin-wght-normal.woff2",
+  weight: "100 900",
 });
 
 export const metadata: Metadata = {
