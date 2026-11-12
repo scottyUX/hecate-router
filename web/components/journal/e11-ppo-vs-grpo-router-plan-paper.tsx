@@ -12,7 +12,7 @@ import {
 import { PaperTable } from "@/components/paper/paper-table";
 import { requireJournalPage } from "@/lib/auth";
 
-const SLUG = "2026-11-11-e10-ppo-vs-grpo-plan";
+const SLUG = "2026-11-12-e11-ppo-vs-grpo-router-plan";
 
 const toc: PaperTocItem[] = [
   { href: "#question", label: "Question" },
@@ -43,38 +43,38 @@ const references = [
   },
   {
     id: 4,
-    href: "/journal/2026-11-11-e11-ppo-vs-grpo-advisor-plan",
-    text: "Davis, S. (2026). Experiment 11: PPO vs GRPO for the advisor, with LoRA. Hecate Lab journal, 11 November 2026.",
+    href: "/journal/2026-11-12-e10-ppo-vs-grpo-advisor-plan",
+    text: "Davis, S. (2026). Experiment 10: PPO vs GRPO for the advisor, all on the DGX Spark. Hecate Lab journal, 12 November 2026.",
   },
 ] as const;
 
-export async function E10PpoVsGrpoPlanPaper() {
+export async function E11PpoVsGrpoRouterPlanPaper() {
   await requireJournalPage(`/journal/${SLUG}`);
 
   return (
     <PaperShell
-      title="Experiment 10: PPO vs GRPO for the router, on the DGX Spark"
+      title="Experiment 11: PPO vs GRPO for the router, on the DGX Spark"
       authors={
         <>
           Scott Davis · <Link href="/">Hecate Lab</Link>
         </>
       }
-      affiliations="SWE-bench Verified · django specialist split (185 train / 46 holdout) · Qwen2.5-Coder-7B LoRA router · DGX Spark · plan · 11 November 2026"
-      date="November 11, 2026"
+      affiliations="SWE-bench Verified · django specialist split (185 train / 46 holdout) · Qwen2.5-Coder-7B LoRA router · DGX Spark · plan · 12 November 2026"
+      date="November 12, 2026"
       subjects={[
         "Machine Learning (cs.LG)",
         "Software Engineering (cs.SE)",
         "Artificial Intelligence (cs.AI)",
       ]}
-      updated="2026-11-11"
-      tags="e10 · routing · ppo · grpo · reinforcement learning · lora · dgx spark · plan"
+      updated="2026-11-12"
+      tags="e11 · routing · ppo · grpo · reinforcement learning · lora · dgx spark · plan"
       toc={toc}
     >
       <PaperAbstract>
         <p>
           Experiment 7 trained an LLM with GRPO <PaperCite n={2} />, which
           drops PPO’s learned critic <PaperCite n={1} /> and scores each
-          sample against the average of its group. Experiment 10 asks whether
+          sample against the average of its group. Experiment 11 asks whether
           that choice matters on a small problem Hecate already has: the
           router that sends an SWE-bench task to the cheap model (Qwen3-Coder)
           or the strong one (Claude 4 Opus). Experiment 2’s router is
@@ -96,10 +96,10 @@ export async function E10PpoVsGrpoPlanPaper() {
           caption="Table 1. Pre-registered questions, with the predictions recorded before any run."
           headers={["ID", "Question", "Prediction"]}
           rows={[
-            ["Q10.1", "Does GRPO or PPO train the better router on Route-AUC, with everything else the same?", "No detectable difference"],
-            ["Q10.2", "Secondary: does either beat Experiment 2’s cross-entropy loss on the same model?", "No"],
-            ["Q10.3", "Descriptive: fewest Opus calls that still match always-Opus (33/46).", "Most seeds still need 46"],
-            ["Q10.4", "Descriptive: training time, memory and epochs to the best checkpoint on the Spark.", "About the same for all three"],
+            ["Q11.1", "Does GRPO or PPO train the better router on Route-AUC, with everything else the same?", "No detectable difference"],
+            ["Q11.2", "Secondary: does either beat Experiment 2’s cross-entropy loss on the same model?", "No"],
+            ["Q11.3", "Descriptive: fewest Opus calls that still match always-Opus (33/46).", "Most seeds still need 46"],
+            ["Q11.4", "Descriptive: training time, memory and epochs to the best checkpoint on the Spark.", "About the same for all three"],
           ]}
         />
       </PaperSection>
@@ -119,7 +119,7 @@ export async function E10PpoVsGrpoPlanPaper() {
         <p>
           The oracle is only 4 issues above always-Opus, and only 10 issues are
           solved by Opus alone, so every comparison turns on a handful of
-          tasks. Experiment 10 reruns the cross-entropy arm on the Spark so
+          tasks. Experiment 11 reruns the cross-entropy arm on the Spark so
           that all three arms share hardware and settings.
         </p>
       </PaperSection>
@@ -170,15 +170,15 @@ export async function E10PpoVsGrpoPlanPaper() {
       <PaperSection id="rules" number="4" title="Decision rules">
         <PaperTable
           id="table-rules"
-          caption="Table 4. Fixed before any Experiment 10 run. For a difference X − Y in seed-mean Route-AUC, with a paired bootstrap over the 46 holdout tasks."
+          caption="Table 4. Fixed before any Experiment 11 run. For a difference X − Y in seed-mean Route-AUC, with a paired bootstrap over the 46 holdout tasks."
           headers={["Outcome", "Rule"]}
           rows={[
             ["X better", "Point estimate > 0 and 95% lower bound > 0"],
             ["Y better", "Point estimate < 0 and 95% upper bound < 0"],
             ["Otherwise", "“No detectable difference at n = 46, 3 seeds”: not a win for either"],
-            ["Q10.1 (primary)", "GRPO − PPO"],
-            ["Q10.2 (secondary)", "GRPO − CE and PPO − CE, each on its own"],
-            ["Scope", "Says nothing about long-text, multi-turn training; that is Experiment 11"],
+            ["Q11.1 (primary)", "GRPO − PPO"],
+            ["Q11.2 (secondary)", "GRPO − CE and PPO − CE, each on its own"],
+            ["Scope", "Says nothing about long-text, multi-turn training; that is Experiment 10"],
           ]}
         />
       </PaperSection>
@@ -212,7 +212,7 @@ export async function E10PpoVsGrpoPlanPaper() {
           loading may not work; then every arm runs in bf16, recorded.
         </p>
         <p>
-          Out of scope: the advisor (Experiment 11 <PaperCite n={4} />), the
+          Out of scope: the advisor (Experiment 10 <PaperCite n={4} />), the
           trajectory arms, other repos, and any change to Experiment 2’s
           results.
         </p>
@@ -220,13 +220,14 @@ export async function E10PpoVsGrpoPlanPaper() {
 
       <PaperSection id="notes" number="7" title="Notes">
         <p>
-          Spec: <code>experiments/e10-ppo-vs-grpo-router/spec.md</code> (rev
-          3), including a constitution check; runbook:{" "}
-          <code>experiments/e10-ppo-vs-grpo-router/runbook.md</code>. Earlier
-          revisions of Experiment 10 planned four router objectives (rev 1)
-          and then the advisor comparison (rev 2), which is now Experiment
-          11. Nothing was built or run under either. Nothing is authorized to
-          run until review.
+          Spec: <code>experiments/e11-ppo-vs-grpo-router/spec.md</code> (rev
+          4), including a constitution check; runbook:{" "}
+          <code>experiments/e11-ppo-vs-grpo-router/runbook.md</code>. This
+          plan was Experiment 10 (revs 1 and 3) and was renumbered on 12
+          November, unchanged, when the advisor comparison became Experiment
+          10 <PaperCite n={4} />. The Spark runs one trainer at a time, so
+          this experiment waits until Experiment 10 is done. Nothing is
+          authorized to run until review.
         </p>
       </PaperSection>
 

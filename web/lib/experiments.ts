@@ -9,23 +9,24 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
-    href: "/journal/2026-11-11-e11-ppo-vs-grpo-advisor-plan",
-    title: "Experiment 11: PPO vs GRPO for the advisor, with LoRA",
-    date: "2026-11-11",
-    status: "plan · not started · after E10",
-    summary:
-      "Plan to retrain Experiment 7's Qwen2.5-7B advisor twice on the lab's DGX Spark, once with GRPO and once with PPO, both with LoRA, keeping E7's recipe: Flash-Lite student, 56 Tenacity training issues, 4 × 8 rollouts, 295 steps. Same student calls per step; only the advantage and PPO's critic differ. About $1,500–1,750, mostly student API, 3–4 weeks. First written as E10 rev 2.",
-    archiveEntryId: "2026-11-11-e11-ppo-vs-grpo-advisor-plan",
-  },
-  {
-    href: "/journal/2026-11-11-e10-ppo-vs-grpo-plan",
-    title: "Experiment 10: PPO vs GRPO for the router, on the DGX Spark",
-    date: "2026-11-11",
+    href: "/journal/2026-11-12-e10-ppo-vs-grpo-advisor-plan",
+    title: "Experiment 10: PPO vs GRPO for the advisor, all on the DGX Spark",
+    date: "2026-11-12",
     status: "plan · not started",
     summary:
-      "Plan to retrain Experiment 2's Qwen2.5-Coder-7B LoRA router on its django split (185 train / 46 holdout) three ways: cross-entropy (reference), GRPO and PPO, changing only the loss. Outcomes and costs are already logged, so nothing runs live. Reuses E2's code, runs on the lab's Spark from a runbook, ~2–3 days, $0 beyond electricity. Predicted no detectable GRPO–PPO difference.",
-    archiveEntryId: "2026-11-11-e10-ppo-vs-grpo-plan",
-  },  {
+      "Plan to train a Qwen2.5-7B LoRA advisor twice, with GRPO and with PPO (1.5B critic), for a local Qwen3-Coder-30B student on SWE-smith Tenacity (56 train / 49 test issues). Everything runs on the lab's DGX Spark, including the student and ARM-rebuilt test containers, so no paid inference: capped at $50. Every training rollout is saved as state, action and reward. Predicted no detectable PPO–GRPO difference.",
+    archiveEntryId: "2026-11-12-e10-ppo-vs-grpo-advisor-plan",
+  },
+  {
+    href: "/journal/2026-11-12-e11-ppo-vs-grpo-router-plan",
+    title: "Experiment 11: PPO vs GRPO for the router, on the DGX Spark",
+    date: "2026-11-12",
+    status: "plan · not started · after E10",
+    summary:
+      "Plan to retrain Experiment 2's Qwen2.5-Coder-7B LoRA router on its django split (185 train / 46 holdout) three ways: cross-entropy (reference), GRPO and PPO, changing only the loss. Outcomes and costs are already logged, so nothing runs live. Reuses E2's code, runs on the lab's Spark from a runbook, ~2–3 days, $0 beyond electricity. Predicted no detectable GRPO–PPO difference. Formerly E10 rev 3.",
+    archiveEntryId: "2026-11-12-e11-ppo-vs-grpo-router-plan",
+  },
+  {
     href: "/journal/2026-10-25-e09-route-or-advise-plan",
     title: "Experiment 9: route or advise",
     date: "2026-10-25",

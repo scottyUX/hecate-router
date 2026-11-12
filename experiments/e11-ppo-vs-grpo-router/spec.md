@@ -1,29 +1,32 @@
-Experiment 10 — PPO vs GRPO for the M1/M2 router, on the DGX Spark
+Experiment 11 — PPO vs GRPO for the M1/M2 router, on the DGX Spark
 Hecate Lab
-E2's LoRA router retrained with GRPO and with PPO; same model, split and reward · rev 3 — PLANNED
-November 11, 2026
+E2's LoRA router retrained with GRPO and with PPO; same model, split and reward · rev 4 — PLANNED
+November 12, 2026
 
 Status: PLANNED. Nothing in this document is authorized to run.
 
 Revision history (all before any code or run):
-  rev 1  `f9d6f42`  router, four objectives, new two-token trainer
-  rev 2  `12a141e`  redefined as PPO vs GRPO for the E7 advisor; that plan
-                    is now Experiment 11 (`experiments/e11-ppo-vs-grpo-advisor/`)
-  rev 3  this       router again, two RL arms plus a cross-entropy reference,
-                    built on E2's existing router code and run on the Spark by
-                    a lab member over SSH (`runbook.md`)
+  rev 1  `f9d6f42`  as E10: router, four objectives, new two-token trainer
+  rev 2  `12a141e`  E10 redefined as PPO vs GRPO for the E7 advisor
+  rev 3  `2eca0c1`  as E10: router again, two RL arms plus a cross-entropy
+                    reference, built on E2's existing router code and run on
+                    the Spark by a lab member over SSH (`runbook.md`)
+  rev 4  this       renumbered E10 -> E11 on 12 Nov, unchanged otherwise:
+                    Scott made the advisor study (all on the Spark, local
+                    student) Experiment 10 (`experiments/e10-ppo-vs-grpo-advisor/`)
 
-Position in slate: Experiment 10. Does not start, stop, or overwrite E1–E9.
+Position in slate: Experiment 11. Does not start, stop, or overwrite E1–E10.
 
   E2  Specialist django (this experiment reuses its split, model and code)
   E7  Route-then-Advise (its advisor was trained with GRPO)
-  E10 PPO vs GRPO for the M1/M2 router (this document)
-  E11 PPO vs GRPO for the E7 advisor, with LoRA (plan; starts after E10)
+  E10 PPO vs GRPO for the E7-style advisor, all on the Spark (runs first)
+  E11 PPO vs GRPO for the M1/M2 router (this document; the Spark runs one
+      trainer at a time, so E11 waits until the Spark is free of E10)
 
 Abstract
 --------
 E7 trained an LLM with GRPO, which drops PPO's learned critic and scores
-each sample against the average of its group. E10 asks whether that choice
+each sample against the average of its group. E11 asks whether that choice
 matters on a small, fully controlled problem that Hecate already has: the
 router that sends an SWE-bench task to the cheap model (M1, Qwen3-Coder-480B)
 or the strong one (M2, Claude 4 Opus). E2's router is retrained on E2's
@@ -34,15 +37,15 @@ training budget are shared; only the objective differs.
 Both models' outcomes and costs are already logged for every task, so no
 agent runs live: the experiment needs no API calls and no containers, and
 it runs on the lab's DGX Spark in about 2–3 days. It also sets up the
-Spark's training stack for E11.
+Spark's training stack.
 
-Q10.1  Does GRPO (group-mean baseline) or PPO (learned critic) give the
+Q11.1  Does GRPO (group-mean baseline) or PPO (learned critic) give the
        better router on Route-AUC, at the same sample budget?
-Q10.2  Does either RL objective beat E2's cross-entropy objective on the
+Q11.2  Does either RL objective beat E2's cross-entropy objective on the
        same model? (Secondary.)
-Q10.3  Does any arm reach always-Opus quality on the holdout (33/46) with
+Q11.3  Does any arm reach always-Opus quality on the holdout (33/46) with
        fewer than 46 Opus calls? (Descriptive.)
-Q10.4  What does each arm cost to train on the Spark: GPU-hours, peak
+Q11.4  What does each arm cost to train on the Spark: GPU-hours, peak
        memory, epochs to the best checkpoint? (Descriptive.)
 
 1 What is already known
@@ -60,8 +63,8 @@ E2 holdout, seed 0, 46 django issues (`experiments/e02-specialist-django/results
   B K=0 LoRA (`_run-3`)                           0.489       46
   D K=1 LoRA (`_run-3`)                           0.583       36
 
-These are context. E10's own cross-entropy arm is rerun on the Spark so
-that all three E10 arms share hardware and settings. Every number turns on
+These are context. E11's own cross-entropy arm is rerun on the Spark so
+that all three E11 arms share hardware and settings. Every number turns on
 about 10–14 issues, so intervals will be wide (§11).
 
 2 Data and split
@@ -161,14 +164,14 @@ Code changes (the only new code):
   - In `fit()`: the GRPO and PPO losses, the critic head, the KL term, the
     validation expected reward, and the critic saved with the adapter.
   - `scripts/fetch_miniswe_costs.py` (§2).
-  - `configs/router_traj_e10_smoke.yaml`: `configs/router_traj.yaml` with
+  - `configs/router_traj_e11_smoke.yaml`: `configs/router_traj.yaml` with
     `epochs: 1`, for the G2 smoke only.
   - Unit tests (§10.III), in `tests/test_router_rl.py`.
 
 Run ids (`hecate.utils.run_ids.make_run_id`, split `specialist`):
-  `exp-10_arm-ce_split-specialist_seed-{0,1,2}`
-  `exp-10_arm-grpo_split-specialist_seed-{0,1,2}`
-  `exp-10_arm-ppo_split-specialist_seed-{0,1,2}`
+  `exp-11_arm-ce_split-specialist_seed-{0,1,2}`
+  `exp-11_arm-grpo_split-specialist_seed-{0,1,2}`
+  `exp-11_arm-ppo_split-specialist_seed-{0,1,2}`
 
 Each run writes what E2's runs write (adapter via `.save()`,
 `training_summary.json`, 46-row `holdout_scores.jsonl`), plus for GRPO and
@@ -193,10 +196,10 @@ Per seed, with the median.
 Diagnostic: AUROC and Brier (never read as routing results), validation
 curves, and the RL training statistics in §5.
 
-Compute (Q10.4): wall-clock hours per run, epochs to the restored
+Compute (Q11.4): wall-clock hours per run, epochs to the restored
 checkpoint, peak GPU memory.
 
-7 Decision rules (fixed before any E10 run)
+7 Decision rules (fixed before any E11 run)
 -------------------------------------------
 
 For a difference X − Y in seed-mean Route-AUC: "X better" if the point
@@ -204,16 +207,16 @@ estimate > 0 and the 95% lower bound > 0; "Y better" if < 0 and the upper
 bound < 0; otherwise "no detectable difference at n = 46, 3 seeds", which
 is not a positive result for either.
 
-  1. Q10.1: GRPO − PPO. Primary.
-  2. Q10.2: GRPO − CE and PPO − CE, each read on its own. Secondary.
-  3. Q10.3 and Q10.4: descriptive.
+  1. Q11.1: GRPO − PPO. Primary.
+  2. Q11.2: GRPO − CE and PPO − CE, each read on its own. Secondary.
+  3. Q11.3 and Q11.4: descriptive.
   4. Predictions, recorded now and not rules: no detectable GRPO − PPO
      difference; neither RL arm beats CE; most seeds of every arm still need
      46 Opus calls to reach 33 (E2's K=0 router never found a cheaper 33);
      PPO and GRPO cost about the same to train (the critic is one linear
      head).
-  5. E10 says nothing about PPO vs GRPO for long-text, multi-turn training.
-     That is E11's question, whatever E10 finds.
+  5. E11 says nothing about PPO vs GRPO for long-text, multi-turn training.
+     That is E10's question, whatever E11 finds.
 
 8 Gates and order
 -----------------
@@ -298,7 +301,7 @@ a day of analysis and write-up.
   - Small learning signal: the RL gradients (advantage × log-prob) are
     smaller than CE's. If an RL arm's policy stays near (0.5, 0.5) after 5
     epochs, that is reported as a result, not fixed by retuning.
-  - Out of scope: the advisor (E11), the trajectory arms K=1/K=3, other
+  - Out of scope: the advisor (E10), the trajectory arms K=1/K=3, other
     repos, the SB3 MLP router, λ-conditioned policies.
 
 12 Not authorized by this document

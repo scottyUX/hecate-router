@@ -1,6 +1,6 @@
-# E10 runbook: router PPO vs GRPO on the DGX Spark
+# E11 runbook: router PPO vs GRPO on the DGX Spark
 
-For the lab member running E10 over SSH. The spec (`spec.md`, rev 3) is the
+For the lab member running E11 over SSH. The spec (`spec.md`, rev 4) is the
 source of truth; this file only says how to carry it out. If the two
 disagree, stop and ask Scott.
 
@@ -61,9 +61,9 @@ the repo, a results folder and the Hugging Face cache. Write the exact tag
 you used in your notes.
 
 ```bash
-mkdir -p ~/hecate-artifacts ~/e10-logs
-tmux new -s e10
-docker run --gpus all -it --rm --ipc=host -v ~/work/hecate:/workspace/hecate -v ~/hecate-artifacts:/artifacts -v ~/e10-logs:/logs -v ~/.cache/huggingface:/root/.cache/huggingface nvcr.io/nvidia/pytorch:<YY.MM>-py3
+mkdir -p ~/hecate-artifacts ~/e11-logs
+tmux new -s e11
+docker run --gpus all -it --rm --ipc=host -v ~/work/hecate:/workspace/hecate -v ~/hecate-artifacts:/artifacts -v ~/e11-logs:/logs -v ~/.cache/huggingface:/root/.cache/huggingface nvcr.io/nvidia/pytorch:<YY.MM>-py3
 ```
 
 Inside the container:
@@ -106,10 +106,10 @@ missing django costs.
 No holdout scoring, nothing copied. Uses the smoke config (`epochs: 1`):
 
 ```bash
-export E10_COMMON="--backend lora --arm k0 --split specialist --hold-repo django/django --seeds 0 --config configs/router_traj_e10_smoke.yaml --allow-unsynced"
-python scripts/run_train_traj.py $E10_COMMON --objective ce   --output-dir /logs/smoke-ce   > /logs/smoke-ce.log 2>&1
-python scripts/run_train_traj.py $E10_COMMON --objective grpo --output-dir /logs/smoke-grpo > /logs/smoke-grpo.log 2>&1
-python scripts/run_train_traj.py $E10_COMMON --objective ppo  --output-dir /logs/smoke-ppo  > /logs/smoke-ppo.log 2>&1
+export E11_COMMON="--backend lora --arm k0 --split specialist --hold-repo django/django --seeds 0 --config configs/router_traj_e11_smoke.yaml --allow-unsynced"
+python scripts/run_train_traj.py $E11_COMMON --objective ce   --output-dir /logs/smoke-ce   > /logs/smoke-ce.log 2>&1
+python scripts/run_train_traj.py $E11_COMMON --objective grpo --output-dir /logs/smoke-grpo > /logs/smoke-grpo.log 2>&1
+python scripts/run_train_traj.py $E11_COMMON --objective ppo  --output-dir /logs/smoke-ppo  > /logs/smoke-ppo.log 2>&1
 ```
 
 From each `training_summary.json`, note the epoch wall time and peak GPU
@@ -128,7 +128,7 @@ Durable copy (gate G3): the runner copies each finished run to
 
 ```bash
 export HECATE_ARTIFACTS_URI=/artifacts
-export E10_BASE="--backend lora --arm k0 --split specialist --hold-repo django/django"
+export E11_BASE="--backend lora --arm k0 --split specialist --hold-repo django/django"
 ```
 
 Run ids come from the helper, so nothing is typed by hand:
@@ -142,7 +142,7 @@ in its own tmux window, for example:
 
 ```bash
 RID=$(python -c "from hecate.utils.run_ids import make_run_id; print(make_run_id(exp=10, arm='grpo', split='specialist', seed=0))")
-python scripts/run_train_traj.py $E10_BASE --objective grpo --seeds 0 --run-id $RID > /logs/$RID.log 2>&1
+python scripts/run_train_traj.py $E11_BASE --objective grpo --seeds 0 --run-id $RID > /logs/$RID.log 2>&1
 ```
 
 Two runs at once only if the smoke showed enough memory for both.
@@ -165,7 +165,7 @@ ls /artifacts/runs/$RID && wc -l /artifacts/runs/$RID/holdout_scores.jsonl
 When all nine runs are done, pack them on the Spark (outside the container):
 
 ```bash
-cd ~/hecate-artifacts && tar czf ~/e10-runs.tgz runs/exp-10_* && ls -la ~/e10-runs.tgz
+cd ~/hecate-artifacts && tar czf ~/e11-runs.tgz runs/exp-11_* && ls -la ~/e11-runs.tgz
 ```
 
 Tell Scott where the file is, with your notes (container tag, QLoRA or
