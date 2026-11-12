@@ -9,6 +9,14 @@ export type ExperimentReport = {
 
 export const EXPERIMENT_REPORTS: ExperimentReport[] = [
   {
+    href: "/journal/2026-11-11-e10-ppo-vs-grpo-plan",
+    title: "Experiment 10: PPO vs GRPO for the router",
+    date: "2026-11-11",
+    status: "plan · not started",
+    summary:
+      "Plan to train one Qwen2.5-Coder-7B LoRA router four ways on Experiment 2's django split (165 train / 46 holdout), changing only the loss: label cross-entropy, full-information expected reward, GRPO and PPO. The route is one token, so sampling is free and all arms share one trainer. Predicted full-info ≥ GRPO ≥ PPO on Route-AUC; a full fine-tune follows only if PPO wins. On the lab's Spark, under $10, about 1–1.5 weeks.",
+    archiveEntryId: "2026-11-11-e10-ppo-vs-grpo-plan",
+  },  {
     href: "/journal/2026-10-25-e09-route-or-advise-plan",
     title: "Experiment 9: route or advise",
     date: "2026-10-25",

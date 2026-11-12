@@ -7,12 +7,14 @@ import { E07UntrainedAdvisorPaper } from "@/components/journal/e07-untrained-adv
 import { E07Week1Paper } from "@/components/journal/e07-week1-paper";
 import { E08HandoffModesPlanPaper } from "@/components/journal/e08-handoff-modes-plan-paper";
 import { E09RouteOrAdvisePlanPaper } from "@/components/journal/e09-route-or-advise-plan-paper";
+import { E10PpoVsGrpoPlanPaper } from "@/components/journal/e10-ppo-vs-grpo-plan-paper";
 import { RouterE02Paper } from "@/components/journal/router-e02-paper";
 import { RouterV1Paper } from "@/components/journal/router-v1-paper";
 import { RouterV2Paper } from "@/components/journal/router-v2-paper";
 import { RouterV3Paper } from "@/components/journal/router-v3-paper";
 
 export const STATIC_PAPERS: Record<string, ComponentType> = {
+  "2026-11-11-e10-ppo-vs-grpo-plan": E10PpoVsGrpoPlanPaper,
   "2026-10-25-e09-route-or-advise-plan": E09RouteOrAdvisePlanPaper,
   "2026-10-24-e08-handoff-modes-plan": E08HandoffModesPlanPaper,
   "2026-10-24-e07-smoke3-memory": E07Smoke3MemoryPaper,
