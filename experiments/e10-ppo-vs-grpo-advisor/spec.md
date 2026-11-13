@@ -460,3 +460,24 @@ or the Spark.
 
 Any code, any Spark or worker run (including G0), and any download of model
 weights. Authorization comes after review, as an amendment below.
+
+Amendment A1 — G0 setup authorized, PPO arms excluded (2026-11-13)
+------------------------------------------------------------------
+Authorized by Scott, 13 Nov: "we like to start setting up the spark. we do
+not want to touch the PPO arm yet."
+
+Authorized now, on the Spark only, under the CLAUDE.md Spark rules (no
+sudo, tmux and log files, `df -h /` before downloads):
+  G0a  Docker without sudo.
+  G0b  Build the Tenacity environment as an ARM image and check, on the
+       Spark, that gold patches pass and unpatched repos fail the hidden
+       tests. The x86 comparison on `hecate-worker` (~$2) is not
+       authorized yet; it needs its own yes.
+  G0c  Download `Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8` and
+       `Qwen/Qwen2.5-7B-Instruct`, and serve the student with vLLM.
+  G0d  Build SkyRL with the LoRA patch for the GRPO arm only.
+
+Not authorized: anything for P or P6 (the 1.5B critic, the six-feature
+value function, PPO configs or runs), G1–G4, any training step, and any
+worker or cloud run. Setup touches no question's data: no eval or training
+pass is run, so no result can be seen before the rules are applied.
