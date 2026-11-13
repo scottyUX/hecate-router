@@ -1,0 +1,10 @@
+{
+  "route": "large",
+  "scores": {
+    "small": 0.18,
+    "large": 0.79
+  },
+  "model_slug": "qwen/qwen-2.5-72b-instruct",
+  "router_version": "em4-v1",
+  "request_id": "3d7a90bc-52e1-4f08-9c6d-11ab4e7f2205"
+}
