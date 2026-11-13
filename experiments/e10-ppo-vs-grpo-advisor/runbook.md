@@ -1,6 +1,8 @@
 # E10 runbook: working on the DGX Spark
 
-For a lab member running E10 on the Spark over SSH. The spec (`spec.md`,
+For a lab member running E10 on the Spark over SSH. Read
+`docs/SPARK_GUIDE.md` first: how to log in and the rules for the shared
+machine. This file adds what is specific to E10. The spec (`spec.md`,
 rev 5 with amendments A1 and A2) is the source of truth; this file only says
 how to carry it out. If the two disagree, stop and ask Scott.
 
