@@ -481,3 +481,33 @@ Not authorized: anything for P or P6 (the 1.5B critic, the six-feature
 value function, PPO configs or runs), G1–G4, any training step, and any
 worker or cloud run. Setup touches no question's data: no eval or training
 pass is run, so no result can be seen before the rules are applied.
+
+Amendment A2 — upstream SkyRL instead of E7's fork (2026-11-13)
+--------------------------------------------------------------
+Decided by Scott, 13 Nov ("use a newer SkyRL"), after G0d found that E7's
+SkyRL fork (advisor-models `SkyRL/`, pinned to torch 2.7/cu128, vLLM 0.9.2
+and x86-only flash-attn/flashinfer wheels) does not run on the GB10
+(`spark/README.md`).
+
+Change. Both trained arms use upstream SkyRL (NovaSky-AI/SkyRL, commit
+`3e8700f`, 12 Nov 2026), FSDP backend, with its pinned stack (torch 2.14,
+vLLM 0.33, CUDA 13, flashinfer kernels for sm121a on aarch64). LoRA uses
+upstream's own LoRA support with §2's settings (rank 32, alpha 32, dropout
+0, all linear layers); this replaces the "SkyRL LoRA patch" of §2 and G0d.
+E7's SWE-smith environment, generator and reward are ported from the fork
+to upstream's API; the port is reviewed as a diff and the reward is
+unit-tested against E7's on fixture rollouts (added to G4).
+
+Deviation recorded. The GRPO implementation is no longer E7's trainer
+code, so E10's GRPO arm is "GRPO as upstream SkyRL implements it". E10
+already makes no comparison with E7's numbers (§10), and all trained arms
+use the same trainer, so the rules in §5 are unchanged. Any setting that
+upstream names or defaults differently from §3 is set explicitly to §3's
+value and listed in the run config.
+
+Authorized now, in addition to A1: building upstream SkyRL on the Spark,
+import tests, and one toolchain check: a few GRPO steps with LoRA of
+upstream's own GSM8K example on `Qwen/Qwen2.5-0.5B-Instruct`, to show the
+trainer, LoRA and weight sync to vLLM run on the GB10. It uses no Tenacity
+data and is not an E10 arm or result. Still not authorized: anything for P
+or P6, G1–G4, any E10 training step, and the x86 G0b comparison.
