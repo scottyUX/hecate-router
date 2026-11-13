@@ -12,7 +12,7 @@ Spark: `spark-c606`, Ubuntu 24.04.4 (aarch64), GB10 (compute 12.1), driver
 | G0b ARM Tenacity image | pass on the Spark (105/105) | `tenacity-arm64.Dockerfile`, `g0b_check.py`, `g0b_arm64.jsonl` |
 | G0b x86 comparison | not run | needs `hecate-worker` (~$2); not authorized by A1 |
 | G0c student serving | pass | `serve_student.sh`; FP8 loads, answers, 444 output tok/s at 32 concurrent |
-| G0d SkyRL, GRPO + LoRA | blocked | image builds and 5/8 core modules import; see below |
+| G0d SkyRL, GRPO + LoRA | blocked on E7's fork; **pass with upstream SkyRL** (A2) | see "G0d after A2" below |
 
 ## G0b
 
@@ -59,4 +59,36 @@ these run on the GB10 (compute 12.1 needs CUDA 13). Import test:
   rank, so the A1 LoRA patch (rank/alpha, reference = adapter off, merge
   before sync/export) is still to be written
 
-Next step needs a decision; see the session report.
+Decision (13 Nov, amendment A2): use upstream SkyRL instead.
+
+## G0d after A2: upstream SkyRL `3e8700f`
+
+Image `hecate/skyrl-upstream-e10:3e8700f` (`skyrl-upstream.Dockerfile`, 48.7
+GB): CUDA 13.0.1 devel base, uv 0.9.4, `uv sync --frozen --extra fsdp`
+from upstream's lock. torch 2.14.0+cu130, vLLM 0.33.0, Ray 2.57.0, peft
+0.21.0, transformers 5.16.1, flashinfer kernels for sm121a. The GB10 is
+seen as compute (12, 1); PyTorch SDPA runs on it.
+
+flash-attn has no aarch64 wheel. It is installed without its CUDA kernels
+(`FLASH_ATTENTION_SKIP_CUDA_BUILD=TRUE`), plus a placeholder
+`flash_attn_2_cuda` module (`flash_attn_2_cuda.py`) that raises if any
+kernel is called. SkyRL imports flash-attn only for pure-PyTorch padding
+helpers. Every run must set `trainer.flash_attn=false` (SDPA) and
+`trainer.remove_microbatch_padding=false` (which asserts flash-attn).
+Building flash-attn for sm_120 is the fallback if either costs too much.
+
+Toolchain check (A2; `toolchain_gsm8k_grpo_lora.sh`): upstream's GSM8K
+LoRA example, Qwen2.5-0.5B-Instruct, GRPO, LoRA rank 32 / alpha 32, KL loss
+on, colocated FSDP + vLLM on one GB10, 48 training questions, batch 16 × 4
+samples, 3 steps. All 3 steps ran with no traceback; after each step the
+LoRA was merged and synced to vLLM (2.4–2.8 s); checkpoint `global_step_3`
+saved (1.4 GB). Mean reward 0.000 → 0.016 → 0.031 (a 0.5B model, 512-token
+cap: only shows the loop runs, not learning). No Tenacity data was used.
+
+Port of E7's environment (next, A2): E7's `SWESmithEnv` subclasses
+skyrl-gym's `BaseTextEnv`, whose `init`/`step` contract upstream kept
+(only type hints changed and optional `get_metrics` hooks were added), so
+`env.py` should carry over almost unchanged. Remaining: the entrypoint
+(`skyrl.train.entrypoints.main_base`), upstream config names, and running
+E7's agent and eval servers on the Spark against the ARM image and the
+local student.
