@@ -12,7 +12,7 @@ how to carry it out. If the two disagree, stop and ask Scott.
   an amendment to `spec.md` that says so. This is what keeps the
   pre-registration honest: no one sees an E10 number before the rules are
   fixed.
-- **Use your own account** (`krishna`) and your own SSH key. Never use
+- **Use your own account** and your own SSH key. Never use
   someone else's key or account.
 - **No `sudo`, no reboots, no sleep, no firmware updates** (`fwupdmgr`), no
   driver changes. If something seems to need them, ask Scott.
@@ -29,7 +29,7 @@ how to carry it out. If the two disagree, stop and ask Scott.
 ## 1. Access
 
 1. Join the lab's Tailscale network (Scott sends the invite).
-2. `ssh krishna@100.100.25.117`
+2. `ssh <your-username>@100.100.25.117`
 3. Check: `id` lists `docker`; `docker run --rm --gpus all
    nvcr.io/nvidia/cuda:13.0.0-base-ubuntu24.04 nvidia-smi` shows `NVIDIA GB10`.
 
