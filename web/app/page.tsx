@@ -1,213 +1,238 @@
+import Link from "next/link";
+
 import { AuthRedirectHandler } from "@/components/auth-redirect-handler";
 import { HecateArchitecture } from "@/components/hecate-architecture";
+import { HecateMark } from "@/components/hecate-mark";
+import { CostHeadroomChart } from "@/components/landing/cost-headroom-chart";
 import { RoadmapMilestones } from "@/components/pipeline-stages";
 import { SiteHeader } from "@/components/site-header";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
-const workstreams = [
+const questions = [
   {
-    title: "Intelligent task routing",
-    body: "Hecate combines a semantic gate and a ts-repo-metrics structural gate, then routes SWE tasks across early-selection MoM, mid, and frontier tiers with execution verification and fail-escalation.",
+    index: "1",
+    title: "Route",
+    body: "From the issue, and maybe the cheap agent’s first few turns, can a model predict whether the cheap agent will fix it?",
+    chip: "issue → P(cheap agent resolves)",
   },
   {
-    title: "SWE task benchmarks",
-    body: "Review existing SWE task benchmarks, then release the Hecate Benchmark for near–real-world tasks with correctness and objective quality evaluation.",
+    index: "2",
+    title: "Advise",
+    body: "Can a small trained advisor coach a cheap agent well enough that the task never needs to escalate?",
+    chip: "advisor + cheap agent",
   },
   {
-    title: "Lab milestones",
-    body: "SWE tasks benchmark review, Hecate Benchmark release, LLM task router literature review, and Hecate Router V1 release.",
+    index: "3",
+    title: "Train",
+    body: "Which objective trains the router and the advisor best: cross-entropy, GRPO or PPO?",
+    chip: "cross-entropy · GRPO · PPO",
   },
 ] as const;
 
+const practices = [
+  {
+    title: "Pre-register",
+    body: "Each experiment’s spec and decision rules are written and reviewed before any number is seen.",
+  },
+  {
+    title: "Ground in execution",
+    body: "Labels come from hidden tests passing, not from a model’s opinion of the patch.",
+    dark: true,
+  },
+  {
+    title: "Persist every run",
+    body: "Adapter, per-task holdout scores and an off-machine copy, or the run doesn’t count.",
+  },
+  {
+    title: "Keep the nulls",
+    body: "Rejected hypotheses and failed checks stay on the record and constrain what we claim.",
+  },
+] as const;
+
+function SectionTitle({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
+  return (
+    <h2
+      className={`max-w-3xl text-3xl leading-[1.1] font-bold tracking-[-0.03em] md:text-[2.75rem] ${
+        dark ? "text-white" : "text-[var(--hc-ink)]"
+      }`}
+    >
+      {children}
+    </h2>
+  );
+}
+
 export default function Home() {
   return (
-    <>
+    <div className="hecate-site flex min-h-full flex-1 flex-col">
       <AuthRedirectHandler />
       <SiteHeader />
 
       <main id="top" className="flex-1">
-        <section className="relative overflow-hidden px-5 pt-16 pb-20 md:px-8 md:pt-24 md:pb-28">
-          <div
-            className="pointer-events-none absolute top-24 right-[12%] size-24 rounded-full bg-[#e8f0fe] md:size-36"
-            aria-hidden="true"
-          />
-          <div
-            className="pointer-events-none absolute top-[42%] right-[28%] size-3 rounded-full bg-[#f9ab00]"
-            aria-hidden="true"
-          />
-          <div
-            className="pointer-events-none absolute bottom-16 left-[8%] size-2 rounded-full bg-primary"
-            aria-hidden="true"
-          />
-
-          <div className="relative mx-auto w-full max-w-[1120px]">
-            <p className="mb-6 text-sm font-medium text-muted-foreground">
-              Research lab · UCSC
-            </p>
-            <h1 className="max-w-4xl text-5xl leading-[1.05] font-medium tracking-tight text-foreground md:text-7xl">
-              <span className="block">Hecate Lab</span>
-              <span className="mt-2 block max-w-[18ch] text-foreground/90 md:mt-4 md:ml-[8%]">
-                Routing research{" "}
-                <span className="text-primary">to reality.</span>
+        {/* Hero */}
+        <section className="px-5 pt-16 pb-16 md:px-8 md:pt-24 md:pb-20">
+          <div className="mx-auto w-full max-w-[1120px]">
+            <div className="flex items-center gap-4 text-[var(--hc-ink)]">
+              <HecateMark className="size-12 md:size-16" />
+              <span className="text-6xl leading-none font-bold tracking-[-0.05em] md:text-8xl">
+                hecate
               </span>
+            </div>
+            <h1 className="mt-10 max-w-4xl text-4xl leading-[1.08] font-bold tracking-[-0.035em] text-[var(--hc-ink)] md:text-6xl">
+              When should a coding agent call the frontier model?
             </h1>
-            <p className="mt-8 max-w-xl text-base leading-relaxed text-muted-foreground md:mt-10">
-              We route models on complex, near–real-world software engineering
-              tasks — optimizing for cost and quality. A near-real-world task
-              pipeline supplies the work;{" "}
-              <span className="text-foreground">ts-repo-metrics</span> scores
-              objective code quality alongside correctness.
+            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-[var(--hc-body)]">
+              Hecate Lab at UC Santa Cruz trains routers and advisors for AI
+              coding agents.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
               <a
-                href="#architecture"
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "h-11 rounded-full px-6 text-sm font-medium"
-                )}
+                href="#gap"
+                className="inline-flex h-11 items-center rounded-full bg-[var(--hc-ink)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[var(--hc-accent)]"
               >
-                View architecture
+                See the gap
               </a>
               <a
-                href="#roadmap"
-                className={cn(
-                  buttonVariants({ size: "lg", variant: "outline" }),
-                  "h-11 rounded-full border-border px-6 text-sm font-medium"
-                )}
+                href="#architecture"
+                className="inline-flex h-11 items-center rounded-full border border-[var(--hc-ink)] px-6 text-sm font-semibold text-[var(--hc-ink)] transition-colors hover:bg-[var(--hc-ink)] hover:text-white"
               >
-                Lab milestones
+                How it works
               </a>
             </div>
           </div>
         </section>
 
-        <section className="px-5 py-16 md:px-8 md:py-24">
-          <div className="mx-auto grid w-full max-w-[1120px] gap-10 md:grid-cols-[0.9fr_1.1fr] md:items-center md:gap-16">
-            <div>
-              <h2 className="text-3xl font-medium tracking-tight text-foreground md:text-4xl">
-                Real-world SWE tasks, judged on cost and quality
-              </h2>
-              <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-                Hecate asks which model tier can handle a complex software
-                engineering task without wasting spend or sacrificing quality.
-                Outcomes come from evaluation — correctness plus objective code
-                quality via ts-repo-metrics — on a pipeline of near–real-world
-                tasks.
-              </p>
-            </div>
-            <div className="flex min-h-[280px] flex-col justify-between rounded-[1.75rem] bg-[#202124] p-8 text-white md:min-h-[320px] md:p-10">
-              <p className="text-sm font-medium text-white/60">Hecate Lab</p>
-              <div>
-                <p className="max-w-md text-2xl leading-snug font-medium tracking-tight md:text-3xl">
-                  Route complex SWE tasks to models that balance cost and
-                  quality.
-                </p>
-                <dl className="mt-8 grid gap-4 sm:grid-cols-3">
-                  {[
-                    { dt: "Focus", dd: "Task routing" },
-                    { dt: "Track", dd: "SWE benchmarks" },
-                    { dt: "Horizon", dd: "May 2027" },
-                  ].map((stat) => (
-                    <div key={stat.dt}>
-                      <dt className="text-xs text-white/50">{stat.dt}</dt>
-                      <dd className="mt-1 text-sm font-medium">{stat.dd}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </div>
+        {/* Headroom */}
+        <section
+          id="gap"
+          className="scroll-mt-16 bg-[var(--hc-ink)] px-5 py-20 text-white md:px-8 md:py-28"
+        >
+          <div className="mx-auto w-full max-w-[1120px]">
+            <p className="text-7xl leading-none font-bold tracking-[-0.05em] text-[var(--hc-accent)] md:text-[9rem]">
+              87%
+            </p>
+            <p className="mt-6 max-w-3xl text-xl leading-snug font-medium md:text-2xl">
+              of the tasks we held out didn’t need the frontier model. Matching
+              its 163 fixes took the frontier model on only 29 of 231 tasks.
+            </p>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/70">
+              That is hindsight. Our best generalist router so far recovers almost
+              none of it: to keep the same 163 fixes it still sent 229 tasks to
+              the frontier model. The distance between those two bars is the
+              research problem.
+            </p>
+            <CostHeadroomChart />
+            <p className="mt-10 text-xs text-[var(--hc-faint)]">
+              Source: our analysis of public coding-agent runs on a repository
+              held out from training.
+            </p>
           </div>
         </section>
 
-        <section id="program" className="scroll-mt-24 bg-[#f8f9fa] px-5 py-20 md:px-8 md:py-28">
+        {/* Questions */}
+        <section id="program" className="scroll-mt-24 px-5 py-20 md:px-8 md:py-28">
           <div className="mx-auto w-full max-w-[1120px]">
-            <p className="text-sm font-medium text-primary">Research program</p>
-            <h2 className="mt-3 max-w-2xl text-3xl font-medium tracking-tight text-foreground md:text-5xl">
-              Three workstreams, one lab
-            </h2>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              Routing research, benchmark construction, and lab milestones run in
-              parallel so experiments and releases reinforce each other.
-            </p>
-            <div className="mt-12 grid gap-5 md:grid-cols-3">
-              {workstreams.map((stream) => (
-                <article
-                  key={stream.title}
-                  className="rounded-[1.5rem] bg-background p-7"
-                >
-                  <h3 className="text-xl font-medium tracking-tight text-foreground">
-                    {stream.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    {stream.body}
+            <SectionTitle>Three questions, one lab</SectionTitle>
+            <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-6">
+              {questions.map((q) => (
+                <div key={q.title} className="border-t border-[var(--hc-rule)] pt-4">
+                  <p className="text-xs text-[var(--hc-muted)]">{q.index}</p>
+                  <h3 className="mt-1 text-xl font-bold tracking-[-0.02em]">{q.title}</h3>
+                  <p className="mt-3 rounded-sm bg-[var(--hc-ink)] px-3 py-2 font-mono text-xs text-white">
+                    {q.chip}
                   </p>
-                </article>
+                  <p className="mt-4 text-sm leading-relaxed text-[var(--hc-body)]">{q.body}</p>
+                </div>
               ))}
             </div>
+
+            <div className="mt-20">
+              <ol className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {practices.map((p, i) => {
+                  const dark = "dark" in p && p.dark;
+                  return (
+                    <li
+                      key={p.title}
+                      className={`rounded-sm border px-4 py-4 ${
+                        dark
+                          ? "border-[var(--hc-ink)] bg-[var(--hc-ink)] text-white"
+                          : "border-[var(--hc-ink)]/70"
+                      }`}
+                    >
+                      <p className={`text-[11px] ${dark ? "text-white/60" : "text-[var(--hc-muted)]"}`}>
+                        {i + 1}
+                      </p>
+                      <p className="text-sm font-bold">{p.title}</p>
+                      <p
+                        className={`mt-1 text-xs leading-relaxed ${
+                          dark ? "text-white/75" : "text-[var(--hc-body)]"
+                        }`}
+                      >
+                        {p.body}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
           </div>
         </section>
 
-        <section id="architecture" className="scroll-mt-24 px-5 py-20 md:px-8 md:py-28">
+        {/* Architecture */}
+        <section
+          id="architecture"
+          className="scroll-mt-24 border-t border-[var(--hc-rule)] px-5 py-20 md:px-8 md:py-28"
+        >
           <div className="mx-auto w-full max-w-[1120px]">
-            <p className="text-sm font-medium text-primary">Architecture</p>
-            <h2 className="mt-3 max-w-3xl text-3xl font-medium tracking-tight text-foreground md:text-5xl">
-              Hecate router
-            </h2>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              Semantic and structural gates feed a joint score that selects early
-              MoM probes, a mid model, or a frontier model. Execution
-              verification can escalate failures; only one promising SLM finishes
-              generation after a short probe decode.
-            </p>
+            <SectionTitle>
+              A cheap agent starts every task.
+              <br />
+              Hecate decides when to escalate.
+            </SectionTitle>
             <HecateArchitecture />
           </div>
         </section>
 
-        <section id="roadmap" className="scroll-mt-24 bg-[#f8f9fa] px-5 py-20 md:px-8 md:py-28">
+        {/* Roadmap */}
+        <section
+          id="roadmap"
+          className="scroll-mt-24 border-t border-[var(--hc-rule)] px-5 py-20 md:px-8 md:py-28"
+        >
           <div className="mx-auto w-full max-w-[1120px]">
-            <p className="text-sm font-medium text-primary">Research roadmap</p>
-            <h2 className="mt-3 text-3xl font-medium tracking-tight text-foreground md:text-5xl">
-              Lab milestones through May 2027
-            </h2>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              Month targets for lab members across benchmark and router work.
-            </p>
+            <SectionTitle>From first router to V1 release, May 2027</SectionTitle>
             <RoadmapMilestones />
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-8 md:pb-28">
-          <div className="mx-auto w-full max-w-[1120px]">
-            <div className="rounded-[1.75rem] bg-[#202124] px-8 py-12 text-white md:px-14 md:py-16">
-              <p className="text-sm font-medium text-white/55">Lab journal</p>
-              <h2 className="mt-3 max-w-xl text-3xl font-medium tracking-tight md:text-4xl">
+        {/* Journal */}
+        <section className="bg-[var(--hc-ink)] px-5 py-20 text-white md:px-8 md:py-24">
+          <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-8 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="text-3xl font-bold tracking-[-0.03em] text-[var(--hc-accent)] md:text-[2.75rem]">
                 Follow the research
               </h2>
-              <p className="mt-4 max-w-lg text-base leading-relaxed text-white/65">
-                Lab members record decisions, runs, and milestones in the journal
-                as the work advances.
+              <p className="mt-4 max-w-lg text-base leading-relaxed text-white/70">
+                Specs, runs, decisions and full write-ups, recorded as the work
+                advances.
               </p>
-              <a
-                href="/journal"
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "mt-8 h-11 rounded-full px-6 text-sm font-medium"
-                )}
-              >
-                Open journal
-              </a>
             </div>
+            <Link
+              href="/journal"
+              className="inline-flex h-11 w-fit items-center rounded-full bg-[var(--hc-bg)] px-6 text-sm font-semibold text-[var(--hc-ink)] transition-colors hover:bg-[var(--hc-accent)] hover:text-white"
+            >
+              Open journal
+            </Link>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border px-5 py-10 text-sm text-muted-foreground md:px-8">
-        <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>Hecate Lab · Cost–quality routing for real-world SWE tasks</p>
-          <p>MIT License · UCSC research project</p>
+      <footer className="bg-[var(--hc-ink)] px-5 pb-10 text-xs text-[var(--hc-faint)] md:px-8">
+        <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-2 border-t border-white/15 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-2">
+            <HecateMark className="size-4 text-white" />
+            Hecate Lab · UC Santa Cruz
+          </p>
+          <p>MIT License</p>
         </div>
       </footer>
-    </>
+    </div>
   );
 }

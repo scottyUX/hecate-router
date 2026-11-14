@@ -10,6 +10,12 @@ const figtree = localFont({
   weight: "300 900",
 });
 
+const inter = localFont({
+  variable: "--font-inter",
+  src: "./fonts/inter-latin-wght-normal.woff2",
+  weight: "100 900",
+});
+
 const ibmPlexMono = localFont({
   variable: "--font-ibm-plex-mono",
   src: [
@@ -31,9 +37,9 @@ const fraunces = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Hecate Lab · Cost–Quality Routing for Real-World SWE Tasks",
+  title: "Hecate Lab · When should a coding agent call the frontier model?",
   description:
-    "Hecate Lab routes models on complex, near–real-world software engineering tasks — balancing cost and quality with a near-real-world task pipeline and ts-repo-metrics for objective code quality.",
+    "Hecate Lab at UC Santa Cruz studies when a cheap coding agent can finish a software-engineering task on its own and when it needs a frontier model, using execution-grounded labels and pre-registered experiments.",
 };
 
 export default function RootLayout({
@@ -44,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${figtree.variable} ${ibmPlexMono.variable} ${sourceSerif.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${figtree.variable} ${inter.variable} ${ibmPlexMono.variable} ${sourceSerif.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="relative flex min-h-full flex-col bg-background font-sans text-foreground">
         {children}

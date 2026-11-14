@@ -1,250 +1,154 @@
-import {
-  Brain,
-  CheckCircle2,
-  Cuboid,
-  Filter,
-  MessageSquareText,
-  ShieldCheck,
-  BarChart3,
-} from "lucide-react";
+import { HecateMark } from "@/components/hecate-mark";
 
-function Node({
+function Box({
   title,
-  subtitle,
-  accent = "neutral",
-  icon,
+  body,
+  index,
+  dark = false,
+  planned = false,
   className = "",
 }: {
-  title: string;
-  subtitle?: string;
-  accent?: "neutral" | "blue" | "green" | "violet" | "orange" | "success";
-  icon?: React.ReactNode;
+  title: React.ReactNode;
+  body: string;
+  index?: string;
+  dark?: boolean;
+  planned?: boolean;
   className?: string;
 }) {
-  const accents = {
-    neutral: "border-border bg-background",
-    blue: "border-[#c2d7f8] bg-[#e8f0fe]",
-    green: "border-[#c4e0c8] bg-[#e6f4ea]",
-    violet: "border-[#ddd0ef] bg-[#f3e8fd]",
-    orange: "border-[#fdddb3] bg-[#fef7e0]",
-    success: "border-[#c4e0c8] bg-[#e6f4ea]",
-  } as const;
-
-  const titleColor = {
-    neutral: "text-foreground",
-    blue: "text-[#174ea6]",
-    green: "text-[#137333]",
-    violet: "text-[#681da8]",
-    orange: "text-[#b06000]",
-    success: "text-[#137333]",
-  } as const;
-
+  const tone = dark
+    ? "border-[var(--hc-ink)] bg-[var(--hc-ink)] text-white"
+    : planned
+      ? "border-dashed border-[var(--hc-faint)] bg-transparent"
+      : "border-[var(--hc-ink)]/70 bg-[var(--hc-bg)]";
   return (
-    <div
-      className={`rounded-2xl border px-4 py-3 text-left shadow-[0_1px_0_rgba(60,64,67,0.06)] ${accents[accent]} ${className}`}
-    >
-      <div className="flex items-start gap-2.5">
-        {icon ? (
-          <span className={`mt-0.5 shrink-0 ${titleColor[accent]}`}>{icon}</span>
-        ) : null}
-        <div className="min-w-0">
-          <p className={`text-sm font-medium tracking-tight ${titleColor[accent]}`}>
-            {title}
-          </p>
-          {subtitle ? (
-            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-              {subtitle}
-            </p>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ArrowDown({ label }: { label?: string }) {
-  return (
-    <div className="flex flex-col items-center py-2" aria-hidden="true">
-      {label ? (
-        <span className="mb-1 rounded-full bg-[#f1f3f4] px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-          {label}
-        </span>
+    <div className={`rounded-sm border px-4 py-3 ${tone} ${className}`}>
+      {index ? (
+        <p className={`text-[11px] ${dark ? "text-white/60" : "text-[var(--hc-muted)]"}`}>
+          {index}
+        </p>
       ) : null}
-      <span className="h-4 w-px bg-border" />
-      <span className="-mt-px border-x-[4px] border-t-[6px] border-x-transparent border-t-border" />
+      <p className="text-sm font-bold tracking-[-0.01em]">{title}</p>
+      <p
+        className={`mt-1 text-xs leading-relaxed ${
+          dark ? "text-white/75" : "text-[var(--hc-body)]"
+        }`}
+      >
+        {body}
+      </p>
     </div>
   );
 }
+
+/** Horizontal on wide screens, vertical when stacked. */
+function Arrow() {
+  return (
+    <div className="flex items-center justify-center text-[var(--hc-muted)]" aria-hidden="true">
+      <span className="md:hidden">↓</span>
+      <span className="hidden md:flex md:items-center">
+        <span className="h-px w-6 bg-[var(--hc-muted)]" />
+        <span className="-ml-px border-y-[4px] border-l-[6px] border-y-transparent border-l-[var(--hc-muted)]" />
+      </span>
+    </div>
+  );
+}
+
+const loop = [
+  {
+    title: "Run",
+    body: "The cheap and frontier agents attempt the same real software-engineering tasks.",
+  },
+  {
+    title: "Score",
+    body: "Hidden tests decide whether each patch resolves the issue. That pass/fail is the label; no LLM judge.",
+    dark: true,
+  },
+  {
+    title: "Train",
+    body: "The router learns P(cheap agent resolves). The advisor learns from resolve reward with GRPO; PPO is next.",
+  },
+  {
+    title: "Price",
+    body: "Sweep the escalation threshold λ. Report Route-AUC and the dollars it takes to match always-frontier quality.",
+  },
+] as const;
 
 export function HecateArchitecture() {
   return (
-    <figure
-      className="mt-10 overflow-hidden rounded-[1.75rem] border border-border bg-background"
-      aria-labelledby="architecture-diagram-caption"
-    >
+    <figure className="mt-12" aria-labelledby="architecture-diagram-caption">
       <figcaption id="architecture-diagram-caption" className="sr-only">
-        Hecate architecture diagram: user prompt through semantic and structural
-        gates into a joint decision gate, then Tier 1 early-selection MoM, Tier 2
-        mid model, or Tier 3 frontier model, with execution verification,
-        fail-escalation, and final patch output.
+        Hecate flow: an SWE task, optionally with the cheap agent’s first few
+        turns, goes to the Hecate router, which keeps it on the cheap agent
+        (optionally coached by a trained advisor) or escalates it to the
+        frontier model. Mid-run hand-off and a four-way route-or-advise
+        decision are planned. Below, the research loop: run both agents, score
+        patches with hidden tests, train the router and advisor on those
+        labels, and price the result.
       </figcaption>
 
-      <div className="border-b border-border px-5 py-4 md:px-8">
-        <p className="text-sm font-medium text-foreground">Hecate architecture</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Semantic + structural gating → tiered routing → verify or escalate
-        </p>
-      </div>
-
-      <div className="space-y-1 px-4 py-8 md:px-10 md:py-10">
-        {/* Prompt */}
-        <div className="mx-auto max-w-sm">
-          <Node
-            title="User prompt"
-            subtitle="Prompt text + code context"
-            icon={<MessageSquareText className="size-4" />}
-          />
-        </div>
-        <ArrowDown />
-
-        {/* Dual gates */}
-        <div className="mx-auto grid max-w-2xl gap-3 sm:grid-cols-2">
-          <Node
-            title="Semantic gate"
-            subtitle="DistilBERT → S_semantic"
-            accent="blue"
-            icon={<Brain className="size-4" />}
-          />
-          <Node
-            title="Structural gate"
-            subtitle="ts-repo-metrics → W_struct"
-            accent="green"
-            icon={<BarChart3 className="size-4" />}
-          />
-        </div>
-        <ArrowDown />
-
-        {/* Joint decision */}
-        <div className="mx-auto max-w-md">
-          <Node
-            title="Joint decision gate"
-            subtitle="S = α·S_sem + β·W_struct"
-            accent="violet"
-            icon={<Filter className="size-4" />}
-          />
-        </div>
-
-        {/* Tier branches */}
-        <div className="mt-2 grid gap-4 lg:grid-cols-3">
-          {/* Tier 1 */}
-          <div className="flex flex-col">
-            <ArrowDown label="S < τ_mid" />
-            <div className="flex flex-1 flex-col rounded-[1.25rem] border border-[#c2d7f8] bg-[#f8fbff] p-3">
-              <p className="px-1 text-sm font-medium text-[#174ea6]">
-                Tier 1: Early-selection MoM
-              </p>
-              <p className="mt-0.5 px-1 text-xs text-muted-foreground">
-                Parallel probe decoding
-              </p>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {["SLM 1", "SLM 2", "SLM 3"].map((slm) => (
-                  <div
-                    key={slm}
-                    className="rounded-xl border border-[#c2d7f8] bg-background px-2 py-2 text-center text-xs font-medium text-[#174ea6]"
-                  >
-                    {slm}
-                  </div>
-                ))}
-              </div>
-              <ArrowDown />
-              <Node
-                title="Early model-selection gate"
-                subtitle="Short probe decode · confidence / divergence / predicted pass"
-                accent="blue"
-                icon={<Filter className="size-4" />}
-              />
-              <ArrowDown />
-              <Node
-                title="Selected SLM completes patch"
-                accent="blue"
-                icon={<Cuboid className="size-4" />}
-              />
-            </div>
-          </div>
-
-          {/* Tier 2 */}
-          <div className="flex flex-col">
-            <ArrowDown label="τ_mid ≤ S < τ_prem" />
-            <div className="flex flex-1 flex-col gap-3 rounded-[1.25rem] border border-border bg-[#f8f9fa] p-3">
-              <div>
-                <p className="px-1 text-sm font-medium text-foreground">
-                  Tier 2: Intermediate
-                </p>
-                <p className="mt-0.5 px-1 text-xs text-muted-foreground">
-                  1 mid model
-                </p>
-              </div>
-              <div className="mt-auto flex flex-1 items-center justify-center rounded-2xl border border-dashed border-border bg-background py-10">
-                <Cuboid className="size-8 text-muted-foreground" />
-              </div>
-            </div>
-          </div>
-
-          {/* Tier 3 */}
-          <div className="flex flex-col">
-            <ArrowDown label="S ≥ τ_prem" />
-            <div className="flex flex-1 flex-col gap-3 rounded-[1.25rem] border border-[#fdddb3] bg-[#fffbf0] p-3">
-              <div>
-                <p className="px-1 text-sm font-medium text-[#b06000]">
-                  Tier 3: Premium
-                </p>
-                <p className="mt-0.5 px-1 text-xs text-muted-foreground">
-                  1 frontier model
-                </p>
-              </div>
-              <div className="mt-auto flex flex-1 items-center justify-center rounded-2xl border border-dashed border-[#fdddb3] bg-background py-10">
-                <Cuboid className="size-8 text-[#e37400]" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Verifier + output */}
-        <div className="mx-auto mt-2 max-w-md">
-          <div className="flex justify-center gap-8 text-[10px] text-muted-foreground" aria-hidden="true">
-            <span className="flex flex-col items-center">
-              <span className="h-4 w-px bg-border" />
-              <span className="-mt-px border-x-[4px] border-t-[6px] border-x-transparent border-t-border" />
-              <span className="mt-1">from Tier 1 / 2</span>
+      <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr_auto_1.15fr]">
+        <Box
+          title="SWE task"
+          body="Issue text and the repository. Some router variants also read the cheap agent’s first few turns."
+        />
+        <Arrow />
+        <Box
+          dark
+          title={
+            <span className="flex items-center gap-2">
+              <HecateMark className="size-4 text-white" />
+              hecate router
             </span>
-          </div>
-          <Node
-            title="Execution verifier"
-            subtitle="compile / test / lint"
-            icon={<ShieldCheck className="size-4" />}
+          }
+          body="A small fine-tuned model scores the chance the cheap agent resolves the task."
+        />
+        <Arrow />
+        <div className="grid gap-3">
+          <Box
+            title="Stay cheap"
+            body="A low-cost model, optionally coached by a small trained advisor."
           />
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-dashed border-[#fdddb3] bg-[#fef7e0] px-3 py-3 text-center">
-              <p className="text-xs font-medium text-[#b06000]">fail → escalate</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Retry on Tier 3 frontier model
-              </p>
-            </div>
-            <div className="rounded-2xl border border-[#c4e0c8] bg-[#e6f4ea] px-3 py-3 text-center">
-              <p className="text-xs font-medium text-[#137333]">pass</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Accept verified patch
-              </p>
-            </div>
-          </div>
-          <ArrowDown />
-          <Node
-            title="Final patch output"
-            accent="success"
-            icon={<CheckCircle2 className="size-4" />}
-          />
+          <Box title="Escalate" body="Hand the task to a frontier model." />
         </div>
       </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <Box
+          planned
+          title="Hand off mid-run"
+          body="Escalate partway through, passing full text, a summary or the KV cache."
+        />
+        <Box
+          planned
+          title="Route or advise"
+          body="One decision over four options: cheap, cheap + advisor, mid or premium."
+        />
+      </div>
+
+      <ol className="mt-12 grid items-stretch gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
+        {loop.map((step, i) => (
+          <li key={step.title} className="contents">
+            <Box
+              index={String(i + 1)}
+              title={step.title}
+              body={step.body}
+              dark={"dark" in step && step.dark}
+              className="h-full"
+            />
+            {i < loop.length - 1 ? <Arrow /> : null}
+          </li>
+        ))}
+      </ol>
+
+      <p className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs text-[var(--hc-muted)]">
+        <span className="flex items-center gap-2">
+          <span className="inline-block h-3 w-5 rounded-[2px] border border-[var(--hc-ink)]/70" />
+          Built and tested
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="inline-block h-3 w-5 rounded-[2px] border border-dashed border-[var(--hc-faint)]" />
+          Planned, not run
+        </span>
+      </p>
     </figure>
   );
 }

@@ -101,6 +101,33 @@
   }
 }
 
+/* Landing page, in the Hecate slide-deck language (AI Pioneer Summit pitch). */
+.hecate-site {
+  --hc-bg: #f1efe9;
+  --hc-ink: #121214;
+  --hc-body: #333333;
+  --hc-muted: #6b6b6b;
+  --hc-faint: #8a8a8a;
+  --hc-rule: #c7c7c7;
+  --hc-accent: #e95526;
+  --radius: 0.25rem;
+  --background: var(--hc-bg);
+  --foreground: var(--hc-ink);
+  --card: var(--hc-bg);
+  --card-foreground: var(--hc-ink);
+  --primary: var(--hc-ink);
+  --primary-foreground: var(--hc-bg);
+  --muted: #e6e3dc;
+  --muted-foreground: var(--hc-muted);
+  --border: var(--hc-rule);
+  --input: var(--hc-rule);
+  --ring: var(--hc-accent);
+  background: var(--hc-bg);
+  color: var(--hc-ink);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+}
+
 .paper {
   --paper-bg: #faf8f4;
   --paper-ink: #1a2433;
