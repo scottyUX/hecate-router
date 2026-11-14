@@ -30,6 +30,7 @@ function PersonCard({ person, compact = false }: { person: Person; compact?: boo
             fill
             sizes="(min-width: 1024px) 260px, (min-width: 640px) 45vw, 90vw"
             className="object-cover"
+            style={person.photoPosition ? { objectPosition: person.photoPosition } : undefined}
           />
         ) : (
           <div
@@ -51,7 +52,9 @@ function PersonCard({ person, compact = false }: { person: Person; compact?: boo
       {person.affiliation ? (
         <p className="text-xs text-[var(--hc-muted)]">{person.affiliation}</p>
       ) : null}
-      <p className="mt-3 text-sm leading-relaxed text-[var(--hc-body)]">{person.blurb}</p>
+      {person.blurb ? (
+        <p className="mt-3 text-sm leading-relaxed text-[var(--hc-body)]">{person.blurb}</p>
+      ) : null}
       {person.linkedin || person.website ? (
         <p className="mt-3 flex gap-4 text-sm font-semibold">
           {person.linkedin ? (

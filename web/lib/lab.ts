@@ -10,8 +10,10 @@ export type Person = {
   name: string;
   role: string;
   affiliation?: string;
-  blurb: string;
+  blurb?: string;
   photo?: string;
+  /** CSS object-position for the square crop; defaults to centered. */
+  photoPosition?: string;
   linkedin?: string;
   website?: string;
 };
@@ -41,6 +43,8 @@ export const PEOPLE: PeopleGroup[] = [
       {
         slug: "scott-davis",
         name: "Scott Davis",
+        photo: "/people/scott-davis.webp",
+        photoPosition: "50% 0%",
         role: "Ph.D. student",
         affiliation: "Computer Science & Engineering, UCSC",
         blurb:
@@ -56,7 +60,6 @@ export const PEOPLE: PeopleGroup[] = [
         name: "Arav Adhikari",
         role: "Master’s student",
         affiliation: "UCSC",
-        blurb: "Master’s student in Hecate Lab.",
         photo: "/people/arav-adhikari.webp",
         linkedin: "https://www.linkedin.com/in/arav-adhikari/",
       },
@@ -65,7 +68,6 @@ export const PEOPLE: PeopleGroup[] = [
         name: "Krishna Kasturi",
         role: "Master’s student",
         affiliation: "UCSC",
-        blurb: "Master’s student in Hecate Lab.",
         photo: "/people/krishna-kasturi.webp",
         linkedin: "https://www.linkedin.com/in/krishna-kastur1/",
       },
@@ -74,7 +76,6 @@ export const PEOPLE: PeopleGroup[] = [
         name: "Monisha Garika",
         role: "Master’s student",
         affiliation: "UCSC",
-        blurb: "Master’s student in Hecate Lab.",
         photo: "/people/monisha-garika.webp",
         linkedin: "https://www.linkedin.com/in/mg-moni/",
       },
@@ -88,7 +89,6 @@ export const PEOPLE: PeopleGroup[] = [
         name: "Jacob L. Johnston",
         role: "Undergraduate Research Assistant",
         affiliation: "UCSC",
-        blurb: "Undergraduate researcher in Hecate Lab.",
         photo: "/people/jacob-johnston.webp",
         linkedin: "https://www.linkedin.com/in/jacobljohnston/",
       },
@@ -97,7 +97,6 @@ export const PEOPLE: PeopleGroup[] = [
         name: "Jaisree David Ravikumar",
         role: "Undergraduate researcher",
         affiliation: "UCSC",
-        blurb: "Undergraduate researcher in Hecate Lab.",
         photo: "/people/jaisree-david-ravikumar.webp",
         linkedin: "https://www.linkedin.com/in/jaisree-david-ravikumar-818799232/",
       },
@@ -106,7 +105,6 @@ export const PEOPLE: PeopleGroup[] = [
         name: "Ryan Cleary",
         role: "Undergraduate researcher",
         affiliation: "UCSC",
-        blurb: "Undergraduate researcher in Hecate Lab.",
         photo: "/people/ryan-cleary.jpg",
       },
     ],
@@ -123,7 +121,6 @@ export const PEOPLE: PeopleGroup[] = [
     ].map((intern) => ({
       ...intern,
       role: "Research intern",
-      blurb: "Co-author of ts-repo-metrics, a tree-sitter engine for measuring TypeScript and React repositories.",
     })),
   },
 ];
