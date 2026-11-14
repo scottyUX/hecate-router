@@ -1,12 +1,9 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { Publication } from "@/lib/lab";
-
-const selectClass =
-  "h-10 w-full rounded-sm border border-[var(--hc-rule)] bg-[var(--hc-bg)] px-3 text-sm text-[var(--hc-ink)] focus:border-[var(--hc-ink)] focus:outline-none";
 
 function citation(p: Publication) {
   const status = p.status ? ` (${p.status})` : "";
@@ -14,30 +11,8 @@ function citation(p: Publication) {
 }
 
 export function PublicationsList({ publications }: { publications: Publication[] }) {
-  const [query, setQuery] = useState("");
-  const [year, setYear] = useState("all");
-  const [type, setType] = useState("all");
-  const [newestFirst, setNewestFirst] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
-
-  const years = useMemo(
-    () => [...new Set(publications.map((p) => p.year))].sort((a, b) => b - a),
-    [publications]
-  );
-  const types = useMemo(() => [...new Set(publications.map((p) => p.type))], [publications]);
-
-  const shown = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return publications
-      .filter((p) => year === "all" || String(p.year) === year)
-      .filter((p) => type === "all" || p.type === type)
-      .filter(
-        (p) =>
-          !q ||
-          [p.title, p.venue, ...p.authors, ...p.topics].join(" ").toLowerCase().includes(q)
-      )
-      .sort((a, b) => (newestFirst ? b.year - a.year : a.year - b.year));
-  }, [publications, query, year, type, newestFirst]);
+  const shown = [...publications].sort((a, b) => b.year - a.year);
 
   if (publications.length === 0) {
     return (
@@ -55,43 +30,7 @@ export function PublicationsList({ publications }: { publications: Publication[]
 
   return (
     <>
-      <div className="mt-10 grid gap-3 rounded-sm border border-[var(--hc-rule)] p-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search title, author or topic"
-          aria-label="Search publications"
-          className={selectClass}
-        />
-        <select aria-label="Year" value={year} onChange={(e) => setYear(e.target.value)} className={selectClass}>
-          <option value="all">All years</option>
-          {years.map((y) => (
-            <option key={y} value={String(y)}>
-              {y}
-            </option>
-          ))}
-        </select>
-        <select aria-label="Type" value={type} onChange={(e) => setType(e.target.value)} className={selectClass}>
-          <option value="all">All types</option>
-          {types.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Sort"
-          value={newestFirst ? "new" : "old"}
-          onChange={(e) => setNewestFirst(e.target.value === "new")}
-          className={selectClass}
-        >
-          <option value="new">Newest first</option>
-          <option value="old">Oldest first</option>
-        </select>
-      </div>
-
-      <ol className="mt-6">
+      <ol className="mt-4">
         {shown.map((p) => (
           <li key={p.title} className="border-b border-[var(--hc-rule)] py-8">
             <p className="flex flex-wrap items-center gap-2 font-mono text-xs tracking-[0.08em] text-[var(--hc-muted)] uppercase">
@@ -145,9 +84,6 @@ export function PublicationsList({ publications }: { publications: Publication[]
           </li>
         ))}
       </ol>
-      <p className="mt-6 text-xs text-[var(--hc-muted)]">
-        Showing {shown.length} of {publications.length} publications
-      </p>
     </>
   );
 }
