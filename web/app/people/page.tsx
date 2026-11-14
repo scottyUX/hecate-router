@@ -15,10 +15,14 @@ function initials(name: string) {
   return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
 }
 
-function PersonCard({ person }: { person: Person }) {
+function PersonCard({ person, compact = false }: { person: Person; compact?: boolean }) {
   return (
-    <article className="flex flex-col">
-      <div className="relative aspect-square w-full overflow-hidden rounded-sm bg-[#e6e3dc]">
+    <article className={`flex flex-col ${compact ? "border-t-2 border-[var(--hc-ink)] pt-2" : ""}`}>
+      <div
+        className={`relative aspect-square w-full overflow-hidden rounded-sm bg-[#e6e3dc] ${
+          compact ? "hidden" : ""
+        }`}
+      >
         {person.photo ? (
           <Image
             src={person.photo}
@@ -36,7 +40,11 @@ function PersonCard({ person }: { person: Person }) {
           </div>
         )}
       </div>
-      <h3 className="mt-4 text-lg font-bold tracking-[-0.02em] text-[var(--hc-ink)]">
+      <h3
+        className={`text-lg font-bold tracking-[-0.02em] text-[var(--hc-ink)] ${
+          compact ? "mt-1" : "mt-4"
+        }`}
+      >
         {person.name}
       </h3>
       <p className="text-sm text-[var(--hc-body)]">{person.role}</p>
@@ -84,17 +92,16 @@ export default function PeoplePage() {
 
           {PEOPLE.map((group) => (
             <div key={group.title} className="mt-14">
-              <div className="flex items-baseline justify-between border-b border-[var(--hc-rule)] pb-3">
-                <h2 className="text-xl font-bold tracking-[-0.02em] text-[var(--hc-ink)]">
-                  {group.title}
-                </h2>
-                <p className="text-xs text-[var(--hc-muted)]">
-                  {group.people.length} {group.people.length === 1 ? "member" : "members"}
-                </p>
-              </div>
-              <div className="mt-8 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+              <h2 className="border-b border-[var(--hc-rule)] pb-3 text-xl font-bold tracking-[-0.02em] text-[var(--hc-ink)]">
+                {group.title}
+              </h2>
+              <div
+                className={`mt-8 grid gap-x-6 sm:grid-cols-2 lg:grid-cols-4 ${
+                  group.compact ? "gap-y-8" : "gap-y-12"
+                }`}
+              >
                 {group.people.map((person) => (
-                  <PersonCard key={person.slug} person={person} />
+                  <PersonCard key={person.slug} person={person} compact={group.compact} />
                 ))}
               </div>
             </div>

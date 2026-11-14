@@ -1,7 +1,8 @@
 /**
  * People, publications and events for the public lab pages.
  * Photos go in public/people/<slug>.webp (square, ~600px). Members without a
- * photo show their initials. Blurbs are drafts until each member signs off.
+ * photo show their initials; a `compact` group shows no picture at all.
+ * Blurbs are drafts until each member signs off.
  */
 
 export type Person = {
@@ -15,7 +16,7 @@ export type Person = {
   website?: string;
 };
 
-export type PeopleGroup = { title: string; people: Person[] };
+export type PeopleGroup = { title: string; people: Person[]; compact?: boolean };
 
 export const PEOPLE: PeopleGroup[] = [
   {
@@ -106,17 +107,19 @@ export const PEOPLE: PeopleGroup[] = [
         role: "Undergraduate researcher",
         affiliation: "UCSC",
         blurb: "Undergraduate researcher in Hecate Lab.",
+        photo: "/people/ryan-cleary.jpg",
       },
     ],
   },
   {
     title: "Research interns",
+    compact: true,
     people: [
-      { name: "Luna Wang", slug: "luna-wang" },
-      { name: "Asin Pancholi", slug: "asin-pancholi" },
-      { name: "Timothy Tran", slug: "timothy-tran" },
-      { name: "Joshua Cao", slug: "joshua-cao" },
-      { name: "Bryan Zhang", slug: "bryan-zhang" },
+      { name: "Luna Wang", slug: "luna-wang", affiliation: "Henry M. Gunn High School" },
+      { name: "Asin Pancholi", slug: "asin-pancholi", affiliation: "Dougherty Valley High School" },
+      { name: "Timothy Tran", slug: "timothy-tran", affiliation: "St. Albans School" },
+      { name: "Joshua Cao", slug: "joshua-cao", affiliation: "Monta Vista High School" },
+      { name: "Bryan Zhang", slug: "bryan-zhang", affiliation: "The Overlake School" },
     ].map((intern) => ({
       ...intern,
       role: "Research intern",
@@ -169,6 +172,8 @@ export type LabEvent = {
   title: string;
   detail: string;
   place?: string;
+  /** Photo in public/events/, cropped to 4:3; `position` is the CSS object-position. */
+  image?: { src: string; alt: string; position?: string };
 };
 
 export const EVENTS: LabEvent[] = [
@@ -177,12 +182,23 @@ export const EVENTS: LabEvent[] = [
     sortDate: "2026-10-09",
     title: "AI Pioneer Summit",
     detail: "Talk on self-learning model routing for AI coding agents.",
+    image: {
+      src: "/events/ai-pioneer-summit.jpg",
+      alt: "Scott Davis presenting Hecate at the AI Pioneer Summit",
+      position: "60% 50%",
+    },
   },
   {
     date: "Oct 8, 2026",
     sortDate: "2026-10-08",
     title: "Frontier Data Summit",
+    place: "Presented by Snorkel AI",
     detail:
       "Introduced the Hecate Benchmark: fresh, contamination-free web-development tasks drawn from real feature work. Sagnik Nath, Richard Jullig and Scott Davis.",
+    image: {
+      src: "/events/frontier-data-summit.jpg",
+      alt: "Sagnik Nath at the Frontier Data Summit",
+      position: "50% 30%",
+    },
   },
 ];

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 import { PageIntro, SiteShell } from "@/components/site-shell";
 import { EVENTS } from "@/lib/lab";
@@ -20,7 +21,7 @@ export default function EventsPage() {
             {events.map((event) => (
               <li
                 key={event.title + event.sortDate}
-                className="grid gap-2 border-b border-[var(--hc-rule)] py-8 md:grid-cols-[12rem_1fr] md:gap-8"
+                className="grid gap-4 border-b border-[var(--hc-rule)] py-8 md:grid-cols-[10rem_1fr_20rem] md:gap-8"
               >
                 <p className="font-mono text-xs tracking-[0.08em] text-[var(--hc-muted)] uppercase md:pt-1.5">
                   {event.date}
@@ -36,6 +37,18 @@ export default function EventsPage() {
                     {event.detail}
                   </p>
                 </div>
+                {event.image ? (
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-[#e6e3dc]">
+                    <Image
+                      src={event.image.src}
+                      alt={event.image.alt}
+                      fill
+                      sizes="(min-width: 768px) 320px, 90vw"
+                      className="object-cover"
+                      style={{ objectPosition: event.image.position ?? "50% 50%" }}
+                    />
+                  </div>
+                ) : null}
               </li>
             ))}
           </ol>
