@@ -109,6 +109,20 @@ export const PEOPLE: PeopleGroup[] = [
       },
     ],
   },
+  {
+    title: "Research interns",
+    people: [
+      { name: "Luna Wang", slug: "luna-wang" },
+      { name: "Asin Pancholi", slug: "asin-pancholi" },
+      { name: "Timothy Tran", slug: "timothy-tran" },
+      { name: "Joshua Cao", slug: "joshua-cao" },
+      { name: "Bryan Zhang", slug: "bryan-zhang" },
+    ].map((intern) => ({
+      ...intern,
+      role: "Research intern",
+      blurb: "Co-author of ts-repo-metrics, a tree-sitter engine for measuring TypeScript and React repositories.",
+    })),
+  },
 ];
 
 export type Publication = {
@@ -124,7 +138,29 @@ export type Publication = {
 };
 
 /** Only work that is public. Anonymized submissions stay off until accepted. */
-export const PUBLICATIONS: Publication[] = [];
+export const PUBLICATIONS: Publication[] = [
+  {
+    title:
+      "ts-repo-metrics: A Tree-sitter Engine for Cohort-Scale Lexical, Structural, and Cognitive Metrics of TypeScript and React Repositories",
+    authors: ["Luna Wang", "Asin Pancholi", "Timothy Tran", "Joshua Cao", "Bryan Zhang", "Scott Davis"],
+    venue: "MSR 2027: Data and Tool Showcase Track",
+    year: 2027,
+    type: "Conference",
+    status: "Under review",
+    topics: ["Software metrics", "Mining software repositories", "Computing education"],
+  },
+  {
+    title:
+      "Cultivating AI Usage Maturity Across the Software Development Lifecycle: An Iterative Course-Design Approach",
+    authors: ["Scott Davis"],
+    venue:
+      "SIGCSE Virtual 2026: 2nd ACM Virtual Global Computing Education Conference, V.2, pp. 554–556",
+    year: 2026,
+    type: "Conference",
+    topics: ["Computing education", "AI-assisted software engineering"],
+    link: { label: "ACM DL", href: "https://doi.org/10.1145/3795860.3846212" },
+  },
+];
 
 export type LabEvent = {
   date: string;

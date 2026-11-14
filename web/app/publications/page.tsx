@@ -6,7 +6,7 @@ import { PUBLICATIONS } from "@/lib/lab";
 
 export const metadata: Metadata = {
   title: "Publications · Hecate Lab",
-  description: "Papers from Hecate Lab at UC Santa Cruz.",
+  description: "Peer-reviewed papers from Hecate Lab at UC Santa Cruz.",
 };
 
 export default function PublicationsPage() {
@@ -15,8 +15,8 @@ export default function PublicationsPage() {
       <section className="px-5 pt-16 pb-24 md:px-8 md:pt-24">
         <div className="mx-auto w-full max-w-[1120px]">
           <PageIntro title="Publications">
-            Peer-reviewed and forthcoming work on cost-aware routing and
-            advising for AI coding agents.
+            Published and submitted work from the lab on AI coding agents,
+            software metrics and AI in software-engineering education.
           </PageIntro>
           <PublicationsList publications={PUBLICATIONS} />
         </div>
