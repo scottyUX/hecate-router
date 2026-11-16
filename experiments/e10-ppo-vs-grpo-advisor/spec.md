@@ -511,3 +511,25 @@ upstream's own GSM8K example on `Qwen/Qwen2.5-0.5B-Instruct`, to show the
 trainer, LoRA and weight sync to vLLM run on the GB10. It uses no Tenacity
 data and is not an E10 arm or result. Still not authorized: anything for P
 or P6, G1–G4, any E10 training step, and the x86 G0b comparison.
+
+Amendment A3 — x86 G0b comparison authorized (2026-11-16)
+---------------------------------------------------------
+Authorized by Scott, 16 Nov ("x86 check + A3").
+
+Authorized now, in addition to A1 and A2: starting `hecate-worker`
+(x86, CPU) once, running the same G0b check there on E7's x86 image
+`jyangballin/swesmith.x86_64.jd_1776_tenacity.0d40e76f`, and stopping the
+worker when it finishes. Same code (`spark/g0b_check.py`), same 105
+instances (`spark/make_instances.py`, 56 train and 49 test), same test
+command. Budget about $2, inside the $50 cap.
+
+Pass = every instance gets the same result on x86 as on ARM
+(`spark/g0b_arm64.jsonl`): the same `ok` flag and the same lists of
+fail-to-pass tests not failing on the bug, pass-to-pass tests not passing on
+the bug, and tests not passing after the fix. Any mismatch stops E10 (§7
+G0b), and is reported before anything else is decided. This is a check of
+the test environment only: no student, advisor or eval pass runs, so no
+E10 number is seen.
+
+Still not authorized: anything for P or P6, G1–G4, and any E10 training or
+eval step.

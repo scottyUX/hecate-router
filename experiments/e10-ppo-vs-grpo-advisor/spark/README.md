@@ -10,7 +10,7 @@ Spark: `spark-c606`, Ubuntu 24.04.4 (aarch64), GB10 (compute 12.1), driver
 |---|---|---|
 | G0a Docker without sudo | pass | user `sanath` is in group `docker`; `--gpus all` sees the GB10 |
 | G0b ARM Tenacity image | pass on the Spark (105/105) | `tenacity-arm64.Dockerfile`, `g0b_check.py`, `g0b_arm64.jsonl` |
-| G0b x86 comparison | not run | needs `hecate-worker` (~$2); not authorized by A1 |
+| G0b x86 comparison | pass (A3, 16 Nov): 105/105 identical to ARM | `g0b_x86_64.jsonl`; see "G0b x86 comparison" below |
 | G0c student serving | pass | `serve_student.sh`; FP8 loads, answers, 444 output tok/s at 32 concurrent |
 | G0d SkyRL, GRPO + LoRA | blocked on E7's fork; **pass with upstream SkyRL** (A2) | see "G0d after A2" below |
 
@@ -30,7 +30,19 @@ from the "Bug Patch" commit, run `pytest --disable-warnings --color=no
 --tb=no --verbose`; then reverse the bug patch and run again. Pass = every
 FAIL_TO_PASS test fails on the bug, every PASS_TO_PASS test passes on the bug,
 and every listed test passes after the reversal. 56/56 training and 49/49
-test issues pass. The same check on the x86 image is the remaining G0b step.
+test issues pass.
+
+### G0b x86 comparison (amendment A3, 2026-11-16)
+
+Same `g0b_check.py` (md5 `3ed01e95…`) and the same instance file (md5
+`6cd9ed87…`, byte-identical to the Spark's), run on `hecate-worker`
+(n2-standard-32, x86_64, project `whatsapp-sales-agent`) against E7's image
+`jyangballin/swesmith.x86_64.jd_1776_tenacity.0d40e76f:latest` (image id
+`sha256:7ec64b27…`). 105/105 OK in about 2 minutes. Compared per instance with
+`g0b_arm64.jsonl`: the same `ok` flag, F2P/P2P counts, and empty lists of
+unexpected results on all 105, no instance missing on either side. G0b
+passes. The worker was started for this run only and stopped after it
+(about 6 minutes up).
 
 ## G0c
 
