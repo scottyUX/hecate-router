@@ -533,3 +533,86 @@ E10 number is seen.
 
 Still not authorized: anything for P or P6, G1–G4, and any E10 training or
 eval step.
+
+Amendment A4 — G1 and G2 for the GRPO arm (2026-11-16)
+------------------------------------------------------
+Authorized by Scott, 16 Nov ("Approve A4"), as drafted the same day.
+
+Code it relies on, merged to advisor-models `main` on 16 Nov:
+`1b4f07a` (#2, Krishna: E7's environment on upstream SkyRL 3e8700f, the ARM
+grading wrapper `swesmith_arm.py`, per-step rollout counts) and `3c8d8d1`
+(#3: the six features of §3.1 and the trajectory writer of §6). The Spark
+runs exactly that commit, recorded as `CODE_SHA` in every run dir.
+
+Deviations and clarifications, recorded before any E10 training step:
+  D1  `zero_reward_on_non_stop` is upstream 3e8700f's rule, not E7's fork's
+      (Scott, 13 Nov): a rollout is zeroed when its stop reason is not
+      "stop", which upstream sets when the conversation exceeds 28,672
+      tokens before an advisor turn or the last advisor turn hits 4,096.
+      E7 also zeroed a rollout already ended by the env, and one whose total
+      response exceeded a combined length. The exact conditions are in the
+      header of `scripts/e10_train_swe_smith_grpo.sh`. Same rule for all
+      arms; the per-step counts (`generate/e10_rollouts_*`) show how often
+      it fires.
+  D2  Grading: E7's grader (swesmith 0.0.9 `run_evaluation`) through
+      `swesmith_arm.py`, which points it at the ARM image and the arm64
+      platform without editing swesmith (Scott, 13 Nov, option a). It is
+      used only if check W below passes.
+  D3  Features (§3.1), three readings of the text: test output of 10,000
+      characters or more, which the student sees only as a warning, counts
+      as unparsed; a command that times out counts as a non-zero exit; the
+      progress hash is of `git diff <instance commit>`, so staging a change
+      is not progress.
+  D4  Trajectories (§6): advice turns are the runs of trained tokens in each
+      rollout's single sequence (upstream's step-wise mode is not used); the
+      state is the decoded prompt plus the response up to the turn; the
+      policy log-probs are the trainer's forward pass before the update (the
+      vLLM ones if upstream skips that pass, flagged in the record); the
+      advantages are the estimator's output, copied before upstream rescales
+      them for its loss reduction.
+
+Authorized by this amendment, on the Spark only, under the
+CLAUDE.md Spark rules, in this order. Each step stops on any failure and is
+reported before the next one starts.
+
+  W   Grader check. `scripts/e10_check_swesmith_arm.py` on all 105 Tenacity
+      issues: the fix graded resolved and the bug unresolved, under G0b's
+      conditions, matching `spark/g0b_arm64.jsonl` on every issue. Any
+      mismatch stops here; switching to G0b's own procedure (option b) would
+      need its own amendment.
+  S   One live agent session (Scott, 13 Nov, question 4): the local student
+      (`serve_student.sh`) through the agent server on one training issue,
+      with no advisor and no training step, to check the connection, the
+      step loop and the features in each response. Its reward is not
+      recorded as a result.
+  G1  Memory, GRPO arm only: student vLLM + advisor vLLM + LoRA policy and
+      reference, one training step on 4 training issues (32 rollouts), with
+      trajectory saving on. Peak memory from `free -h`, sampled every 10 s
+      to a log. Fixes the advisor vLLM's memory share
+      (`ADVISOR_VLLM_MEM`), recorded by the next amendment.
+  G2  Smoke, GRPO arm only: 3 training steps on training issues with
+      trajectory saving on. Checks that every §6 field is present and that
+      the agent logs and test reports are saved; records the time and
+      trajectory size per step and projects both to 295 steps. The step
+      count (295 or 150) is fixed by the next amendment, from these numbers.
+  G3  The G1 and G2 run dirs are copied to
+      `gs://hecate-506120-artifacts/runs/<run_id>/` from Scott's Mac
+      (okdogulu@ucsc.edu has the bucket), and the copy is checked file by
+      file. This tests the durability path before any full run.
+
+Run ids: `exp-10_arm-g1smokegrpo_split-tenacitytrain_seed-0` and
+`exp-10_arm-g2smokegrpo_split-tenacitytrain_seed-0`. They are setup runs,
+not E10 arms: their adapters are discarded, the full GRPO run starts from the
+base model, and their rewards and trajectories are not used for any
+question, Q10.4 included. Only training issues are used; no test issue is
+touched.
+
+The launch script's guard may be relaxed only to allow these two runs (a
+step cap of 1 for G1 and 3 for G2), in an advisor-models commit that cites
+A4.
+
+Still not authorized: anything for P or P6 (their G1 and G2 need their own
+amendment), the A and U eval passes, and any full training run. G's full
+run also waits for P's G1: if P does not fit, §7 drops the student to
+Qwen3-8B for every arm, and a G run on the 30B student would have to be
+redone.
