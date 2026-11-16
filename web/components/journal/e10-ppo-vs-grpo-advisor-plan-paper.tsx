@@ -25,6 +25,7 @@ const toc: PaperTocItem[] = [
   { href: "#cost", label: "Cost" },
   { href: "#risks", label: "Risks and scope" },
   { href: "#notes", label: "Notes" },
+  { href: "#status", label: "Setup status" },
   { href: "#references", label: "References" },
 ];
 
@@ -74,7 +75,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
         "Software Engineering (cs.SE)",
         "Artificial Intelligence (cs.AI)",
       ]}
-      updated="2026-11-12"
+      updated="2026-11-16"
       tags="e10 · advisor models · ppo · grpo · value critic · reinforcement learning · lora · dgx spark · qwen3-coder · plan"
       toc={toc}
     >
@@ -196,7 +197,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
       <PaperSection id="design" number="4" title="Design">
         <PaperTable
           id="table-setup"
-          caption="Table 4. Setup, shared by both trained arms."
+          caption="Table 4. Setup, shared by all three trained arms."
           headers={["Part", "Choice"]}
           rows={[
             ["Task", "SWE-smith Tenacity: 56 training issues, 49 test issues, mini-SWE-agent, 40-step cap, advice every 5 steps"],
@@ -228,7 +229,7 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
           <strong>Memory.</strong> The student (~31 GB at FP8), the advisor’s
           vLLM, the LoRA trainer and the 1.5B critic share the Spark’s ~114
           GiB. P6 needs less than P. If PPO does not fit, the advisor’s vLLM sleeps during updates;
-          after that, the student drops to Qwen3-8B for both arms.
+          after that, the student drops to Qwen3-8B for all three.
         </p>
       </PaperSection>
 
@@ -353,7 +354,49 @@ export async function E10PpoVsGrpoAdvisorPlanPaper() {
           any full run: the Spark environment and the ARM container check
           (G0), memory (G1), a 3-step smoke with trajectory saving (G2), the
           copy off the Spark (G3) and offline tests (G4). Nothing is
-          authorized to run until review.
+          authorized to run until review. Amendments A1 and A2 (13 November)
+          have since authorized the G0 setup; §11 records it.
+        </p>
+      </PaperSection>
+
+      <PaperSection id="status" number="11" title="Setup status, 16 November">
+        <p>
+          Sections 1–10 are the plan as registered on 12 November and are
+          unchanged, apart from two wording fixes (“both trained arms” now
+          reads “all three”). Since then, three amendments to the spec have
+          authorized setup for the GRPO arm only, and G0 has passed. No eval or
+          training pass has run, so no result has been seen.
+        </p>
+        <PaperTable
+          id="table-amendments"
+          caption="Table 10. Amendments to the spec, both recorded before any run."
+          headers={["Amendment", "What it changes"]}
+          rows={[
+            ["A1 (13 Nov)", "Authorizes G0 on the Spark: Docker, the ARM Tenacity image, the student and advisor weights, serving the student, and SkyRL for the GRPO arm. P and P6, G1–G4, any training step and the x86 container check stay unauthorized."],
+            ["A2 (13 Nov)", "Experiment 7’s SkyRL fork does not run on the GB10 (it pins x86-only wheels and an older CUDA), so every trained arm uses upstream SkyRL (commit 3e8700f) with its own LoRA support. Recorded as a deviation: GRPO is now “as upstream SkyRL implements it”. All arms share the same trainer, so the decision rules are unchanged."],
+            ["A3 (16 Nov)", "Authorizes the x86 container check on the x86 worker, once (about $2). Any mismatch with the ARM image would have stopped the experiment."],
+          ]}
+        />
+        <PaperTable
+          id="table-g0"
+          caption="Table 11. G0, the Spark environment. Details and scripts: experiments/e10-ppo-vs-grpo-advisor/spark/README.md."
+          headers={["Check", "Status", "Evidence"]}
+          rows={[
+            ["G0a Docker without sudo", "Pass", "The GPU is visible to containers"],
+            ["G0b ARM Tenacity image", "Pass on the Spark", "105 of 105 issues (56 train, 49 test): every fail-to-pass test fails on the bug, and every listed test passes after the fix"],
+            ["G0b x86 comparison", "Pass (A3, 16 Nov)", "The same check on Experiment 7’s x86 image gives identical results on all 105 issues"],
+            ["G0c Student serving", "Pass", "Qwen3-Coder-30B FP8 in vLLM, 444 output tokens/s at 32 concurrent requests"],
+            ["G0d SkyRL, GRPO + LoRA", "Pass (upstream SkyRL, A2)", "Toolchain check on upstream’s GSM8K example with Qwen2.5-0.5B: 3 GRPO steps with LoRA rank 32, the adapter merged and synced to vLLM after each step. No Tenacity data used"],
+          ]}
+        />
+        <p>
+          <strong>Next.</strong> Port Experiment 7’s SWE-smith environment,
+          its agent and eval servers, and its reward to upstream SkyRL,
+          against the ARM image and the local student; A2 requires a unit test
+          that the ported reward matches Experiment 7’s. The port is in
+          progress. Then G1 (memory, with all four models loaded) and G2 (the
+          3-step smoke), each needing its own amendment. The PPO critic is
+          still unverified on the Spark.
         </p>
       </PaperSection>
 

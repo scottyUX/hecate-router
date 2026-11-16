@@ -12,7 +12,7 @@ export const EXPERIMENT_REPORTS: ExperimentReport[] = [
     href: "/journal/2026-11-12-e10-ppo-vs-grpo-advisor-plan",
     title: "Experiment 10: PPO vs GRPO for the advisor, all on the DGX Spark",
     date: "2026-11-12",
-    status: "plan · not started",
+    status: "plan · Spark setup (G0) under way",
     summary:
       "Plan to train a Qwen2.5-7B LoRA advisor three ways for a local Qwen3-Coder-30B student on SWE-smith Tenacity (56 train / 49 test issues): GRPO, PPO with a 1.5B LLM critic, and PPO with a small critic on Sagnik's six progress features, which also serve as an offline critic baseline. Everything runs on the lab's DGX Spark, so no paid inference: capped at $50. Every rollout is saved as state, action and reward. Predicted no detectable differences.",
     archiveEntryId: "2026-11-12-e10-ppo-vs-grpo-advisor-plan",
@@ -25,6 +25,15 @@ export const EXPERIMENT_REPORTS: ExperimentReport[] = [
     summary:
       "Plan to retrain Experiment 2's Qwen2.5-Coder-7B LoRA router on its django split (185 train / 46 holdout) three ways: cross-entropy (reference), GRPO and PPO, changing only the loss. Outcomes and costs are already logged, so nothing runs live. Reuses E2's code, runs on the lab's Spark from a runbook, ~2–3 days, $0 beyond electricity. Predicted no detectable GRPO–PPO difference. Formerly E10 rev 3.",
     archiveEntryId: "2026-11-12-e11-ppo-vs-grpo-router-plan",
+  },
+  {
+    href: "/journal/2026-10-26-e07-final-results",
+    title: "Experiment 7: the trained advisor across three students",
+    date: "2026-10-26",
+    status: "complete · checks 1 and 3 pass, check 2 fails",
+    summary:
+      "GRPO brought Flash-Lite's resolve back from 13.5% (untrained advice) to 31.9%, against 34.0% alone, with no step saving. The same advisor lifted Gemini 2.5 Flash from 60.3% to 66.0% (7–12% cheaper per fix) and did not transfer to Qwen3-Coder-30B, which alone matched Flash at about one-sixth the cost. Model choice moved cost per fix far more than advice.",
+    archiveEntryId: "2026-10-26-e07-final-results",
   },
   {
     href: "/journal/2026-10-25-e09-route-or-advise-plan",
