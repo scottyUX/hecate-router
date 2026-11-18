@@ -15,12 +15,12 @@ AI coding tools are allowed under the course AI policy. You are responsible for 
 
 ## Requirements
 
-You own at least two tasks each sprint. Each task must meet all of these:
+Each sprint you own **two tasks or one big task**. One big task is a single task of about the work of two, with `estimate_hours` of 4 or more. Each task must meet all of these:
 
 - You are the only assignee. You write the task file (you will discuss and clarify it with your team members), the tests, and the implementation. Teammates may review. They do not commit to your task branch.
-- Your two tasks are different slices. A revision, rename, or follow-up fix of the first is not a second task.
+- When you own two tasks, they are different slices. A revision, rename, or follow-up fix of the first is not a second task.
 - Each task ID is used only once in your team's repository, in any sprint. Agree on task IDs with your team, because the ID also names your git tags.
-- Estimated at 2 hours or more, and it changes behavior a user or another part of the system can observe.
+- Estimated at 2 hours or more (4 or more for one big task), and it changes behavior a user or another part of the system can observe.
 - Small enough that one person can finish within 2–3 days, including review.
 - The task file is created before any implementation code.
 - Every acceptance criterion has at least one committed test.
@@ -164,15 +164,15 @@ Submit in the [Repo Metrics app](https://cse115a-repo-metrics-production.up.rail
 **Every sprint**
 1. Open **Assignment N**, where `N` is the sprint number.
 2. In **Task 1**, paste the first merged pull-request link and press **Add PR**. Keep the tab open while the analysis runs.
-3. Do the same in **Task 2** for your second task.
+3. Do the same in **Task 2** for a second task. With one big task, leave **Task 2** empty; the button then reads **Submit Sprint N with one task**.
 4. Read the checks under each task. A check marked for review can cost the Process point. To re-check a task after fixing it (for example, after pushing a missing tag), press **Re-check** on that task.
-5. When both tasks are analyzed, press **Submit Sprint N**. Both tasks lock when you submit. To change them, press **Change submission**. You can do this until the sprint closes, as long as your grade hasn't been released.
+5. When your tasks are analyzed, press **Submit Sprint N**. Your tasks lock when you submit. To change them, press **Change submission**. You can do this until the sprint closes, as long as your grade hasn't been released.
 
 Your grade appears in the app after an instructor reviews it.
 
 ## Sprint Submission Checklist
 
-Before pressing **Submit Sprint N**, check **each of the following for both tasks**:
+Before pressing **Submit Sprint N**, check **each of the following for each task**:
 
 - [ ] The task is on the team's Scrum board.
 - [ ] The task file was committed alone, before any implementation code.
@@ -239,7 +239,7 @@ For each sprint, write **one paragraph** that:
 
 ## Grading
 
-Each task is scored out of 10. Your sprint score is the average of your two tasks. A missing task scores 0. The grader reads the task file and checks the merged pull request, and the two tags. An instructor reviews every grade before you see it.
+Each task is scored out of 10. With two tasks, your sprint score is their average; with one big task, that task's score is your sprint score. The grader reads the task file and checks the merged pull request, and the two tags. An instructor reviews every grade before you see it.
 
 | Criterion | Full credit | Partial | None | Pts |
 |---|---|---|---|-----|
@@ -248,6 +248,6 @@ Each task is scored out of 10. Your sprint score is the average of your two task
 | Acceptance criteria | Every item pass/fail and checkable | Some items vague | Missing or not checkable | 2   |
 | Test quality | Tests assert the criteria and fail without the implementation | Some weak or trivial assertions | Tests pass even without the implementation | 2   |
 | Tests pass | All task tests pass at `-done`; existing tests still pass | Some task tests still failing | Tests do not run, all fail, or are missing | 2   |
-| Process | Spec committed first, both tags pushed, Scrum board card present, both tasks submitted in the app | One step missing or late | Implementation committed before the task file | 1   |
+| Process | Spec committed first, both tags pushed, Scrum board card present, your tasks submitted in the app | One step missing or late | Implementation committed before the task file | 1   |
 
 Consent to the research, whether a task is later chosen for the benchmark, which AI tools you used, and how any AI tool performs on your task do not affect your grade.
