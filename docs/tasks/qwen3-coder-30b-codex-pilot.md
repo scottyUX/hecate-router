@@ -72,3 +72,16 @@ are touched. Preserve `diflh-ollama`. Stop the task-owned server on exit.
 Tests cover scope isolation, exact20 selection, model identity, no precision/parser
 fallback, command/result lifecycle, corrected grading and mirror integrity. Timing
 must disclose any actual GPU overlap, model-specific decoding and setup differences.
+
+## Diagnostic regrade D1 — authorized 2026-11-19
+
+Scott requested a manual pass/fail check of the first three attempts rejected for
+new test files. Preserve the automated policy rejections unchanged. For only
+combine_file__s0bcdks5, combine_module__yjmtlc2r and func_basic__7azvfd3s, derive a
+separate patch by removing exactly the new-file blocks for the recorded rejected
+test paths; do not repair or otherwise modify source hunks. Rerun patched/unpatched
+controls and independently grade that saved source-only patch in a fresh evaluator.
+No new model attempts, prompt changes, budget increases or ongoing-run mutation.
+Record original/derived hashes, excluded paths, evaluator outcomes and durable
+artifacts under a distinct diagnostic run ID. Report this as correctness of the
+saved source edits with added tests excluded, not a revised official pilot score.

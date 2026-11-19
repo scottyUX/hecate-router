@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+"""D1: independently grade three saved source patches; never regenerate agents."""
+import argparse
+import hashlib
+import json
+import os
+import re
+import shlex
+import shutil
+from pathlib import Path
+import yaml
+from hecate.execution.codex_artifacts import create_run, finish_run
+from hecate.execution.task_environment import grade_patch, protected_test_path
+
+IDS = [
+    "jd__tenacity.0d40e76f.combine_file__s0bcdks5",
+    "jd__tenacity.0d40e76f.combine_module__yjmtlc2r",
+    "jd__tenacity.0d40e76f.func_basic__7azvfd3s",
+]
+
+
+def source_only(patch, rejected):
+    kept = []
+    removed = []
+    for block in re.split(r"(?=^diff --git )", patch, flags=re.M):
+        if not block:
+            continue
+        header = shlex.split(block.splitlines()[0])
+        if len(header) != 4 or header[:2] != ["diff", "--git"]:
+            raise ValueError("Unexpected patch boundary")
+        old, new = header[2][2:], header[3][2:]
+        if protected_test_path(old) or protected_test_path(new):
+            if (
+                old != new
+                or new not in rejected
+                or "\nnew file mode " not in block
+                or "\n--- /dev/null\n" not in block
+            ):
+                raise ValueError(
+                    "Only explicitly rejected newly added tests can be excluded"
+                )
+            removed.append(new)
+        else:
+            kept.append(block)
+    if set(removed) != set(rejected):
+        raise ValueError("Excluded files differ from recorded policy rejection")
+    return "".join(kept), removed
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--root", type=Path, required=True)
+    ap.add_argument("--dataset", type=Path, required=True)
+    ap.add_argument("--config", type=Path, required=True)
+    ap.add_argument("--run-id", required=True)
+    args = ap.parse_args()
+    cfg = yaml.safe_load(args.config.read_text())
+    source = args.root / "runs/task006-qwen3-codex-pilot-run-01"
+    selection = json.loads(Path("configs/codex_qwen_size_pilot_tasks.json").read_text())
+    if (
+        hashlib.sha256(args.dataset.read_bytes()).hexdigest()
+        != selection["source_sha256"]
+    ):
+        raise ValueError("Dataset changed")
+    rows = [
+        json.loads(line)
+        for line in args.dataset.read_text().splitlines()
+        if line.strip()
+    ]
+    instances = {}
+    for row in rows:
+        instance = json.loads(row["reward_spec"]["ground_truth_json"])
+        if instance["instance_id"] in IDS:
+            instances[instance["instance_id"]] = instance
+    if set(instances) != set(IDS):
+        raise ValueError("Diagnostic task set incomplete")
+    run = create_run(
+        args.root / "diagnostic-runs",
+        args.run_id,
+        cfg,
+        {
+            "git_commit": os.environ["HECATE_CODE_SHA"],
+            "purpose": "Diagnostic saved-source correctness; official policy rejections unchanged",
+            "source_run": str(source),
+            "instance_ids": IDS,
+            "model_attempts_generated": 0,
+        },
+    )
+    shutil.copy2(__file__, run / "diagnostic-source.py")
+    results = []
+    try:
+        for iid in IDS:
+            directory = run / iid
+            directory.mkdir()
+            original = json.loads((source / iid / "result.json").read_text())
+            if original["status"] != "test_modification_rejected":
+                raise ValueError("Source is not the named policy rejection")
+            patch = (source / iid / "agent/patch.diff").read_text()
+            derived, excluded = source_only(patch, original["test_modifications"])
+            (directory / "original.diff").write_text(patch)
+            (directory / "source-only.diff").write_text(derived)
+            image = cfg["sandbox"]["image"]
+            instance = instances[iid]
+            gold = grade_patch(
+                image, instance, "", directory / "control-patched", gold=True
+            )
+            bug = grade_patch(
+                image,
+                instance,
+                "",
+                directory / "control-unpatched",
+                verified_gold=gold.get("resolved") is True,
+            )
+            controls = (
+                gold.get("status") == "completed"
+                and gold.get("resolved") is True
+                and bug.get("status") == "completed"
+                and bug.get("resolved") is False
+            )
+            if not controls:
+                raise RuntimeError("Independent grading controls failed")
+            outcome = grade_patch(
+                image,
+                instance,
+                derived,
+                directory / "evaluation",
+                validated_controls=True,
+                verified_gold=True,
+            )
+            result = {
+                "instance_id": iid,
+                "diagnostic_only": True,
+                "original_policy_status": original["status"],
+                "original_sha256": hashlib.sha256(patch.encode()).hexdigest(),
+                "source_only_sha256": hashlib.sha256(derived.encode()).hexdigest(),
+                "excluded_new_test_files": excluded,
+                "controls": {"patched": gold, "unpatched": bug},
+                "evaluation": outcome,
+                "resolved": outcome["resolved"],
+                "status": outcome["status"],
+            }
+            (directory / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+            results.append(result)
+            print(
+                json.dumps(
+                    {
+                        "instance_id": iid,
+                        "diagnostic_resolved": outcome["resolved"],
+                        "status": outcome["status"],
+                    }
+                ),
+                flush=True,
+            )
+        finish_run(
+            run,
+            {
+                "diagnostic_only": True,
+                "model_attempts_generated": 0,
+                "rows": results,
+                "evaluable": sum(x["resolved"] is not None for x in results),
+                "resolved": sum(x["resolved"] is True for x in results),
+            },
+        )
+    except BaseException as exc:
+        finish_run(run, {"diagnostic_only": True, "rows": results, "error": str(exc)})
+        raise
+
+
+if __name__ == "__main__":
+    main()
