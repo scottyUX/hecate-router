@@ -1,46 +1,37 @@
-"""Stage-2 execution harness and Stage-3 routing labels."""
+"""Execution backends, loaded lazily so local Codex needs no benchmark loader.
 
+Existing Stage-2/3 public imports remain available. Importing a Codex module must
+not eagerly import datasets/SWE-bench or initialize another execution backend.
+"""
 from __future__ import annotations
+from importlib import import_module
 
-from hecate.execution.harness import (
-    Harness,
-    HarnessRequest,
-    HarnessResult,
-    ScriptedHarness,
-    ScriptedOutcome,
-    SwebenchHarness,
-)
-from hecate.execution.labels import RoutingLabel, build_labels
-from hecate.execution.merge import apply_report, load_error_ids, load_instance_report
-from hecate.execution.predictions import (
-    has_executable_patch,
-    to_prediction,
-    write_predictions,
-)
-from hecate.execution.runner import (
-    ExecutionConfig,
-    ExecutionResult,
-    load_execution_config,
-    run_execution,
-)
+_MODULE_EXPORTS = {
+    "harness": (
+        "Harness",
+        "HarnessRequest",
+        "HarnessResult",
+        "ScriptedHarness",
+        "ScriptedOutcome",
+        "SwebenchHarness",
+    ),
+    "labels": ("RoutingLabel", "build_labels"),
+    "merge": ("apply_report", "load_error_ids", "load_instance_report"),
+    "predictions": ("has_executable_patch", "to_prediction", "write_predictions"),
+    "runner": (
+        "ExecutionConfig",
+        "ExecutionResult",
+        "load_execution_config",
+        "run_execution",
+    ),
+}
+_EXPORTS = {name: module for module, names in _MODULE_EXPORTS.items() for name in names}
+__all__ = list(_EXPORTS)
 
-__all__ = [
-    "ExecutionConfig",
-    "ExecutionResult",
-    "Harness",
-    "HarnessRequest",
-    "HarnessResult",
-    "RoutingLabel",
-    "ScriptedHarness",
-    "ScriptedOutcome",
-    "SwebenchHarness",
-    "apply_report",
-    "build_labels",
-    "has_executable_patch",
-    "load_error_ids",
-    "load_execution_config",
-    "load_instance_report",
-    "run_execution",
-    "to_prediction",
-    "write_predictions",
-]
+
+def __getattr__(name: str):
+    if name not in _EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    value = getattr(import_module(f"{__name__}.{_EXPORTS[name]}"), name)
+    globals()[name] = value
+    return value
