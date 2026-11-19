@@ -23,3 +23,13 @@ Status: authorized; fixed protocol and selection recorded before inference.
 Same 20 fresh training tasks and harness for both models, run sequentially on Spark.
 
 - [TASK-003: 7B mini-SWE-agent harness control](qwen25-coder-7b-mini-swe-agent-pilot.md) — same 20 tasks, parallel quality diagnostic.
+
+## TASK-004 — E7 telemetry reuse and routing State Builder
+
+Status: approved for implementation on `codex/task-004-telemetry-state-builder`.
+
+- [Task, specifications, requirements, edge cases, acceptance criteria and tests](e7-telemetry-and-routing-state-builder.md)
+
+Reuse E7/current harness events to produce causal, versioned routing observations.
+
+- [TASK-004 reuse assessment and replay runbook](task-004-reuse-and-runbook.md)
