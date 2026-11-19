@@ -1,7 +1,7 @@
 # Task: Qwen2.5-Coder-7B compatibility with Codex on Spark
 
 - **Task ID:** TASK-001
-- **Status:** Approved for implementation and scoped compatibility execution
+- **Status:** Completed — compatibility with declared limitations (see task-001-compatibility-report.md)
 - **Created:** 2026-11-19
 - **Scope:** Establish a working local coding-agent integration before measuring a large task-resolution baseline or training a router.
 - **Authorization:** Scott approved implementation on a new branch on 2026-11-19 ("open an new branch and implement this"). Includes the scoped preflight, local setup, compatibility fixtures and three-task smoke; excludes the larger baseline and all router training.
@@ -99,15 +99,15 @@ These are proposed bounds for review, not settings already validated on Spark. R
 
 ## Acceptance criteria
 
-- [ ] **AC1:** Reviewed specification, chosen task IDs and effective configuration recorded before execution.
-- [ ] **AC2:** Reuse assessment documents the existing Codex integration and final code ownership; no hidden sibling-checkout dependency.
-- [ ] **AC3:** Exact local model executes through the pinned Codex harness on Spark without hosted-model fallback.
-- [ ] **AC4:** Every capability fixture demonstrates the requested action in tool events and filesystem/test evidence, ending within its limits. A shell-edit fallback is clearly identified if used.
-- [ ] **AC5:** Three selected Tenacity tasks reach a recorded terminal state with final patches and independent outcome or explicit infrastructure failure. Patched/unpatched grading controls behave as expected. Any infrastructure failure blocks readiness until resolved and rerun under a new attempt ID.
-- [ ] **AC6:** Isolation checks demonstrate no evaluator-answer access or unauthorized host/network access; existing Spark workloads remain intact.
-- [ ] **AC7:** Offline protocol/lifecycle tests and the live smoke checks below pass; actual resolution is reported without a minimum success claim or omitted failed tasks.
-- [ ] **AC8:** Manifest, effective config, transcripts/events, usage, patches, evaluation evidence and report exist and have a verified off-Spark copy.
-- [ ] **AC9:** Report gives a clear verdict: compatible, compatible with declared limitations, or blocked. Include measured task times, context/memory constraints, attempted/evaluable/resolved counts, and a recommendation for a separately reviewed larger baseline.
+- [x] **AC1:** Reviewed specification, chosen task IDs and effective configuration recorded before execution.
+- [x] **AC2:** Reuse assessment documents the existing Codex integration and final code ownership; no hidden sibling-checkout dependency.
+- [x] **AC3:** Exact local model executes through the pinned Codex harness on Spark without hosted-model fallback.
+- [x] **AC4:** Every capability fixture demonstrates the requested action in tool events and filesystem/test evidence, ending within its limits. A shell-edit fallback is clearly identified if used.
+- [x] **AC5:** Three selected Tenacity tasks reach a recorded terminal state with final patches and independent outcome or explicit infrastructure failure. Patched/unpatched grading controls behave as expected. Any infrastructure failure blocks readiness until resolved and rerun under a new attempt ID.
+- [x] **AC6:** Isolation checks demonstrate no evaluator-answer access or unauthorized host/network access; existing Spark workloads remain intact.
+- [x] **AC7:** Offline protocol/lifecycle tests and the live smoke checks below pass; actual resolution is reported without a minimum success claim or omitted failed tasks.
+- [x] **AC8:** Manifest, effective config, transcripts/events, usage, patches, evaluation evidence and report exist and have a verified off-Spark copy.
+- [x] **AC9:** Report gives a clear verdict: compatible, compatible with declared limitations, or blocked. Include measured task times, context/memory constraints, attempted/evaluable/resolved counts, and a recommendation for a separately reviewed larger baseline.
 
 ## Tests
 
@@ -174,3 +174,13 @@ Implementation decisions recorded before model execution:
 - Smoke attempt 03 executed the first selected coding task. Its patch broke imports and caused pytest collection errors after both grading controls passed. Before continuing, classify this explicit patch-caused collection failure as unresolved, not infrastructure failure; unknown/missing evaluation output remains an error. Re-evaluate the checksum-verified saved patch in a new run and reuse its original agent artifacts, without rerunning the model on that task. The remaining two selected tasks still receive at most one model attempt each.
 
 - Smoke attempt 04 completed all three distinct agent attempts (reusing the first from attempt 03), with 0/3 resolved and passing unpatched/gold controls for every task. All reached a Codex final response. The final code additionally mounts `.git` read-only and hashes symlink targets without following host paths. Validate this hardened configuration with fresh capability/isolation fixtures before completion. Preserve agent and evaluator exit codes in separate fields; the original smoke-04 top-level `exit_code` was overwritten by the grader and must be read from each `agent/result.json` for the agent's actual status.
+
+
+## Completion record
+
+Completed on 2026-11-19. Final hardened fixture run: `task001-fixtures-attempt-09`
+(all three capability checks and isolation passed). Three-task smoke: 0/3 resolved,
+all independently evaluable, one coding-model attempt per task. Fourteen run
+directories copied off Spark and checksum-verified; task-owned inference stopped.
+See `docs/tasks/task-001-compatibility-report.md` for evidence, limitations and
+artifact field/provenance caveats. No larger baseline or router training launched.
