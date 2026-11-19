@@ -1,0 +1,38 @@
+model:
+  id: Qwen/Qwen2.5-Coder-7B-Instruct
+  revision: c03e6d358207e414f1eca0bb1891e29f1db0e242
+  precision: bfloat16
+  context_tokens: 16384
+  sampling:
+    temperature: 0
+    top_p: 1
+    max_tokens: 2048
+    seed: 0
+serving:
+  image: sha256:bf05c8a0d56f7ed2fe279e0c0c876dd2bb813dd34702d975fa6ab640860ce825
+  endpoint: http://127.0.0.1:8128/v1
+  parser: hermes
+  gpu_memory_utilization: 0.2
+  container_name: hecate-task003-model
+sandbox:
+  image: sha256:bf35e4de2d5f0543c17d124c8ab0c98cf50b6c367dbc3d73f7cd6eec9125e38d
+limits:
+  fixture_model_requests: 10
+  fixture_wall_s: 600
+  task_model_requests: 40
+  task_wall_s: 2700
+  command_timeout_s: 120
+  request_timeout_s: 360
+  retries: 2
+selection_manifest: configs/codex_qwen_size_pilot_tasks.json
+pilot:
+  task_id: TASK-003
+  task_count: 20
+  continue_on_infrastructure_error: true
+  max_consecutive_infrastructure_errors: 3
+harness:
+  name: mini-swe-agent
+  version: 1.0.0
+  upstream_commit: a2b0efee5fd9c1d3bc9fdfc6fe88036a2235d74d
+  vendor_path: vendor/mini-swe-agent-v1
+  concurrency: quality-only; latency confounded by shared GPU

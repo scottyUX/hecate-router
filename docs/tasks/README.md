@@ -21,3 +21,5 @@ Status: authorized; fixed protocol and selection recorded before inference.
 - [Task, requirements and acceptance criteria](qwen25-coder-7b-vs-14b-codex-20-task-pilot.md)
 
 Same 20 fresh training tasks and harness for both models, run sequentially on Spark.
+
+- [TASK-003: 7B mini-SWE-agent harness control](qwen25-coder-7b-mini-swe-agent-pilot.md) — same 20 tasks, parallel quality diagnostic.

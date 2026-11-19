@@ -118,11 +118,11 @@ def execute(
                         sandbox.command(prompt),
                         directory,
                         limit[kind + "_wall_s"],
-                        stop=lambda: "budget_exhausted"
-                        if gateway.cap_hit
-                        else gateway.failure_kind
-                        if gateway.failed
-                        else None,
+                        stop=lambda: (
+                            "budget_exhausted"
+                            if gateway.cap_hit
+                            else gateway.failure_kind if gateway.failed else None
+                        ),
                     )
             except Exception as exc:
                 result = {
@@ -364,6 +364,8 @@ def run_task(
     binary: Path,
     instance: dict,
     reuse_agent_from: Path | None = None,
+    *,
+    executor=None,
 ) -> dict:
     iid = instance["instance_id"]
     directory = run / iid
@@ -455,7 +457,7 @@ def run_task(
     else:
         workspace = directory / "workspace"
         base = export_task_tree(image, iid, workspace)
-        result = execute(
+        result = (executor or execute)(
             workspace,
             directory / "agent",
             instance["problem_statement"]
@@ -619,9 +621,9 @@ def main() -> int:
             "argv": sys.argv,
             "mode": args.mode,
             "fixtures_run": str(args.fixtures_run) if args.fixtures_run else None,
-            "reuse_agent_from": str(args.reuse_agent_from)
-            if args.reuse_agent_from
-            else None,
+            "reuse_agent_from": (
+                str(args.reuse_agent_from) if args.reuse_agent_from else None
+            ),
             "source_hashes": {
                 str(p): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in sorted(Path("src/hecate/execution").glob("*.py"))
@@ -667,9 +669,11 @@ def main() -> int:
                 "Schema-constrained required tools with explicit finish action",
                 "Shell editing; no validated apply_patch support",
             ],
-            "attempted": len(rows)
-            if args.mode == "fixtures"
-            else sum("termination_reason" in r for r in rows),
+            "attempted": (
+                len(rows)
+                if args.mode == "fixtures"
+                else sum("termination_reason" in r for r in rows)
+            ),
             "tasks_considered": len(rows),
             "expected_tasks": expected_count,
             "rows": rows,
@@ -682,10 +686,11 @@ def main() -> int:
                 infrastructure_errors=sum(r.get("resolved") is None for r in rows),
                 resolved_fraction_of_selected=sum(r["resolved"] for r in eligible)
                 / expected_count,
-                resolved_fraction_of_evaluable=sum(r["resolved"] for r in eligible)
-                / len(eligible)
-                if eligible
-                else None,
+                resolved_fraction_of_evaluable=(
+                    sum(r["resolved"] for r in eligible) / len(eligible)
+                    if eligible
+                    else None
+                ),
             )
         finish_run(run, results)
         return 0 if ok else 1
