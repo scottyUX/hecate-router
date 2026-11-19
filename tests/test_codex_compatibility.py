@@ -1,4 +1,5 @@
 """Offline contract tests for TASK-001; no model, Docker or provider calls."""
+
 import json
 import subprocess
 
@@ -439,8 +440,11 @@ def test_archive_retains_contained_file_link_and_blocks_escape(tmp_path):
     assert not (tmp_path.parent / "outside").exists()
 
 
+@pytest.mark.parametrize(
+    "summary", ["1 error during collection", "6 errors during collection"]
+)
 def test_patch_collection_error_is_unresolved_only_after_valid_controls(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, summary
 ):
     from hecate.execution import task_environment as environment
 
@@ -449,7 +453,7 @@ def test_patch_collection_error_is_unresolved_only_after_valid_controls(
         return subprocess.CompletedProcess(
             args,
             2 if tests else 0,
-            "Interrupted: 6 errors during collection" if tests else "",
+            f"Interrupted: {summary}" if tests else "",
             "",
         )
 
@@ -488,7 +492,12 @@ def test_artifact_checksums_never_follow_external_model_links(tmp_path):
         checksums(root, legacy_links=True)
 
 
-def test_unpatched_collection_failure_needs_gold_and_empty_p2p(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    "summary", ["1 error during collection", "4 errors during collection"]
+)
+def test_unpatched_collection_failure_needs_gold_and_empty_p2p(
+    tmp_path, monkeypatch, summary
+):
     from hecate.execution import task_environment as environment
 
     def fake_docker(*args, **kwargs):
@@ -496,7 +505,7 @@ def test_unpatched_collection_failure_needs_gold_and_empty_p2p(tmp_path, monkeyp
         return subprocess.CompletedProcess(
             args,
             2 if tests else 0,
-            "Interrupted: 4 errors during collection" if tests else "",
+            f"Interrupted: {summary}" if tests else "",
             "",
         )
 

@@ -3,6 +3,7 @@
 No Docker socket, host home, evaluator metadata, or source git history enters the
 agent. The Unix inference socket is the sole host service available to it.
 """
+
 from __future__ import annotations
 import io
 import json
@@ -374,14 +375,16 @@ def grade_patch(
         if (
             ((validated_controls and patch) or bug_collection_failure)
             and result.returncode == 2
-            and "errors during collection" in log
+            and re.search(r"\b[1-9]\d* errors? during collection\b", log)
         ):
             outcome = {
                 "status": "completed",
                 "resolved": False,
-                "reason": "unpatched_bug_broke_test_collection"
-                if bug_collection_failure
-                else "patch_broke_test_collection",
+                "reason": (
+                    "unpatched_bug_broke_test_collection"
+                    if bug_collection_failure
+                    else "patch_broke_test_collection"
+                ),
                 "exit_code": result.returncode,
                 "f2p": {t: statuses.get(t) for t in f2p},
                 "p2p": {t: statuses.get(t) for t in p2p},

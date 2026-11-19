@@ -178,3 +178,22 @@ and error timestamps, explicitly marked as derived. No model call is regenerated
 Apply the same accounting rule to both arms; final comparison discloses missing
 token accounting and any continuation-order effects. Active first-pass source is
 left unchanged until its sequence ends.
+
+## Grader amendment A3 — singular and plural collection summaries
+
+During the 14B first pass, `func_basic__1avsmufn` passed both evaluator controls,
+then its saved model patch renamed an exported function and broke a test import.
+Pytest reported `1 error during collection`. The grader recognized only the plural
+`errors during collection`, incorrectly recording an infrastructure failure.
+
+Recognize both positive-count singular and plural pytest collection summaries
+under the existing validation requirements. A model patch that breaks collection
+after passing controls remains unresolved; an unpatched collection failure still
+requires a verified gold control and empty PASS_TO_PASS. Other missing test reports
+remain evaluator failures. This corrects spelling-dependent accounting and does
+not change the decision rule, tasks, model attempts, prompts or budgets.
+
+Regression tests cover singular/plural summaries in both validated model-patch and
+verified-gold unpatched-control paths. Regrade immutable saved patches using a fresh
+source snapshot; leave both active first-pass sources and the earlier corrected
+snapshot unchanged. Do not regenerate any existing agent attempt.
