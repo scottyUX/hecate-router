@@ -268,6 +268,7 @@ def grade_patch(
     *,
     gold: bool = False,
     validated_controls: bool = False,
+    verified_gold: bool = False,
 ) -> dict:
     """Evaluator-only history restores hidden tests. Gold reverses injected bug."""
     name = "task001-grade-" + uuid.uuid4().hex[:10]
@@ -369,16 +370,18 @@ def grade_patch(
             f2p = json.loads(f2p)
         if isinstance(p2p, str):
             p2p = json.loads(p2p)
+        bug_collection_failure = verified_gold and not gold and not patch and not p2p
         if (
-            validated_controls
-            and patch
+            ((validated_controls and patch) or bug_collection_failure)
             and result.returncode == 2
             and "errors during collection" in log
         ):
             outcome = {
                 "status": "completed",
                 "resolved": False,
-                "reason": "patch_broke_test_collection",
+                "reason": "unpatched_bug_broke_test_collection"
+                if bug_collection_failure
+                else "patch_broke_test_collection",
                 "exit_code": result.returncode,
                 "f2p": {t: statuses.get(t) for t in f2p},
                 "p2p": {t: statuses.get(t) for t in p2p},

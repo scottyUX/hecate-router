@@ -5,6 +5,7 @@ set -euo pipefail
 TASK_ROOT="${1:?usage: run_codex_size_pilot.sh <task-root> <attempt-tag> <training-jsonl>}"
 ATTEMPT_TAG="${2:?attempt tag required}"
 TRAINING_DATA="${3:?training dataset required}"
+REUSE_TAG="${4:-}"
 TASK_PYTHON="$TASK_ROOT/venv/bin/python"
 TASK_CONTAINER=hecate-task002-model
 export PYTHONPATH=src
@@ -40,9 +41,13 @@ else:
     raise SystemExit('Model serving did not become ready within 15 minutes')
 PY
     "$TASK_PYTHON" scripts/run_codex_baseline.py fixtures --root "$TASK_ROOT" --config "$config" --run-id "$fixture_id"
+    reuse_args=()
+    if [ -n "$REUSE_TAG" ]; then
+        reuse_args=(--reuse-agent-from "$TASK_ROOT/runs/task002-${arm}-pilot-${REUSE_TAG}")
+    fi
     set +e
     "$TASK_PYTHON" scripts/run_codex_baseline.py pilot --root "$TASK_ROOT" --config "$config" --run-id "$pilot_id" \
-        --fixtures-run "$TASK_ROOT/runs/$fixture_id" --dataset "$TRAINING_DATA"
+        --fixtures-run "$TASK_ROOT/runs/$fixture_id" --dataset "$TRAINING_DATA" "${reuse_args[@]}"
     pilot_exit=$?
     set -e
     "$TASK_PYTHON" - "$TASK_ROOT/runs/$pilot_id/results.json" "$pilot_exit" <<'PY'

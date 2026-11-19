@@ -131,3 +131,50 @@ labels. The three TASK-001 outcomes are not reused as pilot observations.
   without re-running those agents. Preserve attempt IDs and evaluator/agent statuses.
 - Live: per-model capability/isolation checks, independent controls and the paired
   20-task runs under the fixed settings. No tuning on pilot outcomes.
+
+
+## Grader amendment A1 — recorded during the first pass, before corrective execution
+
+The selected `pr_390` unpatched control aborts collection with a source NameError;
+its known-fix control passes all named tests. PASS_TO_PASS is empty and the dataset
+labels the entire suite FAIL_TO_PASS. Requiring individual failed node IDs from an
+aborted collection incorrectly treats this expected bug behavior as infrastructure
+failure. No coding-model attempt has occurred for that task at detection.
+
+Correct the grader narrowly: after a verified passing gold control, accept explicit
+pytest collection errors as an unresolved unpatched control only when PASS_TO_PASS
+is empty. Preserve missing node outcomes as missing; do not fabricate test statuses.
+With nonempty PASS_TO_PASS, unknown output, missing gold validation or unrelated
+runner errors, remain fail-closed. Model patches that break collection after valid
+controls continue to count unresolved, as previously specified.
+
+Keep the active first-pass source unchanged for both arms. After it completes, run
+a corrected continuation per arm using checksum-verified saved agent artifacts.
+Re-evaluate saved patches, generate only selected tasks which never reached an
+agent, and never regenerate prior model attempts. Both arms use the same corrected
+grader for final reporting. Disclose any resulting task execution-order difference;
+models, task IDs, prompts, tool interface, budgets and sampling remain fixed.
+
+
+## Accounting amendment A2 — fixed output-budget/model failures
+
+The first-pass `pr_406` request reached the local model but produced no complete
+action; its gateway reports “Missing, ambiguous or truncated completion” and the
+7B server records one `finished_reason=length`, zero server errors and zero aborts.
+The original bridge classified all protocol failures as infrastructure failures.
+A model exhausting the fixed output-token budget is instead a model-budget event,
+not a serving outage: grade its saved patch (including an empty patch) under valid
+controls. Do not retry generation, raise the token budget, repair partial JSON or
+change the model prompt. Other model-generated invalid actions are retained as
+model-output failures; unsupported incoming Codex contracts and transport/serving
+failures remain infrastructure errors.
+
+For corrective continuations, preserve successful and failed raw upstream output
+before translation and record usage for failed completions. For historical
+first-pass failures with that exact recorded completion error, reuse the original
+agent attempt and record its original classification, missing raw-output caveat
+and unknown token usage. Recover elapsed request wall time from the saved request
+and error timestamps, explicitly marked as derived. No model call is regenerated.
+Apply the same accounting rule to both arms; final comparison discloses missing
+token accounting and any continuation-order effects. Active first-pass source is
+left unchanged until its sequence ends.

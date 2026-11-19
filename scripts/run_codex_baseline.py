@@ -130,6 +130,11 @@ def execute(
                     "error": str(exc),
                     "events": [],
                 }
+            if gateway.failed and gateway.failure_kind in {
+                "model_output_failure",
+                "model_output_budget_exhausted",
+            }:
+                result["termination_reason"] = gateway.failure_kind
             result["model_requests"] = gateway.requests
             result["usage_records"] = gateway.metrics
             result["tool_calls"] = sum(
@@ -365,12 +370,22 @@ def run_task(
     directory.mkdir()
     image = config["sandbox"]["image"]
     # Controls must pass before any model attempt on this task.
-    bug = grade_patch(image, instance, "", directory / "control-unpatched")
     gold = grade_patch(image, instance, "", directory / "control-patched", gold=True)
+    bug = grade_patch(
+        image,
+        instance,
+        "",
+        directory / "control-unpatched",
+        verified_gold=gold.get("status") == "completed"
+        and gold.get("resolved") is True,
+    )
     controls = (
         bug["status"] == "completed"
         and not bug["resolved"]
-        and all(s in {"FAILED", "ERROR"} for s in bug.get("f2p", {}).values())
+        and (
+            bug.get("reason") == "unpatched_bug_broke_test_collection"
+            or all(s in {"FAILED", "ERROR"} for s in bug.get("f2p", {}).values())
+        )
         and gold["status"] == "completed"
         and gold["resolved"]
         and all(s == "PASSED" for s in bug.get("p2p", {}).values())
@@ -387,6 +402,51 @@ def run_task(
         shutil.copytree(previous, directory / "agent", symlinks=True)
         result = json.loads((previous / "result.json").read_text())
         original_row = json.loads((previous.parent / "result.json").read_text())
+        if result.get("termination_reason") == "tool_protocol_failure":
+            events = [
+                json.loads(line)
+                for line in (previous / "gateway.jsonl").read_text().splitlines()
+                if line.strip()
+            ]
+            failures = [
+                e
+                for e in events
+                if e.get("event") == "gateway_error"
+                and e.get("message") == "Missing, ambiguous or truncated completion"
+            ]
+            if failures:
+                failure = failures[-1]
+                requests = [
+                    e
+                    for e in events
+                    if e.get("event") == "request"
+                    and e["timestamp"] <= failure["timestamp"]
+                ]
+                result.update(
+                    original_termination_reason=result["termination_reason"],
+                    termination_reason="model_output_failure",
+                    failure_evidence=failure["message"],
+                    historical_failed_output_not_retained=True,
+                )
+                if requests:
+                    last = requests[-1]
+                    if last["request"] not in {
+                        m["request"] for m in result.get("usage_records", [])
+                    }:
+                        duration = failure["timestamp"] - last["timestamp"]
+                        result.setdefault("usage_records", []).append(
+                            {
+                                "request": last["request"],
+                                "retries": 0,
+                                "inference_wall_s": duration,
+                                "usage": None,
+                                "failed": True,
+                                "timing_source": "gateway_log_timestamps",
+                            }
+                        )
+                        result["inference_wall_s"] = sum(
+                            m["inference_wall_s"] for m in result["usage_records"]
+                        )
         result.update(
             instance_id=iid,
             base_revision=original_row.get("base_revision"),
@@ -408,7 +468,12 @@ def run_task(
         result.update(instance_id=iid, base_revision=base)
     if result["test_modifications"]:
         result.update(status="test_modification_rejected", resolved=False)
-    elif result["termination_reason"] not in {"completed", "budget_exhausted"}:
+    elif result["termination_reason"] not in {
+        "completed",
+        "budget_exhausted",
+        "model_output_failure",
+        "model_output_budget_exhausted",
+    }:
         result.update(status=result["termination_reason"], resolved=None)
     else:
         patch = (directory / "agent/patch.diff").read_text()
@@ -418,6 +483,7 @@ def run_task(
             patch,
             directory / "evaluation",
             validated_controls=True,
+            verified_gold=True,
         )
         result["evaluation"] = evaluation
         result.update(status=evaluation["status"], resolved=evaluation["resolved"])

@@ -26,6 +26,14 @@ class ProtocolError(ValueError):
     pass
 
 
+class ModelOutputError(ProtocolError):
+    """A model response was received but did not yield a valid action."""
+
+
+class OutputBudgetExceeded(ModelOutputError):
+    """Generation exhausted the fixed output-token budget."""
+
+
 ALLOWED_TOOLS = {
     "exec_command",
     "write_stdin",
@@ -197,11 +205,12 @@ def translate_request(
 
 def translate_response(raw: dict, contract: dict, command_timeout_s: int = 120) -> dict:
     choices = raw.get("choices") or []
-    if len(choices) != 1 or choices[0].get("finish_reason") not in {
-        "stop",
-        "tool_calls",
-    }:
-        raise ProtocolError("Missing, ambiguous or truncated completion")
+    if len(choices) != 1:
+        raise ModelOutputError("Missing or ambiguous completion")
+    if choices[0].get("finish_reason") == "length":
+        raise OutputBudgetExceeded("Model exhausted its fixed output-token budget")
+    if choices[0].get("finish_reason") not in {"stop", "tool_calls"}:
+        raise ModelOutputError("Unsupported model completion reason")
     message = choices[0]["message"]
     output = []
     if message.get("content"):
@@ -493,7 +502,39 @@ class Gateway:
         for attempt in range(self.retries + 1):
             try:
                 raw = self.transport(payload) if self.transport else self._post(payload)
-                result = translate_response(raw, contract, self.command_timeout_s)
+                # Preserve unsuccessful model output as well as successful actions.
+                self.record(
+                    {
+                        "event": "upstream_response",
+                        "request": request_id,
+                        "response": raw,
+                    }
+                )
+                try:
+                    result = translate_response(raw, contract, self.command_timeout_s)
+                except (ProtocolError, ValueError, KeyError, TypeError) as exc:
+                    usage = raw.get("usage") or {}
+                    mapped = (
+                        None
+                        if not usage
+                        else {
+                            "input_tokens": usage.get("prompt_tokens"),
+                            "output_tokens": usage.get("completion_tokens"),
+                            "total_tokens": usage.get("total_tokens"),
+                        }
+                    )
+                    self.metrics.append(
+                        {
+                            "request": request_id,
+                            "retries": attempt,
+                            "inference_wall_s": time.monotonic() - started,
+                            "usage": mapped,
+                            "failed": True,
+                        }
+                    )
+                    if isinstance(exc, ModelOutputError):
+                        raise
+                    raise ModelOutputError(str(exc)) from exc
                 for call in (
                     raw.get("choices", [{}])[0].get("message", {}).get("tool_calls", [])
                 ):
@@ -582,7 +623,11 @@ class Gateway:
                 except Exception as exc:
                     owner.failed = not owner.cap_hit
                     owner.failure_kind = (
-                        "tool_protocol_failure"
+                        "model_output_budget_exhausted"
+                        if isinstance(exc, OutputBudgetExceeded)
+                        else "model_output_failure"
+                        if isinstance(exc, ModelOutputError)
+                        else "tool_protocol_failure"
                         if isinstance(exc, (ProtocolError, ValueError, KeyError))
                         else "model_server_failure"
                     )

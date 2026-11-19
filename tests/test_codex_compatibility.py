@@ -486,3 +486,69 @@ def test_artifact_checksums_never_follow_external_model_links(tmp_path):
     assert digest["model-created-link"].startswith("link:")
     with pytest.raises(ValueError):
         checksums(root, legacy_links=True)
+
+
+def test_unpatched_collection_failure_needs_gold_and_empty_p2p(tmp_path, monkeypatch):
+    from hecate.execution import task_environment as environment
+
+    def fake_docker(*args, **kwargs):
+        tests = args[0] == "exec" and "pytest" in args
+        return subprocess.CompletedProcess(
+            args,
+            2 if tests else 0,
+            "Interrupted: 4 errors during collection" if tests else "",
+            "",
+        )
+
+    monkeypatch.setattr(environment, "docker", fake_docker)
+    instance = {
+        "instance_id": "fixture-1",
+        "FAIL_TO_PASS": ["tests/test_example.py::test_fix"],
+        "PASS_TO_PASS": [],
+    }
+    valid = environment.grade_patch(
+        "fixture", instance, "", tmp_path / "validated", verified_gold=True
+    )
+    assert valid["status"] == "completed" and valid["resolved"] is False
+    assert valid["reason"] == "unpatched_bug_broke_test_collection"
+    unknown = environment.grade_patch("fixture", instance, "", tmp_path / "unknown")
+    assert unknown["status"] == "evaluator_failure"
+    requires_p2p = {**instance, "PASS_TO_PASS": ["tests/test_example.py::stable"]}
+    missing = environment.grade_patch(
+        "fixture", requires_p2p, "", tmp_path / "p2p", verified_gold=True
+    )
+    assert missing["status"] == "evaluator_failure"
+
+
+def test_output_budget_failure_retains_raw_response_and_usage(tmp_path):
+    from hecate.execution.model_gateway import OutputBudgetExceeded
+
+    raw = completion()
+    raw["choices"][0]["finish_reason"] = "length"
+    raw["usage"] = {
+        "prompt_tokens": 100,
+        "completion_tokens": 2048,
+        "total_tokens": 2148,
+    }
+    gateway = Gateway(
+        tmp_path / "s",
+        "http://127.0.0.1:8126/v1",
+        "local",
+        tmp_path,
+        request_limit=1,
+        sampling={},
+        transport=lambda _: raw,
+    )
+    with pytest.raises(OutputBudgetExceeded):
+        gateway.complete(request())
+    assert gateway.metrics[0]["failed"] is True
+    assert gateway.metrics[0]["usage"]["output_tokens"] == 2048
+    records = [
+        json.loads(line)
+        for line in (tmp_path / "gateway.jsonl").read_text().splitlines()
+    ]
+    assert any(
+        r.get("event") == "upstream_response"
+        and r["response"]["choices"][0]["finish_reason"] == "length"
+        for r in records
+    )

@@ -82,3 +82,72 @@ def test_pilot_runner_retains_isolated_failures_and_continues(tmp_path, monkeypa
     assert len(rows) == 20 and rows[0]["resolved"] is None
     assert len(list(tmp_path.glob("task-*/result.json"))) == 20
     assert json.loads((tmp_path / "progress.json").read_text())["errors"] == 1
+
+
+def test_summary_keeps_errors_and_checks_pair_alignment(tmp_path):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "pilot_summary_under_test", Path("scripts/summarize_codex_size_pilot.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    ids = ["a", "b"]
+    selection = tmp_path / "selection.json"
+    selection.write_text(json.dumps({"instance_ids": ids}))
+
+    def arm(name, model, rows):
+        root = tmp_path / name
+        root.mkdir()
+        cfg = {
+            "model": {"id": model},
+            **{
+                key: {}
+                for key in (
+                    "serving",
+                    "codex",
+                    "sandbox",
+                    "limits",
+                    "selection_manifest",
+                    "pilot",
+                )
+            },
+        }
+        (root / "manifest.json").write_text(
+            json.dumps(
+                {"config": cfg, "provenance": {"task_selection": {"instance_ids": ids}}}
+            )
+        )
+        (root / "results.json").write_text(json.dumps({"rows": rows}))
+        return root
+
+    a = arm(
+        "small",
+        "Qwen/Qwen2.5-Coder-7B-Instruct",
+        [
+            {"instance_id": "a", "resolved": False},
+            {"instance_id": "b", "resolved": None},
+        ],
+    )
+    b = arm(
+        "large",
+        "Qwen/Qwen2.5-Coder-14B-Instruct",
+        [
+            {"instance_id": "a", "resolved": True},
+            {"instance_id": "b", "resolved": False},
+        ],
+    )
+    result = module.summarize(a, b, selection)
+    assert (
+        result["small"]["selected"] == 2
+        and result["small"]["infrastructure_errors"] == 1
+    )
+    assert (
+        result["paired_counts"]["14b_only"] == 1
+        and result["paired_counts"]["infrastructure_error"] == 1
+    )
+    data = json.loads((b / "manifest.json").read_text())
+    data["provenance"]["task_selection"]["instance_ids"] = ["b", "a"]
+    (b / "manifest.json").write_text(json.dumps(data))
+    with pytest.raises(ValueError):
+        module.summarize(a, b, selection)
