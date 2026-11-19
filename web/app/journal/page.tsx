@@ -53,6 +53,12 @@ export default async function JournalIndexPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
+            href="/alpha"
+            className={cn(buttonVariants({ variant: "outline" }), "h-9 px-3")}
+          >
+            Alpha architecture
+          </Link>
+          <Link
             href="/journal/new"
             className={cn(buttonVariants({ variant: "outline" }), "h-9 px-3")}
           >
