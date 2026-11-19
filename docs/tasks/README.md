@@ -26,7 +26,7 @@ Same 20 fresh training tasks and harness for both models, run sequentially on Sp
 
 ## TASK-004 — E7 telemetry reuse and routing State Builder
 
-Status: approved for implementation on `codex/task-004-telemetry-state-builder`.
+Status: completed offline implementation and replay validation on `codex/task-004-telemetry-state-builder`.
 
 - [Task, specifications, requirements, edge cases, acceptance criteria and tests](e7-telemetry-and-routing-state-builder.md)
 

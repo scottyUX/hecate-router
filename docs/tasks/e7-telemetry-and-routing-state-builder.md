@@ -1,7 +1,7 @@
 # Task: Reuse E7 telemetry and define the routing State Builder
 
 - **Task ID:** TASK-004
-- **Status:** Approved for implementation on a separate branch.
+- **Status:** Completed offline implementation and replay validation; live producers/integration remain separate tasks.
 - **Created:** 2026-11-19
 - **Scope:** Turn existing execution logs into a reproducible routing observation, independent of the final M1/M2 choice.
 - **Authorization:** Scott requested this task specification in the same style as the earlier tasks. Scott approved implementation on a separate branch on 2026-11-19 ("on a seperate branch we can build this task"). Scope remains offline telemetry/state construction.
@@ -538,21 +538,21 @@ availability. The schema hash below is computed from the current v1 config.
 
 ## Acceptance criteria
 
-- [ ] Scott reviews the schema, checkpoint cadence, candidate features and scope
+- [x] Scott reviews the schema, checkpoint cadence, candidate features and scope
   before implementation; approval and changes are recorded here.
-- [ ] Reuse assessment identifies actual available artifacts and optional-log gaps.
-- [ ] Versioned event/schema configuration distinguishes requests, retries, tools,
+- [x] Reuse assessment identifies actual available artifacts and optional-log gaps.
+- [x] Versioned event/schema configuration distinguishes requests, retries, tools,
   advisor calls, termination and evaluation-only data.
-- [ ] Adapters replay at least one available E7 training/pilot trace and one current
+- [x] Adapters replay at least one available E7 training/pilot trace and one current
   harness training/pilot trace; missing fields produce explicit coverage reports.
   If an E7 trace is unavailable, record the blocker rather than claim validation
   from synthetic fixtures alone.
-- [ ] Collector and State Builder produce deterministic, causal observations with
+- [x] Collector and State Builder produce deterministic, causal observations with
   fixed feature order, units, masks, source references and checkpoint identities.
-- [ ] Normalization fitting rejects reserved evaluation inputs and exports a
+- [x] Normalization fitting rejects reserved evaluation inputs and exports a
   reproducible frozen artifact, or raw-only mode is clearly identified as incomplete.
-- [ ] Synthetic and saved-trace tests below pass without model inference or a GPU.
-- [ ] Replay outputs and limitations are reviewable; Spark outputs have verified
+- [x] Synthetic and saved-trace tests below pass without model inference or a GPU.
+- [x] Replay outputs and limitations are reviewable; Spark outputs have verified
   off-Spark copies. Existing experiment artifacts remain unchanged.
 
 ## Tests
@@ -591,3 +591,31 @@ availability. The schema hash below is computed from the current v1 config.
 ## Implementation decisions — 2026-11-19
 
 Approval accepts the proposed deterministic-first v1: cadence five, no initial decision; advisor slots masked until validated; visible tests require structured comparable records and historical stdout is not parsed. Raw replay is diagnostic; router-ready output requires frozen normalization and explicit controller action masks. No inference or active-run changes.
+
+## Completion evidence — 2026-11-19
+
+Implementation commit: `003f755`, branch `codex/task-004-telemetry-state-builder`.
+The state module is `src/hecate/telemetry/state.py`; this keeps offline replay
+independent of the existing router training package.
+
+- 45 targeted tests passed (12 new telemetry/state tests plus existing pilot and
+  compatibility checks); static undefined-name/import checks passed. The fresh
+  minimal environment emits two pytest warnings because it omits the optional
+  pytest-asyncio plugin; no test failures. No dependencies were changed.
+- Actual E7 training/pilot log retrieved from the existing GCS bucket; three source
+  records replayed as five canonical records, with zero invented checkpoints.
+- Two saved TASK-002 training traces replayed into two verified observations. An
+  independent source-history completion ledger confirmed interaction/request
+  counts `(5, 5)` and `(5, 6)` at those checkpoints.
+- Raw, fitted-normalizer and frozen-reload replay runs completed. Fitting and
+  reloading produced byte-identical observation JSONL. Each run retains exact
+  source/config/code provenance and a verified local mirror off Spark.
+- Run IDs: `task004-replay-raw-01`, `task004-replay-normalized-01`,
+  `task004-replay-reload-01`, under `data/outputs/runs/`; verified mirrors are
+  under `data/outputs/task004-mirror/` (12, 14 and 13 checksum files respectively).
+
+These are diagnostic replay outputs, not a deployed routing policy. Historical
+logs lack controller action masks and several feature producers. The example
+normalizer was fitted on two training observations to validate the contract;
+it is not a selected production normalizer. No GPU or new model inference was
+used for TASK-004. See `task-004-reuse-and-runbook.md` for commands and limitations.
