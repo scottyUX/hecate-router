@@ -1,4 +1,5 @@
 """Scope and failure accounting for the explicitly authorized TASK-002 pilot."""
+
 from __future__ import annotations
 
 
@@ -16,12 +17,17 @@ def validate_scope(mode: str, config: dict, selection: dict) -> int:
         raise ValueError("Unknown run mode")
     pilot = config.get("pilot", {})
     if (
-        pilot.get("task_id") != "TASK-002"
+        pilot.get("task_id") not in {"TASK-002", "TASK-006"}
         or selection.get("task_id") != "TASK-002"
         or pilot.get("task_count") != 20
         or len(ids) != 20
     ):
         raise ValueError("TASK-002 pilot requires exactly 20 fixed selected tasks")
+    if (
+        pilot.get("task_id") == "TASK-006"
+        and config.get("model", {}).get("id") != "Qwen/Qwen3-Coder-30B-A3B-Instruct"
+    ):
+        raise ValueError("TASK-006 requires its explicitly authorized model")
     if set(ids) & set(selection.get("excluded_instance_ids", [])):
         raise ValueError("Pilot includes previously exposed smoke tasks")
     return 20

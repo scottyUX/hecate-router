@@ -1,4 +1,5 @@
 """Offline guards for the paired TASK-002 pilot."""
+
 import json
 from pathlib import Path
 import pytest
@@ -151,3 +152,22 @@ def test_summary_keeps_errors_and_checks_pair_alignment(tmp_path):
     (b / "manifest.json").write_text(json.dumps(data))
     with pytest.raises(ValueError):
         module.summarize(a, b, selection)
+
+
+def test_task006_scope_keeps_exact_selection_and_model():
+    import json
+    from pathlib import Path
+    import yaml
+    from hecate.execution.codex_pilot import validate_scope
+
+    selection = json.loads(Path("configs/codex_qwen_size_pilot_tasks.json").read_text())
+    config = yaml.safe_load(Path("configs/codex_qwen3_30b_pilot.yaml").read_text())
+    assert validate_scope("pilot", config, selection) == 20
+    assert config["serving"]["parser"] == "qwen3_coder"
+    assert config["serving"]["tool_decoding"] == "auto"
+    assert config["model"]["precision"] == "bfloat16"
+    config["model"]["id"] = "unapproved"
+    import pytest
+
+    with pytest.raises(ValueError, match="authorized model"):
+        validate_scope("pilot", config, selection)
