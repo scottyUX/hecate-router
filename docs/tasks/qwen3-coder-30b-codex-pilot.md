@@ -94,3 +94,13 @@ __iter__ where TypeError is required. stop_never: pass (123 passed,1 skipped).
 Original policy scores remain unchanged. Run `task006-source-only-diagnostic-01`
 is checksum-mirrored off Spark (30 files), with hashes for original/derived
 patches, excluded paths, controls and complete pytest logs. No new model calls.
+
+## Diagnostic regrade D2 — authorized 2026-11-19
+
+Scott requested checking all eight attempts from the earlier snapshot. Audit
+exactly the first eight selected tasks, including the existing solve, three
+unresolved patches, three new-test-file rejections and one context/gateway error.
+Regrade saved patches only; exclude only added rejected test blocks as in D1.
+Reuse D1 evidence only after full checksum/config and original/derived patch-hash
+verification; independently evaluate other saved patches with fresh controls.
+Keep all automated outcomes unchanged and report diagnostic correctness separately.
