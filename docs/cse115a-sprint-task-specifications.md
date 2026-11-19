@@ -19,7 +19,7 @@ Each sprint you own **two tasks or one big task**. One big task is a single task
 
 - You are the only assignee. You write the task file (you will discuss and clarify it with your team members), the tests, and the implementation. Teammates may review. They do not commit to your task branch.
 - When you own two tasks, they are different slices. A revision, rename, or follow-up fix of the first is not a second task.
-- Each task ID is used only once in your team's repository, in any sprint. Agree on task IDs with your team, because the ID also names your git tags.
+- Each task ID is used only once in your team's repository, in any sprint. Agree on task IDs with your team.
 - Estimated at 2 hours or more (4 or more for one big task), and it changes behavior a user or another part of the system can observe.
 - Small enough that one person can finish within 2–3 days, including review.
 - The task file is created before any implementation code.
@@ -41,7 +41,7 @@ We will cover all of these concepts in lecture. If you are not sure how to write
 
 Copy this shape to `docs/tasks/sprint-N/<task id>.md`, where `N` is the sprint number (for example `docs/tasks/sprint-1/US-1-T-1.md`). The `sprint:` field in the front matter must match. Keep the front matter, the headings, and their order exactly. The files are read automatically.
 
-The task id (for example `US-1-T-1`) stays on the task: in the front matter, the filename, the branch, the tags, the test names, and the pull-request title. You do not submit the id separately.
+The task id (for example `US-1-T-1`) stays on the task: in the front matter, the filename, the branch, the test names, and the pull-request title. You do not submit the id separately.
 
 ```markdown
 ---
@@ -79,6 +79,8 @@ Serves US-1 (log in with a university email). This task covers the rejection pat
 
 Steps below use `US-1-T-1` (User Story 1, Task 1) as the example task id, swap in your own.
 
+You no longer push `-base` or `-done` tags. The app finds your pull request's first commit and its merge commit itself. Tags you already pushed are ignored and can stay.
+
 **Team setup (once, before your first task)**
 - The repository owner or an admin installs the course GitHub App on the team repository. In the Repo Metrics app, click **Install the GitHub App** (it pops up when you open the dashboard, and the button stays above your tasks), choose the account that owns the team repository, pick **Only select repositories**, select it, and click **Install**. The app can only read that one repository and never changes it.
 - If the repository belongs to a GitHub organization and you see **Request** instead of **Install**, an organization owner approves it under the organization's **Settings → GitHub Apps**.
@@ -93,24 +95,18 @@ Steps below use `US-1-T-1` (User Story 1, Task 1) as the example task id, swap i
 
 `git switch -c task/US-1-T-1`.
 
-**3. Commit the task file alone**
+**3. Commit the task file alone, and push it before writing any code**
 ```bash
 git add docs/tasks/sprint-1/US-1-T-1.md
 git commit -m "US-1-T-1: task spec"
+git push -u origin task/US-1-T-1
 ```
 - No implementation code in this commit, spec only.
 - Run `git status` before committing. Only the task file should be listed under "Changes to be committed". If your IDE asked "Add file to Git?" when you created another file, and you clicked Add, that file is staged and will go into this commit too. Unstage it with `git restore --staged <file>`.
+- This commit must stay the first commit on the branch, with nothing else in it. Do not rebase, amend, or force-push it.
+- If this commit isn't first, see [Fixing mistakes](#fixing-mistakes).
 
-**4. Tag and push the spec commit, before writing any code**
-```bash
-git tag US-1-T-1-base
-git push origin task/US-1-T-1 US-1-T-1-base
-```
-- This commit must stay the first commit on the branch. Do not rebase, amend, or force-push it after tagging.
-- If `git push` says the tag already exists, a teammate is probably using this task ID. Don't force-push it; pick a new ID and redo steps 1–4.
-- If this commit isn't first, or you changed it after tagging, see [Fixing mistakes](#fixing-mistakes).
-
-**5. Implement**
+**4. Implement**
 - Add the implementation and its tests on the same branch.
 - Write at least one test per acceptance criterion and start each test name with the task id. For the worked example:
 
@@ -126,7 +122,7 @@ git push origin task/US-1-T-1 US-1-T-1-base
 - **Required:** One task per pull request: the PR adds only this task's task file. Open a separate pull request for each task.
 - **Recommended:** Reorganizing files from earlier tasks (for example, moving the tests folder, or updating an earlier task's task file to match) is its own change. Do it in a separate pull request that you don't submit in the app, merge it, then run `git fetch origin` and `git merge origin/main` on your task branch (don't rebase). If it ends up in a task's pull request anyway, the app still accepts it, and the earlier task's grade doesn't change. Moving this task's own new files is fine.
 
-**6. Open a pull request**
+**5. Open a pull request**
 - Open it from your own GitHub account.
 - Title: `US-1-T-1: <title>`.
 - Within `docs/tasks/`, this PR changes exactly one file: your task file, `docs/tasks/sprint-N/<task id>.md`. (Changes outside `docs/tasks/` are fine.)
@@ -139,18 +135,8 @@ git push origin task/US-1-T-1 US-1-T-1-base
   The first line should be your task spec commit. If it isn't, see [Fixing mistakes](#fixing-mistakes) before you merge.
 - Merge once the task's tests and the existing tests pass.
 
-**7. Tag the merge commit**
-
-Find the merge commit on the pull request page ("merged commit `abc1234` into main"), or with the GitHub CLI: `gh pr view <PR number> --json mergeCommit -q .mergeCommit.oid`.
-```bash
-git fetch origin
-git tag US-1-T-1-done <merge commit sha>
-git push origin US-1-T-1-done
-```
-
-**8. Add the task in the Repo Metrics app**
-- Push the `-done` tag first. The app checks the tags when you add the PR.
-- See [How to submit](#how-to-submit).
+**6. Add the task in the Repo Metrics app**
+- Once the pull request is merged, add it in the app. See [How to submit](#how-to-submit).
 
 ## How to submit
 
@@ -165,7 +151,7 @@ Submit in the [Repo Metrics app](https://cse115a-repo-metrics-production.up.rail
 1. Open **Assignment N**, where `N` is the sprint number.
 2. In **Task 1**, paste the first merged pull-request link and press **Add PR**. Keep the tab open while the analysis runs.
 3. Do the same in **Task 2** for a second task. With one big task, leave **Task 2** empty; the button then reads **Submit Sprint N with one task**.
-4. Read the checks under each task. A check marked for review can cost the Process point. To re-check a task after fixing it (for example, after pushing a missing tag), press **Re-check** on that task.
+4. Read the checks under each task. A check marked for review can cost the Process point. To re-check a task after fixing it (for example, after editing the pull-request title), press **Re-check** on that task.
 5. When your tasks are analyzed, press **Submit Sprint N**. Your tasks lock when you submit. To change them, press **Change submission**. You can do this until the sprint closes, as long as your grade hasn't been released.
 
 Your grade appears in the app after an instructor reviews it.
@@ -176,25 +162,14 @@ Before pressing **Submit Sprint N**, check **each of the following for each task
 
 - [ ] The task is on the team's Scrum board.
 - [ ] The task file was committed alone, before any implementation code.
-- [ ] The `<id>-base` tag is pushed on that commit.
 - [ ] The implementation and tests are committed on the task branch.
 - [ ] The pull request was opened from your account, reviewed, and merged.
-- [ ] The `<id>-done` tag is pushed on the merge commit.
 - [ ] The task tests and existing tests pass on `main`.
 - [ ] The task is added in the Repo Metrics app and its checks have no items to review.
 
 ## Fixing mistakes
 
-Which fix you need depends on the first commit on the branch: the top entry on the pull request's **Commits** tab.
-
-**If the first commit is your task file alone, but the `-base` tag is missing or on another commit** (for example, you amended, rebased, or force-pushed the spec commit after tagging): move the tag to the first commit. This works before or after the merge, and the task card in the app shows the exact command.
-```bash
-git tag -f US-1-T-1-base <first commit sha>
-git push -f origin US-1-T-1-base
-```
-Then press **Re-check** in the app.
-
-If the task card says the tag is on someone else's commit, a teammate is probably using the same task ID. Don't move it, because that turns their spec-first check red; ask a TA.
+The app checks the first commit on your branch: the top entry on the pull request's **Commits** tab.
 
 **If the first commit isn't your task file alone** (code came first, or the spec commit also contains code), it can't be fixed on that branch. What to do next depends on whether the PR is merged.
 
@@ -207,21 +182,16 @@ If the task card says the tag is on someone else's commit, a teammate is probabl
    git pull
    git switch -c task/US-1-T-1-v2
    ```
-3. Copy your task file back, commit it alone, and move the base tag to it:
+3. Copy your task file back, commit it alone, and push:
    ```bash
    git add docs/tasks/sprint-1/US-1-T-1.md
    git commit -m "US-1-T-1: task spec"
-   git tag -d US-1-T-1-base
-   git push origin :refs/tags/US-1-T-1-base
-   git tag US-1-T-1-base
-   git push origin task/US-1-T-1-v2 US-1-T-1-base
+   git push -u origin task/US-1-T-1-v2
    ```
 4. Copy your code and tests back, commit, push, and open a new pull request. Close the old one.
 5. Optional: delete the old branch with `git push origin --delete task/US-1-T-1`.
 
 **If your PR is already merged:** submit the task anyway. You lose the Process point (1 of 10), but everything else is graded normally. Do not delete and re-add files to rewrite the history.
-
-If the PR was squash- or rebase-merged and the branch is gone from your computer, the tag commands above need `git fetch origin pull/<PR number>/head` first, or git can't find the commit.
 
 If you're unsure, ask a TA before changing anything.
 
@@ -235,11 +205,11 @@ For each sprint, write **one paragraph** that:
 * reports the results for those two metrics
 * compares the two metrics and explains what they show about your task.
 
-**You do not need to submit the task files, Git tags, or Scrum board separately.**
+**You do not need to submit the task files or Scrum board separately.**
 
 ## Grading
 
-Each task is scored out of 10. With two tasks, your sprint score is their average; with one big task, that task's score is your sprint score. The grader reads the task file and checks the merged pull request, and the two tags. An instructor reviews every grade before you see it.
+Each task is scored out of 10. With two tasks, your sprint score is their average; with one big task, that task's score is your sprint score. The grader reads the task file and checks the merged pull request. An instructor reviews every grade before you see it.
 
 | Criterion | Full credit | Partial | None | Pts |
 |---|---|---|---|-----|
@@ -247,7 +217,7 @@ Each task is scored out of 10. With two tasks, your sprint score is their averag
 | Specs | Observable behavior and edge cases; names every interface the tests use | Behavior stated, gaps remain | Describes implementation, or missing | 2   |
 | Acceptance criteria | Every item pass/fail and checkable | Some items vague | Missing or not checkable | 2   |
 | Test quality | Tests assert the criteria and fail without the implementation | Some weak or trivial assertions | Tests pass even without the implementation | 2   |
-| Tests pass | All task tests pass at `-done`; existing tests still pass | Some task tests still failing | Tests do not run, all fail, or are missing | 2   |
-| Process | Spec committed first, both tags pushed, Scrum board card present, your tasks submitted in the app | One step missing or late | Implementation committed before the task file | 1   |
+| Tests pass | All task tests pass on the merge commit; existing tests still pass | Some task tests still failing | Tests do not run, all fail, or are missing | 2   |
+| Process | Spec committed first, Scrum board card present, your tasks submitted in the app | One step missing or late | Implementation committed before the task file | 1   |
 
 Consent to the research, whether a task is later chosen for the benchmark, which AI tools you used, and how any AI tool performs on your task do not affect your grade.
