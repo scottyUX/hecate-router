@@ -37,7 +37,7 @@ def main():
         "run",
         "-d",
         "--name",
-        "hecate-task001-model",
+        cfg["serving"].get("container_name", "hecate-task001-model"),
         "--gpus",
         "all",
         "--shm-size=4g",

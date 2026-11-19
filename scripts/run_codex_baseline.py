@@ -19,6 +19,7 @@ import tempfile
 from pathlib import Path
 
 import yaml
+from hecate.execution.codex_pilot import validate_scope, should_halt
 from hecate.execution.codex_artifacts import create_run, finish_run, checksums
 from hecate.execution.codex_session import (
     INSTRUCTIONS,
@@ -351,6 +352,78 @@ def fixtures(run: Path, config: dict, tools: Path, binary: Path) -> list[dict]:
     return rows
 
 
+def run_task(
+    run: Path,
+    config: dict,
+    tools: Path,
+    binary: Path,
+    instance: dict,
+    reuse_agent_from: Path | None = None,
+) -> dict:
+    iid = instance["instance_id"]
+    directory = run / iid
+    directory.mkdir()
+    image = config["sandbox"]["image"]
+    # Controls must pass before any model attempt on this task.
+    bug = grade_patch(image, instance, "", directory / "control-unpatched")
+    gold = grade_patch(image, instance, "", directory / "control-patched", gold=True)
+    controls = (
+        bug["status"] == "completed"
+        and not bug["resolved"]
+        and all(s in {"FAILED", "ERROR"} for s in bug.get("f2p", {}).values())
+        and gold["status"] == "completed"
+        and gold["resolved"]
+        and all(s == "PASSED" for s in bug.get("p2p", {}).values())
+    )
+    if not controls:
+        return {
+            "instance_id": iid,
+            "status": "evaluator_failure",
+            "resolved": None,
+            "controls": {"unpatched": bug, "patched": gold},
+        }
+    previous = reuse_agent_from / iid / "agent" if reuse_agent_from else None
+    if previous and (previous / "result.json").exists():
+        shutil.copytree(previous, directory / "agent", symlinks=True)
+        result = json.loads((previous / "result.json").read_text())
+        original_row = json.loads((previous.parent / "result.json").read_text())
+        result.update(
+            instance_id=iid,
+            base_revision=original_row.get("base_revision"),
+            reused_agent_artifacts_from=str(previous),
+        )
+    else:
+        workspace = directory / "workspace"
+        base = export_task_tree(image, iid, workspace)
+        result = execute(
+            workspace,
+            directory / "agent",
+            instance["problem_statement"]
+            + "\n\nFix non-test source files in /testbed. Do not modify tests.",
+            config,
+            tools,
+            binary,
+            fixture=False,
+        )
+        result.update(instance_id=iid, base_revision=base)
+    if result["test_modifications"]:
+        result.update(status="test_modification_rejected", resolved=False)
+    elif result["termination_reason"] not in {"completed", "budget_exhausted"}:
+        result.update(status=result["termination_reason"], resolved=None)
+    else:
+        patch = (directory / "agent/patch.diff").read_text()
+        evaluation = grade_patch(
+            image,
+            instance,
+            patch,
+            directory / "evaluation",
+            validated_controls=True,
+        )
+        result["evaluation"] = evaluation
+        result.update(status=evaluation["status"], resolved=evaluation["resolved"])
+    return result
+
+
 def smoke(
     run: Path,
     config: dict,
@@ -358,94 +431,60 @@ def smoke(
     binary: Path,
     tasks: list[dict],
     reuse_agent_from: Path | None = None,
+    *,
+    continue_on_error: bool = False,
+    consecutive_limit: int = 3,
 ) -> list[dict]:
     rows = []
     for instance in tasks:
-        iid = instance["instance_id"]
-        directory = run / iid
-        directory.mkdir()
-        image = config["sandbox"]["image"]
-        # Controls must pass before any model attempt on this task.
-        bug = grade_patch(image, instance, "", directory / "control-unpatched")
-        gold = grade_patch(
-            image, instance, "", directory / "control-patched", gold=True
-        )
-        controls = (
-            bug["status"] == "completed"
-            and not bug["resolved"]
-            and all(s in {"FAILED", "ERROR"} for s in bug.get("f2p", {}).values())
-            and gold["status"] == "completed"
-            and gold["resolved"]
-            and all(s == "PASSED" for s in bug.get("p2p", {}).values())
-        )
-        if not controls:
-            rows.append(
-                {
-                    "instance_id": iid,
-                    "status": "evaluator_failure",
-                    "controls": {"unpatched": bug, "patched": gold},
-                }
-            )
-            break
-        previous = reuse_agent_from / iid / "agent" if reuse_agent_from else None
-        if previous and (previous / "result.json").exists():
-            shutil.copytree(previous, directory / "agent", symlinks=True)
-            result = json.loads((previous / "result.json").read_text())
-            original_row = json.loads((previous.parent / "result.json").read_text())
-            result.update(
-                instance_id=iid,
-                base_revision=original_row.get("base_revision"),
-                reused_agent_artifacts_from=str(previous),
-            )
-        else:
-            workspace = directory / "workspace"
-            base = export_task_tree(image, iid, workspace)
-            result = execute(
-                workspace,
-                directory / "agent",
-                instance["problem_statement"]
-                + "\n\nFix non-test source files in /testbed. Do not modify tests.",
-                config,
-                tools,
-                binary,
-                fixture=False,
-            )
-            result.update(instance_id=iid, base_revision=base)
-        if result["test_modifications"]:
-            result.update(status="test_modification_rejected", resolved=None)
-        elif result["termination_reason"] not in {"completed", "budget_exhausted"}:
-            result.update(status=result["termination_reason"], resolved=None)
-        else:
-            patch = (directory / "agent/patch.diff").read_text()
-            evaluation = grade_patch(
-                image,
-                instance,
-                patch,
-                directory / "evaluation",
-                validated_controls=True,
-            )
-            result["evaluation"] = evaluation
-            result.update(status=evaluation["status"], resolved=evaluation["resolved"])
+        try:
+            result = run_task(run, config, tools, binary, instance, reuse_agent_from)
+        except Exception as exc:
+            result = {
+                "instance_id": instance["instance_id"],
+                "status": "infrastructure_failure",
+                "resolved": None,
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            }
         rows.append(result)
+        directory = run / instance["instance_id"]
+        directory.mkdir(exist_ok=True)
         (directory / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+        (run / "progress.json").write_text(
+            json.dumps(
+                {
+                    "records": len(rows),
+                    "resolved": sum(r.get("resolved") is True for r in rows),
+                    "errors": sum(r.get("resolved") is None for r in rows),
+                },
+                indent=2,
+            )
+            + "\n"
+        )
         print(
             json.dumps(
                 {
-                    "instance_id": iid,
+                    "record": len(rows),
+                    "instance_id": instance["instance_id"],
                     "status": result["status"],
                     "resolved": result.get("resolved"),
                 }
             ),
             flush=True,
         )
-        if result.get("resolved") is None:
+        if should_halt(
+            rows,
+            continue_on_error=continue_on_error,
+            consecutive_limit=consecutive_limit,
+        ):
             break
     return rows
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=["fixtures", "smoke"])
+    parser.add_argument("mode", choices=["fixtures", "smoke", "pilot"])
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument(
@@ -464,7 +503,7 @@ def main() -> int:
     if platform.system() != "Linux" or platform.machine() != "aarch64":
         parser.error("Live execution is restricted to ARM64 Linux Spark")
     cfg = yaml.safe_load(args.config.read_text())
-    if args.mode == "smoke":
+    if args.mode in {"smoke", "pilot"}:
         if not args.fixtures_run:
             parser.error("--fixtures-run is required for smoke")
         require_fixture_gate(args.fixtures_run, cfg)
@@ -491,11 +530,12 @@ def main() -> int:
     selection = json.loads(Path(cfg["selection_manifest"]).read_text())
     tasks = (
         load_tasks(args.dataset, selection)
-        if args.mode == "smoke" and args.dataset
+        if args.mode in {"smoke", "pilot"} and args.dataset
         else []
     )
-    if args.mode == "smoke" and len(tasks) != 3:
-        parser.error("Smoke requires the exact three-task dataset selection")
+    expected_count = validate_scope(args.mode, cfg, selection)
+    if args.mode != "fixtures" and len(tasks) != expected_count:
+        parser.error("Run requires the exact authorized task selection")
     run = create_run(
         args.root / "runs",
         args.run_id,
@@ -537,9 +577,20 @@ def main() -> int:
         rows = (
             fixtures(run, cfg, tools, binary)
             if args.mode == "fixtures"
-            else smoke(run, cfg, tools, binary, tasks, args.reuse_agent_from)
+            else smoke(
+                run,
+                cfg,
+                tools,
+                binary,
+                tasks,
+                args.reuse_agent_from,
+                continue_on_error=args.mode == "pilot",
+                consecutive_limit=cfg.get("pilot", {}).get(
+                    "max_consecutive_infrastructure_errors", 3
+                ),
+            )
         )
-        ok = len(rows) == 3 and all(
+        ok = len(rows) == expected_count and all(
             r["passed"] if args.mode == "fixtures" else r.get("resolved") is not None
             for r in rows
         )
@@ -554,12 +605,21 @@ def main() -> int:
             if args.mode == "fixtures"
             else sum("termination_reason" in r for r in rows),
             "tasks_considered": len(rows),
+            "expected_tasks": expected_count,
             "rows": rows,
         }
-        if args.mode == "smoke":
+        if args.mode in {"smoke", "pilot"}:
             eligible = [r for r in rows if r.get("resolved") is not None]
             results.update(
-                evaluable=len(eligible), resolved=sum(r["resolved"] for r in eligible)
+                evaluable=len(eligible),
+                resolved=sum(r["resolved"] for r in eligible),
+                infrastructure_errors=sum(r.get("resolved") is None for r in rows),
+                resolved_fraction_of_selected=sum(r["resolved"] for r in eligible)
+                / expected_count,
+                resolved_fraction_of_evaluable=sum(r["resolved"] for r in eligible)
+                / len(eligible)
+                if eligible
+                else None,
             )
         finish_run(run, results)
         return 0 if ok else 1

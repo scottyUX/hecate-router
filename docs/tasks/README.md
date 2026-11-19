@@ -12,4 +12,12 @@ Status: completed with declared compatibility limitations; three-task smoke 0/3.
 - [Reuse assessment and runbook](task-001-reuse-and-runbook.md)
 - [Compatibility report](task-001-compatibility-report.md)
 
-A larger baseline and PPO routing are separate, unapproved work.
+TASK-001 itself does not authorize a larger baseline or PPO routing; follow-up authorization is recorded in its own task below.
+
+## TASK-002 — Paired 20-task Qwen2.5-Coder 7B / 14B pilot
+
+Status: authorized; fixed protocol and selection recorded before inference.
+
+- [Task, requirements and acceptance criteria](qwen25-coder-7b-vs-14b-codex-20-task-pilot.md)
+
+Same 20 fresh training tasks and harness for both models, run sequentially on Spark.
