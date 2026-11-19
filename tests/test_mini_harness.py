@@ -3,10 +3,13 @@
 import hashlib
 import importlib.util
 import json
+import os
 import sys
+import tempfile
 import time
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
@@ -19,7 +22,15 @@ from hecate.execution.mini_harness import (
 
 VENDOR = Path(__file__).resolve().parents[1] / "vendor/mini-swe-agent-v1"
 sys.path.insert(0, str(VENDOR))
-from microsweagent.agents.default import DefaultAgent, FormatError, Submitted
+with tempfile.TemporaryDirectory(prefix="hecate-mini-test-") as config_dir:
+    with patch.dict(
+        os.environ,
+        {
+            "MICRO_SWE_AGENT_GLOBAL_CONFIG_DIR": config_dir,
+            "MICRO_SWE_AGENT_SILENT_STARTUP": "1",
+        },
+    ):
+        from microsweagent.agents.default import DefaultAgent, FormatError, Submitted
 
 
 def test_upstream_unchanged():
@@ -48,6 +59,25 @@ def test_expired_episode_never_sends_request(tmp_path):
     with pytest.raises(EpisodeBudget):
         model.query([])
     assert model.n_calls == 0
+
+
+def test_upstream_counts_format_errors_against_request_budget():
+    class MalformedModel:
+        config = AdapterConfig()
+        n_calls = 0
+        cost = 0.0
+
+        def query(self, messages):
+            self.n_calls += 1
+            return {"content": "No bash command"}
+
+    model = MalformedModel()
+    agent = DefaultAgent(
+        model, SimpleNamespace(config=AdapterConfig()), step_limit=2, cost_limit=0.0
+    )
+    status, _ = agent.run("Fix a source file")
+    assert status == "LimitsExceeded"
+    assert model.n_calls == 2
 
 
 def test_shell_immutable_bindings_and_timeout(tmp_path, monkeypatch):
