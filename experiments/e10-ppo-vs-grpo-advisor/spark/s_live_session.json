@@ -1,0 +1,210 @@
+{
+ "instance_id": "jd__tenacity.0d40e76f.lm_rewrite__0siuyh3e",
+ "model": "hosted_vllm/student",
+ "calls": [
+  {
+   "call": 1,
+   "terminated": false,
+   "total_steps": 5,
+   "error": null,
+   "features": {
+    "inputs": [
+     0.125,
+     0.875,
+     0.0,
+     1.0,
+     0.0,
+     0.125,
+     0.1111111111111111
+    ],
+    "names": [
+     "steps_used",
+     "steps_remaining",
+     "failing_tests",
+     "no_tests_yet",
+     "command_failures",
+     "steps_without_progress",
+     "advice_turn"
+    ],
+    "raw": {
+     "advice_turn": 1,
+     "commands_in_window": 5,
+     "failed_commands_in_window": 0,
+     "failing_tests": 0,
+     "steps_used": 5,
+     "steps_without_progress": 5,
+     "tests_run": false
+    },
+    "tests_unparsed": false
+   },
+   "observation_chars": 9306,
+   "elapsed_s": 32
+  },
+  {
+   "call": 2,
+   "terminated": false,
+   "total_steps": 10,
+   "error": null,
+   "features": {
+    "inputs": [
+     0.25,
+     0.75,
+     0.0,
+     1.0,
+     0.2,
+     0.25,
+     0.2222222222222222
+    ],
+    "names": [
+     "steps_used",
+     "steps_remaining",
+     "failing_tests",
+     "no_tests_yet",
+     "command_failures",
+     "steps_without_progress",
+     "advice_turn"
+    ],
+    "raw": {
+     "advice_turn": 2,
+     "commands_in_window": 5,
+     "failed_commands_in_window": 1,
+     "failing_tests": 0,
+     "steps_used": 10,
+     "steps_without_progress": 10,
+     "tests_run": false
+    },
+    "tests_unparsed": false
+   },
+   "observation_chars": 4763,
+   "elapsed_s": 110
+  },
+  {
+   "call": 3,
+   "terminated": false,
+   "total_steps": 15,
+   "error": null,
+   "features": {
+    "inputs": [
+     0.375,
+     0.625,
+     0.0,
+     1.0,
+     0.2,
+     0.0,
+     0.3333333333333333
+    ],
+    "names": [
+     "steps_used",
+     "steps_remaining",
+     "failing_tests",
+     "no_tests_yet",
+     "command_failures",
+     "steps_without_progress",
+     "advice_turn"
+    ],
+    "raw": {
+     "advice_turn": 3,
+     "commands_in_window": 5,
+     "failed_commands_in_window": 1,
+     "failing_tests": 0,
+     "steps_used": 15,
+     "steps_without_progress": 0,
+     "tests_run": false
+    },
+    "tests_unparsed": false
+   },
+   "observation_chars": 4600,
+   "elapsed_s": 117
+  },
+  {
+   "call": 4,
+   "terminated": false,
+   "total_steps": 20,
+   "error": null,
+   "features": {
+    "inputs": [
+     0.5,
+     0.5,
+     0.0,
+     1.0,
+     0.0,
+     0.0,
+     0.4444444444444444
+    ],
+    "names": [
+     "steps_used",
+     "steps_remaining",
+     "failing_tests",
+     "no_tests_yet",
+     "command_failures",
+     "steps_without_progress",
+     "advice_turn"
+    ],
+    "raw": {
+     "advice_turn": 4,
+     "commands_in_window": 5,
+     "failed_commands_in_window": 0,
+     "failing_tests": 0,
+     "steps_used": 20,
+     "steps_without_progress": 0,
+     "tests_run": false
+    },
+    "tests_unparsed": false
+   },
+   "observation_chars": 6326,
+   "elapsed_s": 134
+  },
+  {
+   "call": 5,
+   "terminated": false,
+   "total_steps": 25,
+   "error": null,
+   "features": {
+    "inputs": [
+     0.625,
+     0.375,
+     0.0,
+     1.0,
+     0.2,
+     0.05,
+     0.5555555555555556
+    ],
+    "names": [
+     "steps_used",
+     "steps_remaining",
+     "failing_tests",
+     "no_tests_yet",
+     "command_failures",
+     "steps_without_progress",
+     "advice_turn"
+    ],
+    "raw": {
+     "advice_turn": 5,
+     "commands_in_window": 5,
+     "failed_commands_in_window": 1,
+     "failing_tests": 0,
+     "steps_used": 25,
+     "steps_without_progress": 2,
+     "tests_run": false
+    },
+    "tests_unparsed": false
+   },
+   "observation_chars": 6068,
+   "elapsed_s": 157
+  },
+  {
+   "call": 6,
+   "terminated": true,
+   "total_steps": 29,
+   "error": null,
+   "features": null,
+   "observation_chars": 5243,
+   "elapsed_s": 171
+  }
+ ],
+ "problems": [],
+ "session_id": "75afdda2-25a7-4f30-b281-5475bc059044",
+ "patch_chars": 787,
+ "elapsed_s": 171,
+ "ok": true
+}
