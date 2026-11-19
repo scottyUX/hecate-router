@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Authorized D1/D2 saved-source diagnostic grading; never regenerate agents."""
+"""Authorized D1/D2/D3 saved-source diagnostic grading; never regenerate agents."""
 import argparse
 import hashlib
 import json
@@ -54,14 +54,16 @@ def main():
     ap.add_argument("--config", type=Path, required=True)
     ap.add_argument("--run-id", required=True)
     ap.add_argument(
-        "--scope", choices=["policy-three", "snapshot-eight"], default="policy-three"
+        "--scope", choices=["policy-three", "snapshot-eight", "all-twenty"], default="policy-three"
     )
     ap.add_argument("--reuse-from", type=Path)
     args = ap.parse_args()
     cfg = yaml.safe_load(args.config.read_text())
     source = args.root / "runs/task006-qwen3-codex-pilot-run-01"
     selection = json.loads(Path("configs/codex_qwen_size_pilot_tasks.json").read_text())
-    ids = IDS if args.scope == "policy-three" else selection["instance_ids"][:8]
+    ids = IDS if args.scope == "policy-three" else selection["instance_ids"]
+    if args.scope == "snapshot-eight":
+        ids = ids[:8]
     if args.reuse_from:
         recorded = json.loads((args.reuse_from / "checksums.json").read_text())
         if checksums(args.reuse_from) != recorded:

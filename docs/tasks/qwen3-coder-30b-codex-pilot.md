@@ -113,3 +113,14 @@ passes123tests (1skipped). D1reuse was checksum/config/patch-hash verified; the
 other five evaluations reran fresh gold/unpatched controls. No new model calls.
 Run task006-snapshot-eight-diagnostic-01 is mirrored off Spark with75 verified
 files. This is source-only diagnostic correctness, not a changed official score.
+
+## Diagnostic regrade D3 — authorized 2026-11-19
+
+Scott requested manual grading after all20 attempts completed. Extend the same
+saved-source audit to all20 selected tasks, covering all12 previously unscored
+attempts as well as independently graded patches. Reuse D2's eight evaluations
+only after checksum/config and original/derived patch-hash verification. Grade the
+remaining12 with fresh patched/unpatched controls and independent tests. Exclude
+only explicitly rejected newly added test blocks; never repair source patches.
+Preserve original outcomes, save all logs and hashes in a distinct diagnostic
+run, mirror off Spark, and report separately. Generate zero model calls.
