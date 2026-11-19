@@ -193,6 +193,10 @@ The app checks the first commit on your branch: the top entry on the pull reques
 
 **If your PR is already merged:** submit the task anyway. You lose the Process point (1 of 10), but everything else is graded normally. Do not delete and re-add files to rewrite the history.
 
+**If one pull request holds two of your tasks** (two task files): add that pull request in **Task 1** and in **Task 2**. The app asks which task file each one is; choose a different file in each. Each task is graded on its own. Next sprint, use one branch and one pull request per task.
+
+**If your merged pull request has no task file:** open a new pull request that adds only your task file and changes nothing else, and merge it. In the app, paste the first pull request and press **Add PR**; a second box asks for the task-file pull request. The task is graded on the code in the first pull request, and you lose the Process point.
+
 If you're unsure, ask a TA before changing anything.
 
 ## Canvas
