@@ -85,3 +85,12 @@ No new model attempts, prompt changes, budget increases or ongoing-run mutation.
 Record original/derived hashes, excluded paths, evaluator outcomes and durable
 artifacts under a distinct diagnostic run ID. Report this as correctness of the
 saved source edits with added tests excluded, not a revised official pilot score.
+
+D1 outcome: **1/3 source-only patches passes**, after fresh patched/unpatched
+controls and with only the added test files excluded. Wait strategies: fail
+(121 passed,2 failed,1 skipped), due to an off-by-one wait_chain index.
+AsyncRetrying: fail (122 passed,1 failed,1 skipped), due to RuntimeError in
+__iter__ where TypeError is required. stop_never: pass (123 passed,1 skipped).
+Original policy scores remain unchanged. Run `task006-source-only-diagnostic-01`
+is checksum-mirrored off Spark (30 files), with hashes for original/derived
+patches, excluded paths, controls and complete pytest logs. No new model calls.
