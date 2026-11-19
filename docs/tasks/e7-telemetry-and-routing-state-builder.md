@@ -619,3 +619,11 @@ logs lack controller action masks and several feature producers. The example
 normalizer was fitted on two training observations to validate the contract;
 it is not a selected production normalizer. No GPU or new model inference was
 used for TASK-004. See `task-004-reuse-and-runbook.md` for commands and limitations.
+
+## Component documentation
+
+- [Telemetry Collector](../components/telemetry-collector.md)
+- [State Builder](../components/state-builder.md)
+
+The Alpha diagram marks both components complete for offline verification and
+provides a Documentation tab. Live integration remains explicitly pending.

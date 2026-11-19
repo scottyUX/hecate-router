@@ -34,3 +34,8 @@ and experiment decision rules remain open.
 Content is in `components/alpha/content.ts`; interactive diagrams and dialogs are
 in `components/alpha/explorer.tsx`. This feature adds no dependencies, changes no
 existing pages and launches no training jobs.
+
+Completed Telemetry Collector and State Builder nodes carry checkmarks with their
+offline verification scope. Their dialogs include Documentation tabs; full guides
+are in `docs/components/`. Completion metadata is shared by diagrams, the component
+dictionary and roadmap, and does not assert that live integration is complete.
