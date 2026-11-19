@@ -104,3 +104,12 @@ Regrade saved patches only; exclude only added rejected test blocks as in D1.
 Reuse D1 evidence only after full checksum/config and original/derived patch-hash
 verification; independently evaluate other saved patches with fresh controls.
 Keep all automated outcomes unchanged and report diagnostic correctness separately.
+
+D2 outcome: **3/8 saved source patches pass;5 fail**. The original pr_390 solve
+passes again. The three previously graded unresolved attempts remain failures
+(all submitted empty patches). D1's policy-rejected cases remain2fail/1pass.
+The previously unknown context/gateway case func_pm_ctrl_invert_if__ipm7o2gf
+passes123tests (1skipped). D1reuse was checksum/config/patch-hash verified; the
+other five evaluations reran fresh gold/unpatched controls. No new model calls.
+Run task006-snapshot-eight-diagnostic-01 is mirrored off Spark with75 verified
+files. This is source-only diagnostic correctness, not a changed official score.
