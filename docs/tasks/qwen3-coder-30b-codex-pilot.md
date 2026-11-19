@@ -124,3 +124,19 @@ remaining12 with fresh patched/unpatched controls and independent tests. Exclude
 only explicitly rejected newly added test blocks; never repair source patches.
 Preserve original outcomes, save all logs and hashes in a distinct diagnostic
 run, mirror off Spark, and report separately. Generate zero model calls.
+
+D3 outcome: **10/20 saved source patches pass;10 fail**. All8 originally graded
+results agree (3pass/5fail). Of5 added-test policy rejections,3pass/2fail after
+excluding only the recorded new test files. Of7 gateway/context-budget failures,
+4pass/3fail. The7 additional passing patches are func_basic__7azvfd3s,
+func_pm_ctrl_invert_if__ipm7o2gf, pr_425, combine_file__zg0hlvr9,
+combine_file__x5zc4xb6, func_basic__ttznt9oc and func_basic__ogh8drsw.
+Fresh controls passed for all12 newly graded tasks;8 prior evaluations reused
+only after checksum/config/patch verification. Two failing gateway patches broke
+test collection: ld25mubm has a SyntaxError and17y1km6x removes an imported
+retry_if_exception_message symbol. Their successful gold controls distinguish
+these from evaluator setup errors. No source repairs or model calls occurred.
+Run task006-all-twenty-diagnostic-01 (code d0e2344) is mirrored under the main
+checkout's data/outputs/runs with183 verified checksum files. This50% is diagnostic
+saved-source correctness on the selected20 E7 training tasks, not clean agent
+completion, a held-out benchmark result, or a changed original policy score.
