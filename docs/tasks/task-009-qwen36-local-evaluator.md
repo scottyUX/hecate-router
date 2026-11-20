@@ -75,3 +75,14 @@ is not the dataset base SHA even though its source tree is identical. Before any
 model task attempt, verify tree identity and export the exact dataset base commit
 to a fresh one-commit workspace; record both tree and image HEAD. This preserves
 the required source state and prevents exporting evaluator history.
+
+Compatibility amendment before any benchmark inference: Qwen3.6 loaded in BF16
+and served successfully, but fixture run01 was rejected before generation with
+HTTP400 "System message must be at the beginning." The adapter had translated
+multiple developer messages into multiple system messages. Declare a Qwen3.6-only
+single_system_prefix encoding: concatenate existing instruction strings in order
+at the beginning, preserving all non-system history and tool contracts unchanged.
+This is not an instruction rewrite or a native-paper prompt reproduction. Existing
+models retain native message layout. Preserve the failed fixture and server log;
+run a new controls/fixture run under the amended config. No benchmark task attempt
+has occurred, and no model, precision, sampling or budget change is introduced.

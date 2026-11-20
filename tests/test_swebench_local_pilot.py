@@ -51,6 +51,33 @@ def test_qwen36_serving_configuration_is_explicit():
     assert config["serving"]["language_model_only"] is True
     assert config["serving"]["parser"] == "qwen3_coder"
     assert config["model"]["context_tokens"] == 32768
+    assert config["serving"]["message_layout"] == "single_system_prefix"
+
+
+def test_single_system_layout_preserves_instructions_and_conversation_order():
+    from hecate.execution.model_gateway import translate_request
+    body = {"instructions": "base policy", "input": [
+        {"role": "developer", "content": "developer one"},
+        {"role": "user", "content": "task"},
+        {"role": "developer", "content": "developer two"},
+        {"role": "assistant", "content": "working"},
+    ]}
+    original, _ = translate_request(body, "local", {})
+    merged, _ = translate_request(body, "local", {}, message_layout="single_system_prefix")
+    assert sum(m["role"] == "system" for m in original["messages"]) == 3
+    assert merged["messages"][0] == {"role": "system", "content": "base policy\n\ndeveloper one\n\ndeveloper two"}
+    assert merged["messages"][1:] == [m for m in original["messages"] if m["role"] != "system"]
+
+
+def test_single_system_layout_preserves_tool_history():
+    from hecate.execution.model_gateway import translate_request
+    body = {"input": [{"role": "user", "content": "task"},
+                      {"role": "developer", "content": "instructions"},
+                      {"type": "function_call", "name": "exec_command", "call_id": "c", "arguments": '{"cmd":"ls"}'},
+                      {"type": "function_call_output", "call_id": "c", "output": "source.py"}]}
+    raw, _ = translate_request(body, "local", {})
+    merged, _ = translate_request(body, "local", {}, message_layout="single_system_prefix")
+    assert merged["messages"][1:] == [m for m in raw["messages"] if m["role"] != "system"]
 
 
 @pytest.mark.parametrize("changed", [False, True])

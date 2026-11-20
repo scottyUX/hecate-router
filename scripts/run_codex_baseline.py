@@ -98,6 +98,7 @@ def execute(
             request_limit=limit[kind + "_model_requests"],
             tool_decoding=config["serving"].get("tool_decoding", "auto"),
             editing_mode=config["serving"].get("editing_mode", "patch"),
+            message_layout=config["serving"].get("message_layout", "native"),
             sampling=config["model"]["sampling"],
             timeout_s=limit["request_timeout_s"],
             retries=limit["retries"],

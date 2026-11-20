@@ -21,6 +21,7 @@ serving:
   enforce_eager: true
   tool_decoding: auto
   editing_mode: shell
+  message_layout: single_system_prefix
   gpu_memory_utilization: 0.80
   container_name: hecate-task009-model
 codex:

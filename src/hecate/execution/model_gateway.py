@@ -64,6 +64,7 @@ def translate_request(
     sampling: dict,
     tool_decoding: str = "auto",
     editing_mode: str = "patch",
+    message_layout: str = "native",
 ) -> tuple[dict, dict]:
     if editing_mode not in {"patch", "shell"}:
         raise ProtocolError("Unknown editing mode")
@@ -187,6 +188,14 @@ def translate_request(
                 },
             }
         )
+    if message_layout == "single_system_prefix":
+        # Qwen3.6 permits exactly one system message, at index zero. Preserve
+        # instruction text/order and all user/assistant/tool history unchanged.
+        system = [m["content"] for m in messages if m["role"] == "system"]
+        history = [m for m in messages if m["role"] != "system"]
+        messages = ([{"role": "system", "content": "\n\n".join(system)}] if system else []) + history
+    elif message_layout != "native":
+        raise ProtocolError("Unknown message layout")
     payload = {"model": model, "messages": messages, "stream": False, **sampling}
     if tools:
         payload.update(
@@ -448,6 +457,7 @@ class Gateway:
         transport: Callable | None = None,
         tool_decoding: str = "auto",
         editing_mode: str = "patch",
+        message_layout: str = "native",
     ):
         parsed = urlparse(upstream)
         if (
@@ -473,6 +483,7 @@ class Gateway:
             self.command_timeout_s,
         ) = (request_limit, sampling, timeout_s, retries, command_timeout_s)
         self.editing_mode = editing_mode
+        self.message_layout = message_layout
         self.tool_decoding = tool_decoding
         self.transport = transport
         self.requests = 0
@@ -510,6 +521,7 @@ class Gateway:
             self.sampling,
             self.tool_decoding,
             self.editing_mode,
+            self.message_layout,
         )
         self.record(
             {

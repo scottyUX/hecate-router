@@ -6,6 +6,7 @@ CONTROL_RUN="${2:?validated control run}"
 TASK_PYTHON="$TASK_ROOT/venv/bin/python"
 TASK_CONFIG=configs/qwen36_local_evaluator.yaml
 RUNTIME_SOURCE="${3:-$TASK_ROOT/source}"
+ATTEMPT_TAG="${4:-run-01}"
 cd "$RUNTIME_SOURCE"
 export PYTHONPATH=src
 export HECATE_CODE_SHA
@@ -15,7 +16,7 @@ trim_pid=''
 cleanup() {
     if [ -n "$trim_pid" ]; then kill "$trim_pid" 2>/dev/null || true; fi
     if [ -n "$model_started" ]; then
-        docker logs hecate-task009-model > "$TASK_ROOT/logs/model-final.log" 2>&1 || true
+        docker logs hecate-task009-model > "$TASK_ROOT/logs/model-final-$ATTEMPT_TAG.log" 2>&1 || true
         docker stop hecate-task009-model >/dev/null 2>&1 || true
         docker rm hecate-task009-model >/dev/null 2>&1 || true
     fi
@@ -75,4 +76,4 @@ PY
 "$TASK_PYTHON" scripts/run_qwen36_swebench_pilot.py attempt \
     --root "$TASK_ROOT" --dataset "$TASK_ROOT/hecate-task008-verified.parquet" \
     --config "$TASK_CONFIG" --controls-run "$CONTROL_RUN" \
-    --run-id task009-qwen36-codex-one-task-run-01
+    --run-id "task009-qwen36-codex-one-task-$ATTEMPT_TAG"
