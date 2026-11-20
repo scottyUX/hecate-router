@@ -68,3 +68,10 @@ The controller called SWE-bench4.1.0 build_instance_image without its required
 logger/nocache arguments. Preserve that TypeError and all build logs. Correct the
 API call, reuse unchanged completed image layers, and rerun preparation with a
 new run ID/source snapshot. No model calls occurred and no task/model settings changed.
+
+Preparation run02 validates unpatched failure and gold success, covering all8F2P
+and66P2P outcomes. Official setup adds an empty SWE-bench commit, so image HEAD
+is not the dataset base SHA even though its source tree is identical. Before any
+model task attempt, verify tree identity and export the exact dataset base commit
+to a fresh one-commit workspace; record both tree and image HEAD. This preserves
+the required source state and prevents exporting evaluator history.

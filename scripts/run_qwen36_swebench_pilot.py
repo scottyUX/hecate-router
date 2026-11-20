@@ -90,15 +90,21 @@ def export_workspace(spec, base_commit, workspace):
         docker("run", "-d", "--name", name, "--network", "none",
                spec.instance_image_key, "sleep", "600")
         revision = docker("exec", "-w", "/testbed", name, "git", "rev-parse", "HEAD").stdout.strip()
-        if revision != base_commit:
-            raise ValueError("Task image base commit differs from the dataset")
+        actual_tree = docker("exec", "-w", "/testbed", name, "git", "rev-parse", "HEAD^{tree}").stdout.strip()
+        expected_tree = docker("exec", "-w", "/testbed", name, "git", "rev-parse", base_commit + "^{tree}").stdout.strip()
+        # Official setup adds an empty SWE-bench commit; compare source trees,
+        # then export the dataset's exact base, never later history.
+        if actual_tree != expected_tree:
+            raise ValueError("Task image source tree differs from the prescribed base")
         archive = subprocess.check_output(["docker", "exec", "-w", "/testbed", name,
-                                           "git", "archive", "HEAD"], timeout=120)
+                                           "git", "archive", base_commit], timeout=120)
         extract_task_archive(archive, workspace)
         subprocess.run(["git", "init", "-q", str(workspace)], check=True)
         subprocess.run(["git", "-C", str(workspace), "add", "."], check=True)
         subprocess.run(["git", "-C", str(workspace), "-c", "user.name=Hecate",
                         "-c", "user.email=fixture@localhost", "commit", "-qm", "Public task base"], check=True)
+        return {"prescribed_base": base_commit, "image_head": revision,
+                "source_tree": expected_tree, "exported_revision": base_commit}
     finally:
         docker("rm", "-f", name, check=False)
 
@@ -183,7 +189,8 @@ def main():
             if len(fixture_rows) != 3 or not all(r["passed"] for r in fixture_rows):
                 raise RuntimeError("Codex capability fixtures did not pass")
             workspace = run / "workspace"
-            export_workspace(spec, instance["base_commit"], workspace)
+            provenance = export_workspace(spec, instance["base_commit"], workspace)
+            (run / "public-task-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
             agent_config = {**config, "sandbox": {"image": image_id}}
             result = execute(workspace, run / "agent", instance["problem_statement"]
                              + "\n\nFix non-test source files in /testbed. Do not modify tests.",
