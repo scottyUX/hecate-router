@@ -1,5 +1,6 @@
 """Regressions for correctness hidden by policy and execution failures."""
 import importlib.util
+import json
 
 import httpx
 import pytest
@@ -162,3 +163,23 @@ def test_replay_never_falls_back_to_inference(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="never generates"):
         module.run_task(tmp_path, {"sandbox": {"image": "fixture"}}, None, None,
                         {"instance_id": "example"}, reuse_agent_from=tmp_path / "missing")
+
+
+def test_arm_summary_separates_correctness_from_infrastructure(tmp_path):
+    spec = importlib.util.spec_from_file_location("summary", "scripts/summarize_codex_size_pilot.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    row = {"instance_id": "a", "resolved": True, "status": "completed",
+           "termination_reason": "model_server_failure", "test_modifications": []}
+    row.update(outcome_axes(row))
+    (tmp_path / "manifest.json").write_text(json.dumps({
+        "config": {"model": {"id": "fixture"}},
+        "provenance": {"task_selection": {"instance_ids": ["a"]}},
+    }))
+    (tmp_path / "results.json").write_text(json.dumps({"rows": [row]}))
+    summary, _ = module.summarize_arm(tmp_path, ["a"])
+    assert summary["resolved"] == 1 and summary["infrastructure_errors"] == 1
+    assert summary["clean_successes"] == 0 and summary["ungraded"] == 0
+    (tmp_path / "results.json").write_text(json.dumps({"rows": [row, {"instance_id": "b"}]}))
+    with pytest.raises(ValueError, match="different scoring protocols"):
+        module.summarize_arm(tmp_path, ["a"])

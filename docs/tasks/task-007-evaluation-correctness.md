@@ -67,7 +67,7 @@ patch: still counts toward the infrastructure halt. All-null usage remains null.
    evaluator failures, with raw artifacts unchanged.
 2. Gateway tests cover context400 versus unrelated400, request cap race and server
    errors; halt tests cover passing patches with infrastructure failures.
-3. Summaries distinguish10/20 correctness from3 clean successes on TASK-006.
+3. Summaries distinguish patch correctness from clean successes on TASK-006.
 4. Production replay matches all20 D3 verdicts without regenerating agents, with
    immutable manifests, source/config snapshots, hashes and off-Spark receipt.
 5. Relevant existing compatibility/mini tests and new regressions pass.
@@ -76,3 +76,30 @@ patch: still counts toward the infrastructure halt. All-null usage remains null.
 
 Increasing context, fixing model patches, restarting inference, selecting new
 models or benchmarks, changing historical scores in place, publishing/deploying.
+
+## Verification and outcome
+
+Runtime commit `6bad9d0`, replay `task007-task006-source-v2-replay-01`:
+20/20 graded,10pass/10fail,0ungraded. Every per-task verdict and projected-patch
+hash matches D3. All20 copied agent artifact trees match their immutable originals;
+the replay generated zero model attempts.361 checksum files were verified off
+Spark; receipt copied back. Only the unrelated diflh-ollama container remains.
+
+Completion clarification: the initial acceptance wording incorrectly anticipated
+three clean successes from the original three graded passes. Raw evidence shows
+lm_rewrite__3rty13vw ended at budget_exhausted. The unchanged rule (correct AND
+normally completed AND policy compliant) gives **two clean successes**, ten
+normally completed sessions, and five policy violations. This corrects the
+expected count, not the definition of success. Historical context-error records
+without response bodies conservatively retain execution-error classification;
+they do not affect independently verified correctness.
+
+Validation:66 compatibility/mini/evaluation tests passed across targeted runs,
+plus16 external-label compatibility tests. Ruff F checks and diff checks pass.
+The production replay tested the actual runner and Docker evaluator, not the
+diagnostic-only script. Original results were not overwritten.
+
+Local evidence: `data/outputs/runs/task007-task006-source-v2-replay-01/` and
+`data/outputs/task007-replay-validation.json` in the main checkout.
+Implementation and runbook live on branch `codex/task-007-evaluation-correctness`
+in `/private/tmp/hecate-task007`; no unrelated main-workspace changes were edited.
