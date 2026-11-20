@@ -62,3 +62,9 @@ At most40 task requests,2700s episode,120s commands,360s inference requests,
   beyond the approved task requires a new explicit instruction.
 - Raw artifacts/source/config and off-Spark checksum receipt persist even if
   serving/build/fixture gates fail. No lost logs or silent compatibility workarounds.
+
+Preparation run01: official base and environment images built successfully.
+The controller called SWE-bench4.1.0 build_instance_image without its required
+logger/nocache arguments. Preserve that TypeError and all build logs. Correct the
+API call, reuse unchanged completed image layers, and rerun preparation with a
+new run ID/source snapshot. No model calls occurred and no task/model settings changed.

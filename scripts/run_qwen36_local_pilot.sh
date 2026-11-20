@@ -5,7 +5,8 @@ TASK_ROOT="${1:?task root}"
 CONTROL_RUN="${2:?validated control run}"
 TASK_PYTHON="$TASK_ROOT/venv/bin/python"
 TASK_CONFIG=configs/qwen36_local_evaluator.yaml
-cd "$TASK_ROOT/source"
+RUNTIME_SOURCE="${3:-$TASK_ROOT/source}"
+cd "$RUNTIME_SOURCE"
 export PYTHONPATH=src
 export HECATE_CODE_SHA
 HECATE_CODE_SHA="$(cat "$TASK_ROOT/runtime-commit.txt")"

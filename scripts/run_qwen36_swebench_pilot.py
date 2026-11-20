@@ -145,7 +145,7 @@ def main():
             _, failed = build_env_images(client, [spec], max_workers=1)
             if failed:
                 raise RuntimeError("Official ARM environment build failed; inspect retained build logs")
-            build_instance_image(spec, client)
+            build_instance_image(spec, client, logger=None, nocache=False)
             image = json.loads(docker("image", "inspect", spec.instance_image_key).stdout)[0]
             (run / "image.json").write_text(json.dumps(image, indent=2) + "\n")
             bug = grade(spec, "", run / "unpatched", config["evaluator"]["timeout_s"])
