@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 from hecate.execution.codex_artifacts import create_run, finish_run
 from hecate.execution.codex_pilot import should_halt
+from hecate.execution.patch_evaluation import correctness_summary, outcome_axes
 from hecate.execution.mini_harness import (
     EpisodeBudget,
     LocalChatModel,
@@ -223,14 +224,14 @@ def main():
                     "resolved": None,
                     "error": f"{type(exc).__name__}: {exc}",
                 }
+                result.update(outcome_axes(result))
             rows.append(result)
             directory = run / instance["instance_id"]
             directory.mkdir(exist_ok=True)
             (directory / "result.json").write_text(json.dumps(result, indent=2) + "\n")
             summary = {
                 "records": len(rows),
-                "resolved": sum(r.get("resolved") is True for r in rows),
-                "errors": sum(r.get("resolved") is None for r in rows),
+                **correctness_summary(rows, 20),
             }
             (run / "progress.json").write_text(json.dumps(summary, indent=2) + "\n")
             print(
@@ -252,10 +253,8 @@ def main():
                 "harness": cfg["harness"],
                 "rows": rows,
                 "tasks_considered": len(rows),
-                "resolved": sum(r.get("resolved") is True for r in rows),
-                "evaluable": sum(r.get("resolved") is not None for r in rows),
                 "expected_tasks": 20,
-                "infrastructure_errors": sum(r.get("resolved") is None for r in rows),
+                **correctness_summary(rows, 20),
             },
         )
     except BaseException as exc:

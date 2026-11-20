@@ -34,6 +34,10 @@ def validate_scope(mode: str, config: dict, selection: dict) -> int:
 
 
 def infrastructure_failure(row: dict) -> bool:
+    if "evaluation_protocol" in row:
+        return bool(row.get("execution_infrastructure_failure")) or row.get("status") in {
+            "evaluator_failure", "infrastructure_failure"
+        }
     return row.get("resolved") is None
 
 

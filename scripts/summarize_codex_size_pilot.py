@@ -5,6 +5,7 @@ import argparse
 import json
 import statistics
 from pathlib import Path
+from hecate.execution.patch_evaluation import correctness_summary
 
 
 def summarize_arm(run: Path, ids: list[str]) -> tuple[dict, dict]:
@@ -13,6 +14,9 @@ def summarize_arm(run: Path, ids: list[str]) -> tuple[dict, dict]:
     if manifest["provenance"]["task_selection"]["instance_ids"] != ids:
         raise ValueError("Task selection differs between paired arms")
     rows = results["rows"]
+    protocols = {r.get("evaluation_protocol", "legacy") for r in rows}
+    if len(protocols) != 1:
+        raise ValueError("Cannot combine different scoring protocols within an arm")
     indexed = {row["instance_id"]: row for row in rows}
     if len(indexed) != len(rows) or set(indexed) != set(ids):
         raise ValueError("Arm must contain every selected task exactly once")
@@ -62,6 +66,10 @@ def summarize_arm(run: Path, ids: list[str]) -> tuple[dict, dict]:
         "provider_api_cost_usd": 0,
         "sync_verified": (run / "sync_receipt.json").exists(),
     }
+    if protocols == {"source-patch-v2"}:
+        summary.update(correctness_summary(rows, len(ids)))
+    else:
+        summary["evaluation_protocol"] = "legacy"
     return summary, indexed
 
 
@@ -69,6 +77,8 @@ def summarize(small: Path, large: Path, selection: Path) -> dict:
     ids = json.loads(selection.read_text())["instance_ids"]
     a, ar = summarize_arm(small, ids)
     b, br = summarize_arm(large, ids)
+    if a["evaluation_protocol"] != b["evaluation_protocol"]:
+        raise ValueError("Paired arms use different scoring protocols")
     left = json.loads((small / "manifest.json").read_text())["config"]
     right = json.loads((large / "manifest.json").read_text())["config"]
     for key in ("serving", "codex", "sandbox", "limits", "selection_manifest", "pilot"):

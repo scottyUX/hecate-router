@@ -29,6 +29,7 @@ from hecate.execution.codex_session import (
     require_fixture_gate,
 )
 from hecate.execution.model_gateway import Gateway
+from hecate.execution.patch_evaluation import evaluation_patch, outcome_axes, correctness_summary
 from hecate.execution.task_environment import (
     AgentSandbox,
     collect_patch,
@@ -130,10 +131,10 @@ def execute(
                     "error": str(exc),
                     "events": [],
                 }
-            if gateway.failed and gateway.failure_kind in {
-                "model_output_failure",
-                "model_output_budget_exhausted",
-            }:
+            # Codex may exit before run_process polls stop(); preserve gateway truth.
+            if gateway.cap_hit:
+                result["termination_reason"] = "request_budget_exhausted"
+            elif gateway.failed and gateway.failure_kind:
                 result["termination_reason"] = gateway.failure_kind
             result["model_requests"] = gateway.requests
             result["usage_records"] = gateway.metrics
@@ -393,13 +394,16 @@ def run_task(
         and all(s == "PASSED" for s in bug.get("p2p", {}).values())
     )
     if not controls:
-        return {
+        failed = {
             "instance_id": iid,
             "status": "evaluator_failure",
             "resolved": None,
             "controls": {"unpatched": bug, "patched": gold},
         }
+        return {**failed, **outcome_axes(failed)}
     previous = reuse_agent_from / iid / "agent" if reuse_agent_from else None
+    if previous and not (previous / "result.json").exists():
+        raise ValueError("Saved agent result missing; replay never generates a replacement attempt")
     if previous and (previous / "result.json").exists():
         shutil.copytree(previous, directory / "agent", symlinks=True)
         result = json.loads((previous / "result.json").read_text())
@@ -449,10 +453,17 @@ def run_task(
                         result["inference_wall_s"] = sum(
                             m["inference_wall_s"] for m in result["usage_records"]
                         )
+            if any(e.get("event") == "gateway_error"
+                   and e.get("message") == "Model request budget exhausted" for e in events):
+                result.update(original_termination_reason=result["termination_reason"],
+                              termination_reason="request_budget_exhausted")
         result.update(
             instance_id=iid,
             base_revision=original_row.get("base_revision"),
             reused_agent_artifacts_from=str(previous),
+            previous_outcome={key: original_row.get(key) for key in (
+                "status", "resolved", "termination_reason"
+            )},
         )
     else:
         workspace = directory / "workspace"
@@ -468,27 +479,25 @@ def run_task(
             fixture=False,
         )
         result.update(instance_id=iid, base_revision=base)
-    if result["test_modifications"]:
-        result.update(status="test_modification_rejected", resolved=False)
-    elif result["termination_reason"] not in {
-        "completed",
-        "budget_exhausted",
-        "model_output_failure",
-        "model_output_budget_exhausted",
-    }:
-        result.update(status=result["termination_reason"], resolved=None)
-    else:
+    try:
         patch = (directory / "agent/patch.diff").read_text()
+        projected, projection = evaluation_patch(patch, result["test_modifications"])
+        (directory / "evaluation.diff").write_text(projected)
+        result["patch_projection"] = projection
+    except (OSError, ValueError) as exc:
+        result.update(status="patch_projection_failure", resolved=None, projection_error=str(exc))
+    else:
         evaluation = grade_patch(
             image,
             instance,
-            patch,
+            projected,
             directory / "evaluation",
             validated_controls=True,
             verified_gold=True,
         )
         result["evaluation"] = evaluation
         result.update(status=evaluation["status"], resolved=evaluation["resolved"])
+    result.update(outcome_axes(result))
     return result
 
 
@@ -515,6 +524,7 @@ def smoke(
                 "error": str(exc),
                 "error_type": type(exc).__name__,
             }
+            result.update(outcome_axes(result))
         rows.append(result)
         directory = run / instance["instance_id"]
         directory.mkdir(exist_ok=True)
@@ -524,7 +534,14 @@ def smoke(
                 {
                     "records": len(rows),
                     "resolved": sum(r.get("resolved") is True for r in rows),
-                    "errors": sum(r.get("resolved") is None for r in rows),
+                    "ungraded": sum(r.get("resolved") is None for r in rows),
+                    "errors": sum(
+                        bool(r.get("execution_infrastructure_failure"))
+                        or r.get("status") in {"evaluator_failure", "infrastructure_failure"}
+                        for r in rows
+                    ),
+                    "session_completed": sum(r.get("session_completed") is True for r in rows),
+                    "clean_successes": sum(r.get("clean_success") is True for r in rows),
                 },
                 indent=2,
             )
@@ -541,8 +558,13 @@ def smoke(
             ),
             flush=True,
         )
+        # Replay generates no inference: old execution faults do not stop grading.
+        halt_rows = [
+            {**r, "execution_infrastructure_failure": False}
+            if reuse_agent_from and "evaluation_protocol" in r else r for r in rows
+        ]
         if should_halt(
-            rows,
+            halt_rows,
             continue_on_error=continue_on_error,
             consecutive_limit=consecutive_limit,
         ):
@@ -624,6 +646,7 @@ def main() -> int:
             "reuse_agent_from": (
                 str(args.reuse_agent_from) if args.reuse_agent_from else None
             ),
+            "model_attempts_generated": 0 if args.reuse_agent_from else None,
             "source_hashes": {
                 str(p): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in sorted(Path("src/hecate/execution").glob("*.py"))
@@ -664,9 +687,12 @@ def main() -> int:
         )
         results = {
             "mode": args.mode,
-            "verdict": "compatible_with_declared_limitations" if ok else "blocked",
+            "verdict": ("compatible_with_declared_limitations" if ok else "blocked")
+            if args.mode == "fixtures" else ("grading_complete" if ok else "incomplete_grading"),
             "limitations": [
-                "Schema-constrained required tools with explicit finish action",
+                ("Schema-constrained required tools with explicit finish action"
+                 if cfg["serving"].get("tool_decoding") == "required_with_finish"
+                 else "Native parser with automatic tool choice"),
                 "Shell editing; no validated apply_patch support",
             ],
             "attempted": (
@@ -679,19 +705,7 @@ def main() -> int:
             "rows": rows,
         }
         if args.mode in {"smoke", "pilot"}:
-            eligible = [r for r in rows if r.get("resolved") is not None]
-            results.update(
-                evaluable=len(eligible),
-                resolved=sum(r["resolved"] for r in eligible),
-                infrastructure_errors=sum(r.get("resolved") is None for r in rows),
-                resolved_fraction_of_selected=sum(r["resolved"] for r in eligible)
-                / expected_count,
-                resolved_fraction_of_evaluable=(
-                    sum(r["resolved"] for r in eligible) / len(eligible)
-                    if eligible
-                    else None
-                ),
-            )
+            results.update(correctness_summary(rows, expected_count))
         finish_run(run, results)
         return 0 if ok else 1
     except BaseException as exc:

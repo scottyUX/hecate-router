@@ -408,6 +408,28 @@ def response_events(response: dict) -> bytes:
     return "".join(events).encode()
 
 
+def failure_kind(exc: Exception, *, cap_hit: bool = False) -> str:
+    if cap_hit:
+        return "request_budget_exhausted"
+    if isinstance(exc, OutputBudgetExceeded):
+        return "model_output_budget_exhausted"
+    if isinstance(exc, ModelOutputError):
+        return "model_output_failure"
+    if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 400:
+        # Only explicit length errors qualify; unrelated HTTP400 remains an error.
+        text = exc.response.text.lower()
+        if any(s in text for s in (
+            "maximum context length", "context_length_exceeded",
+            "context length exceeded", "max_model_len", "maximum model length",
+        )):
+            return "context_budget_exhausted"
+    return (
+        "tool_protocol_failure"
+        if isinstance(exc, (ProtocolError, ValueError, KeyError))
+        else "model_server_failure"
+    )
+
+
 class Gateway:
     """Unix-only ingress. Fixed loopback upstream; no auth/header forwarding."""
 
@@ -570,6 +592,9 @@ class Gateway:
                         "status": exc.response.status_code
                         if isinstance(exc, httpx.HTTPStatusError)
                         else None,
+                        "failure_kind": failure_kind(exc),
+                        "response_body": exc.response.text[:2000]
+                        if isinstance(exc, httpx.HTTPStatusError) else None,
                     }
                 )
                 if attempt >= self.retries or not retryable:
@@ -622,20 +647,13 @@ class Gateway:
                     )
                 except Exception as exc:
                     owner.failed = not owner.cap_hit
-                    owner.failure_kind = (
-                        "model_output_budget_exhausted"
-                        if isinstance(exc, OutputBudgetExceeded)
-                        else "model_output_failure"
-                        if isinstance(exc, ModelOutputError)
-                        else "tool_protocol_failure"
-                        if isinstance(exc, (ProtocolError, ValueError, KeyError))
-                        else "model_server_failure"
-                    )
+                    owner.failure_kind = failure_kind(exc, cap_hit=owner.cap_hit)
                     owner.record(
                         {
                             "event": "gateway_error",
                             "type": type(exc).__name__,
                             "message": str(exc)[:500],
+                            "failure_kind": owner.failure_kind,
                         }
                     )
                     code = 400 if isinstance(exc, ProtocolError) else 502
