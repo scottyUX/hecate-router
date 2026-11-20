@@ -86,3 +86,55 @@ This is not an instruction rewrite or a native-paper prompt reproduction. Existi
 models retain native message layout. Preserve the failed fixture and server log;
 run a new controls/fixture run under the amended config. No benchmark task attempt
 has occurred, and no model, precision, sampling or budget change is introduced.
+
+## Completed pilot and verification
+
+Run task009-qwen36-codex-one-task-run-02, runtime8987d33, used the exact specified
+Qwen3.6 checkpoint and Codex0.164.0 locally. All3 read/edit/repair fixtures passed.
+One benchmark attempt on django__django-16560 ran38 model requests/37 shell tools
+over527.86seconds. Its saved source patch was independently graded after a
+context_budget_exhausted stop:3/8F2P pass,5ERROR,66/66P2P pass; task unresolved.
+The five errors are missing violation_error_code keyword support in CheckConstraint
+and UniqueConstraint constructors. Official and strict required-test verdicts agree.
+No test-file modifications, source repair or additional benchmark attempts occurred.
+
+The cap was our pilot choice:32768 context with8192 reserved output leaves24576
+input tokens. The rejected request had at least24577 input tokens. This is not
+Qwen3.6's native context limit and cannot support a model-capability conclusion.
+
+One setup limitation remains before comparative runs: the official eval script's
+redundant editable reinstall emitted an offline setuptools build-dependency warning
+in controls03 and the model grade. The existing editable installation loaded the
+actual patched source: every required test produced an outcome, gold passed74,
+unpatched failed all8F2P, and the model's five constructor TypeErrors identify its
+incomplete implementation. Preserve the warning rather than silently discard it;
+provide a clean offline build-dependency supply before a broader replication.
+
+79 targeted tests and Ruff F checks passed. Off-Spark verification includes6741
+files for the final attempt;29 for initial failed preparation;42/39 for successful
+controls02/03;41 for the pre-generation failed fixture; and the controller evidence
+bundle (model logs/config, environment, package versions and cleanup). All owned
+containers and GPU processes stopped; diflh-ollama remains untouched. API cost$0.
+Summary: main checkout data/outputs/task009-qwen36-local-summary-run-01.json.
+
+## Paper comparison prerequisite — user clarification after pilot
+
+Scott explicitly requested matching the paper's settings before further comparison.
+Keep this completed run labeled evaluator compatibility only, not replication.
+
+Reported settings to match: exact45 task rule,4 independent trajectories per task,
+Qwen3.6-35B-A3B, native harness prompts/internal policy, prescribed task base and
+official regression scoring, with correctness separate from operational validity.
+
+Unspecified in the paper's published methods: Codex version, exact Qwen checkpoint
+hash/serving configuration, SWE context/output limits, sampling and request/wall
+budgets. A targeted public code search did not locate the authors' runnable config.
+Do not claim262144 tokens was their setting merely because it is Qwen's native
+limit. Recover author configuration if available; otherwise preregister each
+assumption and describe an approximate replication.
+
+Our custom shell-edit instructions/disabled apply_patch,32K context,40 requests,
+8192 output cap and single task/attempt do not establish matching harness behavior.
+Resolve those differences, offline setup and hardware/context feasibility before
+launching another comparative run. No larger-context or45-task inference is
+authorized by this record, and no such run was launched.
