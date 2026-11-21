@@ -22,6 +22,8 @@ Each sprint you own **two tasks or one big task**. One big task is a single task
 - Each task ID is used only once in your team's repository, in any sprint. Agree on task IDs with your team.
 - Estimated at 2 hours or more (4 or more for one big task), and it changes behavior a user or another part of the system can observe.
 - Small enough that one person can finish within 2–3 days, including review.
+
+**Extra tasks (optional).** You may submit up to **6 tasks** in a sprint. Every task you submit is graded, and your sprint score is the average of all of them, so an extra task can raise your score or lower it. Each extra task meets the same requirements as above, and at most two of your tasks can come from one pull request.
 - The task file is created before any implementation code.
 - Every acceptance criterion has at least one committed test.
 
@@ -150,7 +152,7 @@ Submit in the [Repo Metrics app](https://cse115a-repo-metrics-production.up.rail
 **Every sprint**
 1. Open **Assignment N**, where `N` is the sprint number.
 2. In **Task 1**, paste the first merged pull-request link and press **Add PR**. Keep the tab open while the analysis runs.
-3. Do the same in **Task 2** for a second task. With one big task, leave **Task 2** empty; the button then reads **Submit Sprint N with one task**.
+3. Do the same in **Task 2** for a second task. With one big task, leave **Task 2** empty; the button then reads **Submit Sprint N with one task**. For an extra task, press **Add another task** under Task 2. Before you submit, **Remove** takes a task out.
 4. Read the checks under each task. A check marked for review can cost the Process point. To re-check a task after fixing it (for example, after editing the pull-request title), press **Re-check** on that task.
 5. When your tasks are analyzed, press **Submit Sprint N**. Your tasks lock when you submit. To change them, press **Change submission**. You can do this until the sprint closes, as long as your grade hasn't been released.
 
@@ -213,7 +215,7 @@ For each sprint, write **one paragraph** that:
 
 ## Grading
 
-Each task is scored out of 10. With two tasks, your sprint score is their average; with one big task, that task's score is your sprint score. The grader reads the task file and checks the merged pull request. An instructor reviews every grade before you see it.
+Each task is scored out of 10. Your sprint score is the average of all the tasks you submit; with one big task, that task's score is your sprint score. For example, tasks scoring 10 and 10 give 10, and adding a third task that scores 6 gives 8.67. The grader reads the task file and checks the merged pull request. An instructor reviews every grade before you see it.
 
 | Criterion | Full credit | Partial | None | Pts |
 |---|---|---|---|-----|
