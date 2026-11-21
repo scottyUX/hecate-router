@@ -15,7 +15,7 @@ AI coding tools are allowed under the course AI policy. You are responsible for 
 
 ## Requirements
 
-Each sprint you own **two tasks or one big task**. One big task is a single task of about the work of two, with `estimate_hours` of 4 or more. Each task must meet all of these:
+Each sprint you own **two tasks**, each with `estimate_hours` of 2 or more. You can instead submit **one big task** with `estimate_hours` of 4 or more. You can also add extra tasks, up to six in all, and each of those also needs 2 or more (see **Extra tasks** below). Each task must meet all of these:
 
 - You are the only assignee. You write the task file (you will discuss and clarify it with your team members), the tests, and the implementation. Teammates may review. They do not commit to your task branch.
 - When you own two tasks, they are different slices. A revision, rename, or follow-up fix of the first is not a second task.
@@ -23,7 +23,7 @@ Each sprint you own **two tasks or one big task**. One big task is a single task
 - Estimated at 2 hours or more (4 or more for one big task), and it changes behavior a user or another part of the system can observe.
 - Small enough that one person can finish within 2–3 days, including review.
 
-**Extra tasks (optional).** You may submit up to **6 tasks** in a sprint. Every task you submit is graded, and your sprint score is the average of all of them, so an extra task can raise your score or lower it. Each extra task meets the same requirements as above, and at most two of your tasks can come from one pull request.
+**Extra tasks (optional).** You may submit up to **6 tasks** in a sprint. Every task you submit is graded, and your sprint score is the average of all of them, so an extra task can raise your score or lower it. Each extra task meets the same requirements as above, including an estimate of 2 hours or more, and at most two of your tasks can come from one pull request.
 - The task file is created before any implementation code.
 - Every acceptance criterion has at least one committed test.
 
@@ -80,8 +80,6 @@ Serves US-1 (log in with a university email). This task covers the rejection pat
 ## Workflow
 
 Steps below use `US-1-T-1` (User Story 1, Task 1) as the example task id, swap in your own.
-
-You no longer push `-base` or `-done` tags. The app finds your pull request's first commit and its merge commit itself. Tags you already pushed are ignored and can stay.
 
 **Team setup (once, before your first task)**
 - The repository owner or an admin installs the course GitHub App on the team repository. In the Repo Metrics app, click **Install the GitHub App** (it pops up when you open the dashboard, and the button stays above your tasks), choose the account that owns the team repository, pick **Only select repositories**, select it, and click **Install**. The app can only read that one repository and never changes it.
