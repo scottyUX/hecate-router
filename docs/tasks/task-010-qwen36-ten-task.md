@@ -49,3 +49,7 @@ offline evaluation has no build-dependency error;10 attempt/control records or
 explicit blocked records retained; per-task source grading, batch checkpoint and
 off-Spark verification work without new model calls on resume. Any failed gate is
 reported with evidence rather than bypassed.
+
+## Setup amendment before any benchmark attempt
+
+Native gate run 01 read successfully. The edit fixture made seven malformed apply_patch calls, then edited and verified the correct source, but exhausted its ten-request setup budget before finishing. Preserve that failed gate. Gate run 02 increases only the fixture allowance to twenty requests; all ten task IDs and benchmark budgets remain unchanged. This is a setup correction made before benchmark outcomes.

@@ -32,7 +32,7 @@ codex:
 sandbox:
   image: sha256:bf35e4de2d5f0543c17d124c8ab0c98cf50b6c367dbc3d73f7cd6eec9125e38d
 limits:
-  fixture_model_requests: 10
+  fixture_model_requests: 20
   fixture_wall_s: 600
   task_model_requests: 200
   task_wall_s: 3600

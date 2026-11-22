@@ -83,7 +83,7 @@ def main():
             shutil.copy2(f,snap/f.name)
         (p/'dependencies.txt').write_text(subprocess.check_output([sys.executable,'-m','pip','freeze'],text=True))
         return p
-    gate=root/'runs/task010-native-gate-run-01'
+    gate=root/'runs/task010-native-gate-run-02'
     if args.mode=='gate':
         if gate.exists():
             if not valid_saved(gate,cfg).get('passed'):raise ValueError('Prior gate failed; no silent rerun')
