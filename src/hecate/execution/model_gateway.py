@@ -64,6 +64,7 @@ def translate_request(
     sampling: dict,
     tool_decoding: str = "auto",
     editing_mode: str = "patch",
+    message_layout: str = "native",
 ) -> tuple[dict, dict]:
     if editing_mode not in {"patch", "shell"}:
         raise ProtocolError("Unknown editing mode")
@@ -187,6 +188,14 @@ def translate_request(
                 },
             }
         )
+    if message_layout == "single_system_prefix":
+        # Qwen3.6 permits exactly one system message, at index zero. Preserve
+        # instruction text/order and all user/assistant/tool history unchanged.
+        system = [m["content"] for m in messages if m["role"] == "system"]
+        history = [m for m in messages if m["role"] != "system"]
+        messages = ([{"role": "system", "content": "\n\n".join(system)}] if system else []) + history
+    elif message_layout != "native":
+        raise ProtocolError("Unknown message layout")
     payload = {"model": model, "messages": messages, "stream": False, **sampling}
     if tools:
         payload.update(
@@ -408,6 +417,28 @@ def response_events(response: dict) -> bytes:
     return "".join(events).encode()
 
 
+def failure_kind(exc: Exception, *, cap_hit: bool = False) -> str:
+    if cap_hit:
+        return "request_budget_exhausted"
+    if isinstance(exc, OutputBudgetExceeded):
+        return "model_output_budget_exhausted"
+    if isinstance(exc, ModelOutputError):
+        return "model_output_failure"
+    if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 400:
+        # Only explicit length errors qualify; unrelated HTTP400 remains an error.
+        text = exc.response.text.lower()
+        if any(s in text for s in (
+            "maximum context length", "context_length_exceeded",
+            "context length exceeded", "max_model_len", "maximum model length",
+        )):
+            return "context_budget_exhausted"
+    return (
+        "tool_protocol_failure"
+        if isinstance(exc, (ProtocolError, ValueError, KeyError))
+        else "model_server_failure"
+    )
+
+
 class Gateway:
     """Unix-only ingress. Fixed loopback upstream; no auth/header forwarding."""
 
@@ -426,6 +457,7 @@ class Gateway:
         transport: Callable | None = None,
         tool_decoding: str = "auto",
         editing_mode: str = "patch",
+        message_layout: str = "native",
     ):
         parsed = urlparse(upstream)
         if (
@@ -451,6 +483,7 @@ class Gateway:
             self.command_timeout_s,
         ) = (request_limit, sampling, timeout_s, retries, command_timeout_s)
         self.editing_mode = editing_mode
+        self.message_layout = message_layout
         self.tool_decoding = tool_decoding
         self.transport = transport
         self.requests = 0
@@ -488,6 +521,7 @@ class Gateway:
             self.sampling,
             self.tool_decoding,
             self.editing_mode,
+            self.message_layout,
         )
         self.record(
             {
@@ -570,6 +604,9 @@ class Gateway:
                         "status": exc.response.status_code
                         if isinstance(exc, httpx.HTTPStatusError)
                         else None,
+                        "failure_kind": failure_kind(exc),
+                        "response_body": exc.response.text[:2000]
+                        if isinstance(exc, httpx.HTTPStatusError) else None,
                     }
                 )
                 if attempt >= self.retries or not retryable:
@@ -622,20 +659,13 @@ class Gateway:
                     )
                 except Exception as exc:
                     owner.failed = not owner.cap_hit
-                    owner.failure_kind = (
-                        "model_output_budget_exhausted"
-                        if isinstance(exc, OutputBudgetExceeded)
-                        else "model_output_failure"
-                        if isinstance(exc, ModelOutputError)
-                        else "tool_protocol_failure"
-                        if isinstance(exc, (ProtocolError, ValueError, KeyError))
-                        else "model_server_failure"
-                    )
+                    owner.failure_kind = failure_kind(exc, cap_hit=owner.cap_hit)
                     owner.record(
                         {
                             "event": "gateway_error",
                             "type": type(exc).__name__,
                             "message": str(exc)[:500],
+                            "failure_kind": owner.failure_kind,
                         }
                     )
                     code = 400 if isinstance(exc, ProtocolError) else 502

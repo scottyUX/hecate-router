@@ -113,6 +113,12 @@ def main():
         "--port",
         "8000",
     ]
+    if cfg["serving"].get("reasoning_parser"):
+        command += ["--reasoning-parser", cfg["serving"]["reasoning_parser"]]
+    if cfg["serving"].get("language_model_only"):
+        command.append("--language-model-only")
+    if cfg["serving"].get("enforce_eager"):
+        command.append("--enforce-eager")
     (args.root / "serving-command.json").write_text(
         json.dumps(command, indent=2) + "\n"
     )
