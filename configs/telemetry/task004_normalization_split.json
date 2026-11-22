@@ -1,0 +1,9 @@
+{
+  "training_ids": [
+    "jd__tenacity.0d40e76f.combine_module__yjmtlc2r",
+    "jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__3ljvivv1",
+    "jd__tenacity.0d40e76f.pr_425"
+  ],
+  "reserved_ids": [],
+  "source": "All selected logs are training/pilot; no held-out inputs used. Production experiment must supply its reserved-ID manifest."
+}

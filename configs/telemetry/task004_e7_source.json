@@ -1,0 +1,6 @@
+{
+  "uri": "gs://whatsapp-sales-agent-hecate-artifacts/runs/exp-07_arm-weakalone_split-tenacitytrain_seed-0_run-8/exp-07_arm-weakalone_split-tenacitytrain_seed-0_run-8/agent-logs/20261018_221803_jd__tenacity.0d40e76f.pr_425_3734a410.jsonl",
+  "sha256": "7d50e13e4b1faf25bdd4fa6ab7c5b88bfc2c49a69be94e3c36dceb7fb61d6b8e",
+  "records": 3,
+  "legacy_total_agent_steps": 8
+}
