@@ -39,7 +39,7 @@ def spec_for(instance):
                           env_image_tag="task009", instance_image_tag="task009")
 
 
-def grade(spec, patch, directory, timeout):
+def grade(spec, patch, directory, timeout, *, wheelhouse=None):
     """Run the official eval script/parser in a fresh networkless container."""
     from swebench.harness.grading import get_eval_report, get_logs_eval
     directory.mkdir()
@@ -48,7 +48,9 @@ def grade(spec, patch, directory, timeout):
     name = "hecate-task009-grade-" + uuid.uuid4().hex[:10]
     outcome = {"status": "evaluator_failure", "resolved": None}
     try:
-        docker("run", "-d", "--name", name, "--network", "none", "--memory", "8g",
+        offline = ["-v", str(Path(wheelhouse).resolve()) + ":/opt/hecate-wheels:ro",
+                   "-e", "PIP_NO_INDEX=1", "-e", "PIP_FIND_LINKS=file:///opt/hecate-wheels"] if wheelhouse else []
+        docker("run", "-d", "--name", name, "--network", "none", *offline, "--memory", "8g",
                "--pids-limit", "512", spec.instance_image_key, "sleep", "1200")
         if patch:
             applied = docker("exec", "-i", "-w", "/testbed", name, "git", "apply", "-",
@@ -67,6 +69,12 @@ def grade(spec, patch, directory, timeout):
             return outcome
         path = directory / "test_output.txt"
         path.write_text(log)
+        if wheelhouse and any(marker in log for marker in (
+            "ERROR: No matching distribution found", "ERROR: Failed to build",
+            "error: subprocess-exited-with-error",
+        )):
+            outcome.update(error="Offline setup step failed; inspect test_output.txt")
+            return outcome
         statuses, found = get_logs_eval(spec, str(path))
         (directory / "test_statuses.json").write_text(json.dumps(statuses, indent=2) + "\n")
         official = get_eval_report(spec, {"instance_id": spec.instance_id,

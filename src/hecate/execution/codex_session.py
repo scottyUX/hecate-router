@@ -52,8 +52,8 @@ def model_catalog(binary: Path, model: str, context: int) -> dict:
     return {"models": [entry]}
 
 
-def config_text(model: str, context: int) -> str:
-    return f"""model = {json.dumps(model)}
+def config_text(model: str, context: int, *, native_instructions: bool = False) -> str:
+    text = f"""model = {json.dumps(model)}
 model_provider = "hecate"
 model_context_window = {context}
 model_catalog_json = "/opt/hecate-config/catalog.json"
@@ -77,6 +77,9 @@ request_max_retries = 0
 stream_max_retries = 0
 stream_idle_timeout_ms = 600000
 """
+    if native_instructions:
+        text = text.replace('model_instructions_file = "/opt/hecate-config/instructions.md"\n', '')
+    return text
 
 
 def run_process(

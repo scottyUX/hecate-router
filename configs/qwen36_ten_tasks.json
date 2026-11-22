@@ -1,0 +1,24 @@
+{
+  "task_id": "TASK-010",
+  "seed": 0,
+  "instance_ids": [
+    "django__django-16560",
+    "astropy__astropy-13398",
+    "pylint-dev__pylint-4551",
+    "pytest-dev__pytest-5787",
+    "scikit-learn__scikit-learn-25102",
+    "sphinx-doc__sphinx-8548",
+    "sympy__sympy-12489",
+    "django__django-13344",
+    "sympy__sympy-13852",
+    "django__django-15629"
+  ],
+  "excluded_x86_ids": [
+    "pydata__xarray-3993",
+    "pydata__xarray-6992",
+    "sympy__sympy-14248"
+  ],
+  "selection": "Repeat previous development case, one per other ARM-compatible repo, fill from seed0 shuffled ID-sorted pool; no replacement after outcomes",
+  "repetitions": 1,
+  "task_count": 10
+}

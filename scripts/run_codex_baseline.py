@@ -83,7 +83,8 @@ def execute(
         )
     (config_dir / "instructions.md").write_text(instructions)
     (config_dir / "config.toml").write_text(
-        config_text(config["model"]["id"], config["model"]["context_tokens"])
+        config_text(config["model"]["id"], config["model"]["context_tokens"],
+                    native_instructions=config["serving"].get("prompt_profile") == "native")
     )
     (directory / "prompt.txt").write_text(prompt)
     limit = config["limits"]
