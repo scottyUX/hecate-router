@@ -278,7 +278,7 @@ def translate_request(
     }
 
 
-def translate_response(raw: dict, contract: dict, command_timeout_s: int = 120) -> dict:
+def translate_response(raw: dict, contract: dict, command_timeout_s: int | None = 120) -> dict:
     choices = raw.get("choices") or []
     if len(choices) != 1:
         raise ModelOutputError("Missing or ambiguous completion")
@@ -364,11 +364,12 @@ def translate_response(raw: dict, contract: dict, command_timeout_s: int = 120) 
             if name == "exec_command":
                 if not isinstance(value.get("cmd"), str):
                     raise ProtocolError("exec_command requires cmd")
-                value["cmd"] = (
-                    f"timeout --signal=TERM --kill-after=5s {command_timeout_s}s bash -lc "
-                    + shlex.quote(value["cmd"])
-                )
-            elif name == "shell_command":
+                if command_timeout_s is not None:
+                    value["cmd"] = (
+                        f"timeout --signal=TERM --kill-after=5s {command_timeout_s}s bash -lc "
+                        + shlex.quote(value["cmd"])
+                    )
+            elif name == "shell_command" and command_timeout_s is not None:
                 value["timeout_ms"] = min(
                     int(value.get("timeout_ms", command_timeout_s * 1000)),
                     command_timeout_s * 1000,
@@ -519,9 +520,9 @@ class Gateway:
         *,
         request_limit: int,
         sampling: dict,
-        timeout_s: int = 180,
+        timeout_s: int | None = 180,
         retries: int = 2,
-        command_timeout_s: int = 120,
+        command_timeout_s: int | None = 120,
         transport: Callable | None = None,
         tool_decoding: str = "auto",
         editing_mode: str = "patch",
@@ -719,7 +720,9 @@ class Gateway:
         raise AssertionError("unreachable")
 
     def _post(self, payload: dict) -> dict:
-        with httpx.Client(timeout=self.timeout_s, trust_env=False) as client:
+        # None: no read deadline (TASK-013); connecting still fails fast.
+        timeout = httpx.Timeout(None, connect=30) if self.timeout_s is None else self.timeout_s
+        with httpx.Client(timeout=timeout, trust_env=False) as client:
             response = client.post(self.upstream + "/chat/completions", json=payload)
             response.raise_for_status()
             return response.json()

@@ -561,3 +561,12 @@ def test_output_budget_failure_retains_raw_response_and_usage(tmp_path):
         and r["response"]["choices"][0]["finish_reason"] == "length"
         for r in records
     )
+
+
+def test_null_command_timeout_leaves_native_command_unwrapped():
+    _, contract = translate_request(request(), "local", {})
+    result = translate_response(
+        completion(arguments=json.dumps({"cmd": "python -m pytest"})), contract,
+        command_timeout_s=None,
+    )
+    assert json.loads(result["output"][0]["arguments"])["cmd"] == "python -m pytest"

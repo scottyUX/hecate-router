@@ -52,7 +52,17 @@ def model_catalog(binary: Path, model: str, context: int) -> dict:
     return {"models": [entry]}
 
 
-def config_text(model: str, context: int, *, native_instructions: bool = False) -> str:
+# Codex needs a finite idle timeout; one day stands in for "none" (TASK-013).
+UNLIMITED_IDLE_MS = 86_400_000
+
+
+def config_text(
+    model: str,
+    context: int,
+    *,
+    native_instructions: bool = False,
+    stream_idle_timeout_ms: int = 600000,
+) -> str:
     text = f"""model = {json.dumps(model)}
 model_provider = "hecate"
 model_context_window = {context}
@@ -75,7 +85,7 @@ base_url = "http://127.0.0.1:8127/v1"
 wire_api = "responses"
 request_max_retries = 0
 stream_max_retries = 0
-stream_idle_timeout_ms = 600000
+stream_idle_timeout_ms = {stream_idle_timeout_ms}
 """
     if native_instructions:
         text = text.replace('model_instructions_file = "/opt/hecate-config/instructions.md"\n', '')
@@ -83,8 +93,9 @@ stream_idle_timeout_ms = 600000
 
 
 def run_process(
-    command: list[str], directory: Path, timeout_s: float, *, stop=None
+    command: list[str], directory: Path, timeout_s: float | None, *, stop=None
 ) -> dict:
+    """Run Codex; `timeout_s=None` means no wall-clock cap."""
     started = time.monotonic()
     reason = None
     with (directory / "codex_events.jsonl").open("w") as output, (
@@ -100,7 +111,7 @@ def run_process(
         try:
             while proc.poll() is None:
                 reason = stop() if stop else None
-                if time.monotonic() - started >= timeout_s:
+                if timeout_s is not None and time.monotonic() - started >= timeout_s:
                     reason = "budget_exhausted"
                 if reason:
                     break

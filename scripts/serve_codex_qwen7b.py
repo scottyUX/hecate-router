@@ -107,7 +107,7 @@ def main():
         "--tool-call-parser",
         cfg["serving"]["parser"],
         "--generation-config",
-        "vllm",
+        cfg["serving"].get("generation_config", "vllm"),
         "--host",
         "0.0.0.0",
         "--port",
@@ -119,6 +119,8 @@ def main():
         command.append("--language-model-only")
     if cfg["serving"].get("enforce_eager"):
         command.append("--enforce-eager")
+    if cfg["serving"].get("enable_prefix_caching"):
+        command.append("--enable-prefix-caching")
     (args.root / "serving-command.json").write_text(
         json.dumps(command, indent=2) + "\n"
     )

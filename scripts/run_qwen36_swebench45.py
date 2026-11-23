@@ -167,13 +167,23 @@ def new_run(root, run_id, cfg, args, purpose, parent, extra=None):
     return p
 
 
+# Post-environment pins that restore what the official x86 images contain.
+ENV_PINS = {
+    # TASK-011: retain the official legacy --no-use-pep517 recipe with compatible tools.
+    'scikit-learn__scikit-learn-25102': 'pip==24.0 setuptools==68.0.0',
+    # TASK-013: official images have docutils 0.21.2; 0.22+ drops docutils.utils.roman.
+    'sphinx-doc__sphinx-7590': 'docutils==0.21.2',
+    'sphinx-doc__sphinx-8548': 'docutils==0.21.2',
+}
+
+
 def test_spec(cfg, task):
     from swebench.harness.test_spec.test_spec import make_test_spec
     tag = cfg['evaluator']['image_tag']
     spec = make_test_spec(task, arch=cfg['evaluator']['arch'], base_image_tag=tag, env_image_tag=tag, instance_image_tag=tag)
-    if task['instance_id'] == 'scikit-learn__scikit-learn-25102':
-        # TASK-011: retain the official legacy --no-use-pep517 recipe with compatible tools.
-        spec.env_script_list.append('python -m pip install pip==24.0 setuptools==68.0.0')
+    pin = ENV_PINS.get(task['instance_id'])
+    if pin:
+        spec.env_script_list.append('python -m pip install ' + pin)
     return spec
 
 

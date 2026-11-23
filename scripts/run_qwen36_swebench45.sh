@@ -8,7 +8,7 @@ export PYTHONPATH=src:scripts
 export HECATE_CODE_SHA
 HECATE_CODE_SHA="$(cat "$TASK_ROOT/COMMIT")"
 TASK_PYTHON="$TASK_ROOT/venv/bin/python"
-CONFIG=configs/qwen36_swebench45.yaml
+CONFIG="${HECATE_TASK_CONFIG:-configs/qwen36_swebench45.yaml}"
 MODEL=hecate-task012-model
 started=''
 trim_pid=''

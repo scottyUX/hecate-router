@@ -23,6 +23,7 @@ from hecate.execution.codex_pilot import validate_scope, should_halt
 from hecate.execution.codex_artifacts import create_run, finish_run, checksums
 from hecate.execution.codex_session import (
     INSTRUCTIONS,
+    UNLIMITED_IDLE_MS,
     config_text,
     model_catalog,
     run_process,
@@ -38,6 +39,11 @@ from hecate.execution.task_environment import (
     grade_patch,
 )
 
+
+
+def idle_timeout_ms(request_timeout_s: float | None) -> int:
+    """Codex's stream idle timeout must outlast one gateway request."""
+    return UNLIMITED_IDLE_MS if request_timeout_s is None else int(request_timeout_s * 1000)
 
 def load_tasks(dataset: Path, selection: dict) -> list[dict]:
     if hashlib.sha256(dataset.read_bytes()).hexdigest() != selection["source_sha256"]:
@@ -85,7 +91,8 @@ def execute(
     (config_dir / "instructions.md").write_text(instructions)
     (config_dir / "config.toml").write_text(
         config_text(config["model"]["id"], config["model"]["context_tokens"],
-                    native_instructions=config["serving"].get("prompt_profile") == "native")
+                    native_instructions=config["serving"].get("prompt_profile") == "native",
+                    stream_idle_timeout_ms=idle_timeout_ms(config["limits"]["request_timeout_s"]))
     )
     (directory / "prompt.txt").write_text(prompt)
     limit = config["limits"]
