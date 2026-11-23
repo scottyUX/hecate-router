@@ -24,7 +24,7 @@ from hecate.execution.patch_evaluation import evaluation_patch, outcome_axes
 from hecate.execution.swebench45_scoring import aggregate, bootstrap, schedule, labels
 from run_codex_baseline import execute, fixtures, init_fixture
 from run_qwen36_swebench_pilot import grade, export_workspace
-from run_qwen36_ten_task import controls_pass, prepare_wheels, valid_saved
+from run_qwen36_ten_task import prepare_wheels, valid_saved
 
 SOURCE = Path(__file__).resolve().parents[1]
 GATE = 'task012-native-gate-run-01'
@@ -52,6 +52,23 @@ def attempt_config(cfg, rep, image_id):
     effective['model']['sampling']['seed'] = rep
     effective['sandbox'] = {'image': image_id}
     return effective
+
+
+def controls_pass(bug, gold):
+    """Amendment 2: the paper's official verifier decides the negative control.
+
+    The reference patch must pass under both the strict and official graders. The
+    unpatched run must be officially unresolved without timeout or setup error;
+    required tests left without a status (the bug crashed collection or the test
+    runner, e.g. pylint-4551, django-10554) count as not passing, as officially."""
+    if gold.get('status') != 'completed' or gold.get('resolved') is not True or gold.get('official_resolved') is not True:
+        return False
+    if bug.get('official_resolved') is not False or bug.get('timed_out') or bug.get('error'):
+        return False
+    if bug.get('status') == 'completed':
+        return bug.get('resolved') is False
+    return (bug.get('status') == 'evaluator_failure' and bug.get('test_markers_found') is True
+            and bool(bug.get('missing_required_tests')))
 
 
 def halting_failure(row):
@@ -160,7 +177,7 @@ def preflight(args):
             prepare_wheels(spec, p / 'wheels')
             bug = grade(spec, '', p / 'unpatched', cfg['evaluator']['timeout_s'], wheelhouse=p / 'wheels')
             gold = grade(spec, tasks[iid]['patch'], p / 'gold', cfg['evaluator']['timeout_s'], wheelhouse=p / 'wheels')
-            passed = controls_pass(spec, bug, gold, (p / 'unpatched/test_output.txt').read_text())
+            passed = controls_pass(bug, gold)
             row = {'instance_id': iid, 'status': 'control_passed' if passed else 'control_failure',
                    'image_id': image.id, 'image_key': spec.instance_image_key, 'export': provenance,
                    'unpatched': {k: bug.get(k) for k in ('status', 'resolved', 'official_resolved', 'error')},

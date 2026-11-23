@@ -170,3 +170,21 @@ processes now set `gc.auto=0` through `GIT_CONFIG_*`. Task containers and gradin
 are unaffected. Preflight was stopped and restarted. The failed (10554) and
 interrupted (11138) records are kept and superseded with `--retry`, as is
 astropy-14369 under Amendment 1.
+
+## Amendment 2 — Controls follow the paper's official verifier (approved 2026-11-22)
+
+Scott asked for controls to match the paper. The paper grades with the official
+verifier, which counts a required test with no reported status as not passing.
+django__django-10554's unpatched run crashes Django's test runner inside
+`printErrors` (`DatabaseError: ORDER BY term does not match any column...`), so
+its two FAIL_TO_PASS tests never report. Our strict grader marked that unknown,
+while the official verifier marks it unresolved.
+
+New TASK-012 control rule, replacing per-instance exceptions such as Pylint 4551:
+- The reference patch must pass under both the strict and the official grader.
+- The unpatched run must be officially unresolved, with no timeout and no
+  offline-setup error. It must either fail its required tests, or leave required
+  tests without a status while the evaluator's test markers are present.
+
+Candidate grading is unchanged. The paper column uses the official label, and the
+strict column keeps unknowns separate.

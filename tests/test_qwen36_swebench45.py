@@ -164,3 +164,20 @@ def test_git_auto_gc_disabled_for_runner_git_commands(tmp_path, monkeypatch):
     module.disable_git_auto_gc(env)
     value = subprocess.check_output(['git', 'config', 'gc.auto'], cwd=tmp_path, env=env, text=True).strip()
     assert value == '0'
+
+
+def test_controls_follow_official_verifier(monkeypatch):
+    module = runner(monkeypatch)
+    gold = {'status': 'completed', 'resolved': True, 'official_resolved': True}
+    failed = {'status': 'completed', 'resolved': False, 'official_resolved': False}
+    # django-10554: the bug crashes the test runner, so the target tests never report.
+    crashed = {'status': 'evaluator_failure', 'resolved': None, 'official_resolved': False, 'test_markers_found': True,
+               'timed_out': False, 'error': None, 'missing_required_tests': ['test_union_with_values_list_and_order']}
+    assert module.controls_pass(failed, gold) and module.controls_pass(crashed, gold)
+    assert not module.controls_pass(crashed, {**gold, 'official_resolved': False})
+    assert not module.controls_pass(crashed, {**gold, 'resolved': None, 'status': 'evaluator_failure'})
+    assert not module.controls_pass({**crashed, 'official_resolved': None}, gold)
+    assert not module.controls_pass({**crashed, 'timed_out': True}, gold)
+    assert not module.controls_pass({**crashed, 'error': 'Offline setup step failed; inspect test_output.txt'}, gold)
+    assert not module.controls_pass({**crashed, 'test_markers_found': False}, gold)
+    assert not module.controls_pass({**failed, 'official_resolved': True, 'resolved': True}, gold)
