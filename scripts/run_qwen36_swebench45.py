@@ -27,7 +27,7 @@ from run_qwen36_swebench_pilot import grade, export_workspace
 from run_qwen36_ten_task import prepare_wheels
 
 SOURCE = Path(__file__).resolve().parents[1]
-GATE = 'task012-native-gate-run-02'
+GATE = 'task012-native-gate-run-03'
 
 
 SCHEDULING_KEYS = {'excluded_ids', 'concurrency', 'checkpoint_attempts'}

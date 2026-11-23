@@ -144,3 +144,17 @@ def test_progress_requires_explicit_finish_and_can_continue(tmp_path):
     end=g.complete(body())
     assert end['output'][0]['content'][0]['text']=='Finished after inspecting the file.'
     assert g.requests==3
+
+
+def test_finish_accepts_report_text_and_recovers_bad_json_without_repairing_it(tmp_path):
+    bad=response({'content':'The file was read.','tool_calls':[{'id':'bad-finish','function':
+        {'name':'hecate_finish','arguments':'{"response":"bad "quotes""}'}}]},'tool_calls')
+    good=response({'content':'Accompanying final report.','tool_calls':[{'id':'good-finish','function':
+        {'name':'hecate_finish','arguments':'{"response":"Finished after reading the file."}'}}]},'tool_calls')
+    answers=iter([bad,good]);sent=[]
+    def transport(payload):sent.append(payload);return next(answers)
+    g=gateway(tmp_path,transport,tool_decoding='auto_with_finish')
+    result=g.complete(body())
+    assert g.requests==2 and 'rejected' in sent[1]['messages'][-1]['content']
+    assert len(result['output'])==2
+    assert result['output'][-1]['content'][0]['text']=='Finished after reading the file.'

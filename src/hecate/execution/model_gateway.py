@@ -48,6 +48,14 @@ def recovery_feedback(raw: dict, contract: dict) -> tuple[str, list[dict]] | Non
     message = choices[0].get('message', {})
     calls = message.get('tool_calls') or []
     available = ', '.join(contract['allowed'])
+    if len(calls)==1 and calls[0]['function']['name']=='hecate_finish' and 'hecate_finish' in contract['allowed']:
+        try:
+            value=json.loads(calls[0]['function']['arguments'])
+            valid=isinstance(value,dict) and set(value)=={'response'} and isinstance(value['response'],str)
+        except (ValueError,TypeError):
+            valid=False
+        if not valid:
+            return 'invalid_finish', [{'role':'user','content':'Your hecate_finish call was rejected because its arguments did not match the schema. No finish action was accepted. Call hecate_finish with a valid JSON object containing exactly one response string. Avoid embedded quotes if unnecessary.'}]
     if any(c['function']['name'] not in contract['allowed'] for c in calls):
         seen = set()
         for call in calls:
@@ -303,7 +311,7 @@ def translate_response(raw: dict, contract: dict, command_timeout_s: int = 120) 
     if any(c["function"]["name"] == "hecate_finish" for c in calls):
         if "hecate_finish" not in contract["allowed"]:
             raise ProtocolError("Finish action not advertised")
-        if len(calls) != 1 or message.get("content"):
+        if len(calls) != 1:
             raise ProtocolError("Finish must be a sole action")
         value = json.loads(calls[0]["function"]["arguments"])
         if set(value) != {"response"} or not isinstance(value["response"], str):

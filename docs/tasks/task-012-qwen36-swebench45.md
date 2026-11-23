@@ -269,3 +269,11 @@ checksum-verified image controls (grading and image configuration unchanged),
 require a new v2 capability gate, and mirror every checkpoint off Spark before
 continuing. Report legacy and corrected protocols separately, including the
 legacy results retained in combined TASK-012 scheduled-slot aggregates.
+
+Repair gate 02 passed deterministic recovery but rejected a live finish call
+with accompanying report text (its JSON was valid). Preserve that gate; accept report
+text alongside a sole finish tool (never alongside another action), and return
+bounded schema feedback for malformed finish arguments without repairing them
+(an additional regression case, not the observed gate failure).
+Gate 03 must pass before scheduling. Runtime/import preflight already passed
+all three Astropy images, sklearn and a Python 3.6 Django relay with empty patches.
