@@ -60,6 +60,7 @@ def execute(
     binary: Path,
     *,
     fixture: bool,
+    transport=None,
 ) -> dict:
     directory.mkdir(parents=True, exist_ok=False)
     original_commit = subprocess.check_output(
@@ -104,6 +105,9 @@ def execute(
             timeout_s=limit["request_timeout_s"],
             retries=limit["retries"],
             command_timeout_s=limit["command_timeout_s"],
+            recover_model_outputs=config['serving'].get('recover_model_outputs', False),
+            max_response_recoveries=config['serving'].get('max_response_recoveries', 3),
+            transport=transport,
         ) as gateway:
             try:
                 with AgentSandbox(

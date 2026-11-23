@@ -30,9 +30,9 @@ def valid_saved(path, config):
     return json.loads((path/'results.json').read_text())
 
 
-def case_name(index):
+def case_name(index, prefix='task010'):
     # Only these two setup-only records are superseded. Neither called the model.
-    return f'task010-case-{index:02d}-attempt-{2 if index in (2,3) else 1:02d}'
+    return f'{prefix}-case-{index:02d}-attempt-{2 if prefix == "task010" and index in (2,3) else 1:02d}'
 
 
 def controls_pass(spec, bug, gold, unpatched_log):
@@ -81,6 +81,8 @@ def main():
     args=ap.parse_args()
     root=args.root.resolve(); source=Path(__file__).resolve().parents[1]
     cfg=yaml.safe_load(args.config.read_text())
+    prefix=cfg.get('run_prefix','task010')
+    if prefix not in {'task010','task011'}: raise ValueError('Unknown run namespace')
     selection=json.loads((source/cfg['pilot_selection']).read_text())
     parent=json.loads((source/cfg['selection_manifest']).read_text())
     ids=selection['instance_ids']
@@ -101,17 +103,20 @@ def main():
     def new(run_id, purpose):
         p=create_run(root/'runs',run_id,cfg,{'git_commit':os.environ['HECATE_CODE_SHA'],'purpose':purpose,'argv':sys.argv,'selection':selection,'dataset_sha256':parent['parquet_sha256'],'provider_api_cost_usd':0,'codex_sha256':hashlib.sha256(binary.read_bytes()).hexdigest()})
         snap=p/'source_snapshot';snap.mkdir()
-        for f in [Path(__file__), args.config.resolve(), source/cfg['pilot_selection'], source/cfg['selection_manifest'], source/'scripts/run_codex_baseline.py',source/'scripts/run_qwen36_swebench_pilot.py',*sorted((source/'src/hecate/execution').glob('*.py'))]:
+        for f in [Path(__file__), args.config.resolve(), source/cfg['pilot_selection'], source/cfg['selection_manifest'], source/'scripts/run_codex_baseline.py',source/'scripts/gateway_recovery_fixture.py',source/'scripts/run_qwen36_swebench_pilot.py',*sorted((source/'src/hecate/execution').glob('*.py'))]:
             shutil.copy2(f,snap/f.name)
         (p/'dependencies.txt').write_text(subprocess.check_output([sys.executable,'-m','pip','freeze'],text=True))
         return p
-    gate=root/'runs/task010-native-gate-run-02'
+    gate=root/f'runs/{prefix}-native-gate-run-{"02" if prefix == "task010" else "01"}'
     if args.mode=='gate':
         if gate.exists():
             if not valid_saved(gate,cfg).get('passed'):raise ValueError('Prior gate failed; no silent rerun')
             return
         p=new(gate.name,'Native prompt, read/edit/repair/isolation and patch-tool gate')
         try:
+            if cfg['serving'].get('recover_model_outputs'):
+                from gateway_recovery_fixture import recovery_fixture
+                recovery_fixture(p,cfg,tools,binary)
             rows=fixtures(p,cfg,tools,binary)
             if len(rows)!=3 or not all(x['passed'] for x in rows):raise RuntimeError('Native capability gate failed')
             workspace=p/'workspace-patch'
@@ -129,12 +134,12 @@ def main():
     if not valid_saved(gate,cfg).get('passed'): raise ValueError('Passing native gate required')
     if args.batch==2:
         for n in range(1,6):
-            p=root/'runs'/case_name(n);valid_saved(p,cfg)
+            p=root/'runs'/case_name(n,prefix);valid_saved(p,cfg)
             if json.loads((p/'sync_receipt.json').read_text()).get('status')!='verified_off_spark':
                 raise ValueError('Five-attempt review/off-Spark checkpoint incomplete')
     rows=[]
     for index in range((args.batch-1)*5,args.batch*5):
-        iid=ids[index];name=case_name(index+1);p=root/'runs'/name
+        iid=ids[index];name=case_name(index+1,prefix);p=root/'runs'/name
         if p.exists():
             if not (p/'checksums.json').exists():
                 finish_run(p,{'instance_id':iid,'status':'interrupted','resolved':None,'error':'Prior attempt interrupted; never regenerated automatically'})
@@ -142,7 +147,7 @@ def main():
             if row.get('status') in {'control_failure','interrupted'}:break
             continue
         p=new(name,'One fixed SWE-bench-45 task; one attempt; no training instrumentation')
-        if index+1 in (2,3):
+        if prefix == 'task010' and index+1 in (2,3):
             previous=root/f'runs/task010-case-{index+1:02d}-attempt-01'
             prior=valid_saved(previous,cfg)
             if prior.get('resolved') is not None or (previous/'agent').exists():
@@ -155,6 +160,10 @@ def main():
             from swebench.harness.docker_build import build_env_images,build_instance_image
             tag='task009' if iid=='django__django-16560' else 'task010'
             spec=make_test_spec(tasks[iid],arch='arm64',base_image_tag=tag,env_image_tag=tag,instance_image_tag=tag)
+            if prefix == 'task011' and iid == 'scikit-learn__scikit-learn-25102':
+                # Retain the official legacy build command with a compatible pip.
+                spec.env_image_tag=spec.instance_image_tag='task011'
+                spec.env_script_list.append('python -m pip install pip==24.0')
             (p/'test-spec.json').write_text(json.dumps(spec.__dict__,indent=2)+'\n')
             client=docker_sdk.from_env();_,failed=build_env_images(client,[spec],max_workers=1)
             if failed:raise RuntimeError('Official task environment build failed')

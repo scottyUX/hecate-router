@@ -34,6 +34,44 @@ class OutputBudgetExceeded(ModelOutputError):
     """Generation exhausted the fixed output-token budget."""
 
 
+class RecoverableModelOutput(ModelOutputError):
+    def __init__(self, kind: str, messages: list[dict]):
+        super().__init__(kind)
+        self.kind, self.messages = kind, messages
+
+
+def recovery_feedback(raw: dict, contract: dict) -> tuple[str, list[dict]] | None:
+    """Feedback for non-executable output; never executes or renames an action."""
+    choices = raw.get('choices') or []
+    if len(choices) != 1 or choices[0].get('finish_reason') not in {'stop', 'tool_calls'}:
+        return None
+    message = choices[0].get('message', {})
+    calls = message.get('tool_calls') or []
+    available = ', '.join(contract['allowed'])
+    if any(c['function']['name'] not in contract['allowed'] for c in calls):
+        seen = set()
+        for call in calls:
+            if not call.get('id') or call['id'] in seen:
+                raise ModelOutputError('Invalid or duplicate recovery call ID')
+            seen.add(call['id'])
+            if not isinstance(json.loads(call['function']['arguments']), dict):
+                raise ModelOutputError('Tool arguments must be a JSON object')
+        history = [{'role': 'assistant', 'content': message.get('content'),
+                    'tool_calls': copy.deepcopy(calls)}]
+        for call in calls:
+            name = call['function']['name']
+            error = (f'Unknown or unavailable tool {name!r}.' if name not in contract['allowed']
+                     else 'Not executed: another call in this batch used an unavailable tool.')
+            history.append({'role': 'tool', 'tool_call_id': call['id'],
+                            'content': f'Error: {error} No action was executed. Available tools: {available}. Use exec_command to read files when available. Choose an advertised tool or return a final answer.'})
+        return 'unknown_tool', history
+    if (not calls and not message.get('content')
+            and (message.get('reasoning') or message.get('reasoning_content'))):
+        return 'reasoning_only', [{'role': 'user', 'content':
+            f'Your previous reply contained reasoning but no tool action or final answer. Continue the task with an advertised tool ({available}), or provide a final answer if finished. Do not stop with reasoning alone.'}]
+    return None
+
+
 ALLOWED_TOOLS = {
     "exec_command",
     "write_stdin",
@@ -458,6 +496,8 @@ class Gateway:
         tool_decoding: str = "auto",
         editing_mode: str = "patch",
         message_layout: str = "native",
+        recover_model_outputs: bool = False,
+        max_response_recoveries: int = 3,
     ):
         parsed = urlparse(upstream)
         if (
@@ -485,6 +525,10 @@ class Gateway:
         self.editing_mode = editing_mode
         self.message_layout = message_layout
         self.tool_decoding = tool_decoding
+        if max_response_recoveries < 0:
+            raise ValueError('Recovery limit must be nonnegative')
+        self.recover_model_outputs = recover_model_outputs
+        self.max_response_recoveries = max_response_recoveries
         self.transport = transport
         self.requests = 0
         self.cap_hit = False
@@ -499,6 +543,22 @@ class Gateway:
             f.write(json.dumps({"timestamp": time.time(), **value}) + "\n")
 
     def complete(self, body: dict) -> dict:
+        history = []
+        for recovery in range(self.max_response_recoveries + 1):
+            try:
+                return self._complete_request(body, history)
+            except RecoverableModelOutput as exc:
+                if recovery >= self.max_response_recoveries:
+                    self.record({'event': 'recovery_exhausted', 'kind': exc.kind,
+                                 'request': self.requests})
+                    raise ModelOutputError('Model output recovery limit exhausted') from exc
+                history.extend(exc.messages)
+                self.record({'event': 'model_output_recovery', 'kind': exc.kind,
+                             'request': self.requests, 'feedback': exc.messages,
+                             'recovery': recovery + 1})
+        raise AssertionError('unreachable')
+
+    def _complete_request(self, body: dict, recovery_history: list[dict]) -> dict:
         with self.lock:
             if self.failed:
                 raise ProtocolError("Session has a prior gateway failure")
@@ -523,6 +583,7 @@ class Gateway:
             self.editing_mode,
             self.message_layout,
         )
+        payload['messages'].extend(copy.deepcopy(recovery_history))
         self.record(
             {
                 "event": "request",
@@ -545,6 +606,9 @@ class Gateway:
                     }
                 )
                 try:
+                    feedback = recovery_feedback(raw, contract) if self.recover_model_outputs else None
+                    if feedback:
+                        raise RecoverableModelOutput(*feedback)
                     result = translate_response(raw, contract, self.command_timeout_s)
                 except (ProtocolError, ValueError, KeyError, TypeError) as exc:
                     usage = raw.get("usage") or {}
