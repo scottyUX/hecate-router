@@ -69,6 +69,10 @@ def recovery_feedback(raw: dict, contract: dict) -> tuple[str, list[dict]] | Non
             and (message.get('reasoning') or message.get('reasoning_content'))):
         return 'reasoning_only', [{'role': 'user', 'content':
             f'Your previous reply contained reasoning but no tool action or final answer. Continue the task with an advertised tool ({available}), or provide a final answer if finished. Do not stop with reasoning alone.'}]
+    if not calls and message.get('content') and 'hecate_finish' in contract['allowed']:
+        return 'progress_without_finish', [
+            {'role': 'assistant', 'content': message['content']},
+            {'role': 'user', 'content': 'Text alone does not end this coding session. Continue with an advertised tool, or call hecate_finish with your final report when the requested work is finished.'}]
     return None
 
 
@@ -224,9 +228,9 @@ def translate_request(
             raise ProtocolError(f"Unsupported history item: {kind}")
     if pending:
         raise ProtocolError("Missing tool outputs")
-    if tool_decoding not in {"auto", "required_with_finish"}:
+    if tool_decoding not in {"auto", "required_with_finish", "auto_with_finish"}:
         raise ProtocolError("Unknown tool decoding mode")
-    if tool_decoding == "required_with_finish":
+    if tool_decoding in {"required_with_finish", "auto_with_finish"}:
         tools.append(
             {
                 "type": "function",
@@ -294,6 +298,8 @@ def translate_response(raw: dict, contract: dict, command_timeout_s: int = 120) 
         )
     seen = set()
     calls = message.get("tool_calls") or []
+    if not calls and 'hecate_finish' in contract['allowed']:
+        raise ModelOutputError('Explicit hecate_finish action required')
     if any(c["function"]["name"] == "hecate_finish" for c in calls):
         if "hecate_finish" not in contract["allowed"]:
             raise ProtocolError("Finish action not advertised")

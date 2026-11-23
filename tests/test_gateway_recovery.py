@@ -128,3 +128,19 @@ def test_native_patch_grammar_is_preserved_for_function_adapter():
     assert 'Do not put another JSON object' in tool['description']
     assert 'FREEFORM, do not wrap in JSON' not in tool['description']
     assert tool['parameters']['required']==['input']
+
+
+def test_progress_requires_explicit_finish_and_can_continue(tmp_path):
+    answers=iter([response({'content':'Now let me look at astroid annotations:'}),valid(),
+        response({'content':None,'tool_calls':[{'id':'end','function':{'name':'hecate_finish',
+            'arguments':'{"response":"Finished after inspecting the file."}'}}]},'tool_calls')])
+    sent=[]
+    def transport(payload):sent.append(payload);return next(answers)
+    g=gateway(tmp_path,transport,tool_decoding='auto_with_finish')
+    action=g.complete(body())
+    assert action['output'][0]['name']=='exec_command' and g.requests==2
+    assert sent[1]['messages'][-1]['content'].startswith('Text alone does not end')
+    assert sent[0]['tool_choice']=='auto'
+    end=g.complete(body())
+    assert end['output'][0]['content'][0]['text']=='Finished after inspecting the file.'
+    assert g.requests==3

@@ -46,6 +46,18 @@ def test_repetition_major_schedule_and_distinct_seeds(monkeypatch):
     assert module.attempt_config(cfg, 2, 'sha256:x')['sandbox'] == {'image': 'sha256:x'}
 
 
+def test_repaired_resume_retains_model_attempts_and_supersedes_only_zero_call_startups(tmp_path,monkeypatch):
+    from hecate.execution.codex_artifacts import create_run,finish_run
+    module=runner(monkeypatch)
+    cfg=yaml.safe_load(Path('configs/qwen36_swebench45.yaml').read_text())
+    for iid,requests,termination in [('model-task',4,'completed'),('relay-task',0,'sandbox_failure')]:
+        p=create_run(tmp_path/'runs',module.attempt_name(iid,0),module.legacy_config(cfg),{})
+        finish_run(p,{'model_requests':requests,'termination_reason':termination})
+    assert module.attempt_path(tmp_path,'model-task',0,cfg).name=='task012-model-task-rep0'
+    assert module.attempt_path(tmp_path,'relay-task',0,cfg).name=='task012-relay-task-rep0-v2'
+    assert module.attempt_path(tmp_path,'new-task',0,cfg).name=='task012-new-task-rep0-v2'
+
+
 def test_seed_reaches_the_request_payload(tmp_path):
     from hecate.execution.model_gateway import Gateway
     sent = []

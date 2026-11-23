@@ -122,7 +122,7 @@ def replay_official_recipe(name, spec, base_commit):
     return {'recipe': commands, 'changed_files': changed, 'tree': tree}
 
 
-def export_workspace(spec, base_commit, workspace):
+def export_workspace(spec, base_commit, workspace, *, preserve_runtime=False):
     name = "hecate-task009-export-" + uuid.uuid4().hex[:10]
     try:
         docker("run", "-d", "--name", name, "--network", "none",
@@ -148,9 +148,13 @@ def export_workspace(spec, base_commit, workspace):
         subprocess.run(["git", "-C", str(workspace), "add", "."], check=True)
         subprocess.run(["git", "-C", str(workspace), "-c", "user.name=Hecate",
                         "-c", "user.email=fixture@localhost", "commit", "-qm", "Public task base"], check=True)
+        runtime = {}
+        if preserve_runtime:
+            from hecate.execution.runtime_artifacts import restore_runtime_files
+            runtime = restore_runtime_files(name, spec.repo, workspace)
         return {"prescribed_base": base_commit, "image_head": revision,
                 "source_tree": expected_tree, "exported_revision": base_commit,
-                "image_setup_pin": setup_pin}
+                "image_setup_pin": setup_pin, "runtime_artifacts": runtime}
     finally:
         docker("rm", "-f", name, check=False)
 

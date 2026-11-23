@@ -1,6 +1,6 @@
 # TASK-012 — Qwen3.6 + Codex on the full SWE-bench-45 (paper comparison)
 
-Status: draft for Scott's review. No code, image build or model call yet.
+Status: implemented; checkpoint 1 halted. Authorized repair and continuation below.
 
 ## Request and purpose
 
@@ -236,3 +236,36 @@ defines the same class from `socketserver.ThreadingMixIn` + `HTTPServer`. It was
 verified to start in one image of every repo/version among the 40 runnable tasks
 (Python 3.6.15, 3.8.20, 3.9.25, 3.11.18). Earlier pilots used only Python 3.9 and
 newer environments.
+
+## Amendment 6 — Runtime files and explicit finish (authorized 2026-11-22)
+
+Scott authorized deploying the relay fix, fixing missing compiled extensions and
+premature completion, testing on Spark, then resuming TASK-012. Protocol
+`runtime-finish-v2` keeps the same tasks, models, seeds, limits and exclusions.
+It changes workspace runtime preservation and adds an explicit finish action.
+Publish these deviations and separate retained legacy attempts in the report.
+
+The source export stays at the exact dataset base. Copy only generated runtime
+files (shared libraries, generated version modules and installation metadata)
+from the verified original Astropy/sklearn task image, not evaluator containers.
+Reject unsafe archives, links or collisions with source files. Record file
+hashes and exclude runtime files from source patches using the read-only Git
+metadata. Tests must verify import parity, base-source integrity and that the
+files do not appear in an unchanged patch. Check all three Astropy images and
+the sklearn image before inference.
+
+Advertise `hecate_finish` with auto tool decoding. Only that sole valid action
+ends a session; ordinary text-only progress gets bounded feedback to continue
+or finish explicitly. Keep reasoning private and retain existing unknown-tool
+recovery, three-recovery bound and shared request/wall budgets. Legacy auto
+decoding remains unchanged. Test deterministic progress->tool->finish through
+actual Codex, live Qwen recovery and the native edit/test gates.
+
+Preserve all six checkpoint-1 attempt directories. Retain the three Astropy
+model attempts without regeneration. The three Django relay failures made zero
+model requests: corrected attempts receive `-v2` names and record which setup
+failures they supersede. Remaining attempts also receive `-v2` names. Reuse the
+checksum-verified image controls (grading and image configuration unchanged),
+require a new v2 capability gate, and mirror every checkpoint off Spark before
+continuing. Report legacy and corrected protocols separately, including the
+legacy results retained in combined TASK-012 scheduled-slot aggregates.

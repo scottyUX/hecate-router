@@ -20,7 +20,7 @@ serving:
   reasoning_parser: qwen3
   language_model_only: true
   enforce_eager: true
-  tool_decoding: auto
+  tool_decoding: auto_with_finish
   editing_mode: patch
   message_layout: single_system_prefix
   gpu_memory_utilization: 0.8
@@ -57,3 +57,5 @@ run_prefix: task012
 repetitions: 4
 concurrency: 3
 checkpoint_attempts: 15
+execution_protocol: runtime-finish-v2
+workspace_runtime_artifacts: true

@@ -27,7 +27,7 @@ from run_qwen36_swebench_pilot import grade, export_workspace
 from run_qwen36_ten_task import prepare_wheels
 
 SOURCE = Path(__file__).resolve().parents[1]
-GATE = 'task012-native-gate-run-01'
+GATE = 'task012-native-gate-run-02'
 
 
 SCHEDULING_KEYS = {'excluded_ids', 'concurrency', 'checkpoint_attempts'}
@@ -44,6 +44,32 @@ def valid_saved(path, cfg):
     if protocol(json.loads((path / 'manifest.json').read_text())['config']) != protocol(cfg):
         raise ValueError('Saved protocol configuration differs')
     return json.loads((path / 'results.json').read_text())
+
+
+def legacy_config(cfg):
+    """Exact pre-repair protocol for retained controls and legacy attempts."""
+    old=copy.deepcopy(cfg)
+    old.pop('execution_protocol',None);old.pop('workspace_runtime_artifacts',None)
+    old['serving']['tool_decoding']='auto'
+    return old
+
+
+def saved_control(path,cfg):
+    saved=json.loads((path/'manifest.json').read_text())['config']
+    return valid_saved(path,cfg if saved.get('execution_protocol') else legacy_config(cfg))
+
+
+def attempt_path(root,iid,rep,cfg):
+    legacy=root/'runs'/attempt_name(iid,rep)
+    repaired=root/'runs'/(attempt_name(iid,rep)+'-v2')
+    if repaired.exists():return repaired
+    if legacy.exists():
+        row=valid_saved(legacy,legacy_config(cfg))
+        # Only relay setup failures without a model request may be superseded.
+        if row.get('termination_reason')=='sandbox_failure' and row.get('model_requests')==0:
+            return repaired
+        return legacy
+    return repaired
 
 
 def runnable(cfg, ids):
@@ -172,7 +198,7 @@ def preflight(args):
         if p.exists():
             if not (p / 'checksums.json').exists():
                 finish_run(p, {'instance_id': iid, 'status': 'interrupted', 'error': 'Preflight interrupted; review before retry'})
-            saved = valid_saved(p, cfg)
+            saved = saved_control(p, cfg)
             if iid not in (args.retry or []) or saved.get('status') == 'control_passed':
                 summary.append(saved); continue
             supersedes, retry = p.name, retry + 1
@@ -250,10 +276,15 @@ def attempt(args):
     binary = codex_binary(root, cfg); tools = binary.parent.parent
     if not valid_saved(root / 'runs' / GATE, cfg).get('passed'): raise ValueError('Passing native gate required')
     control_dir, _ = current_control(root, iid)
-    control = valid_saved(control_dir, cfg)
+    control = saved_control(control_dir, cfg)
     if control.get('status') != 'control_passed': raise ValueError('Clean controls required before inference')
-    p = new_run(root, attempt_name(iid, rep), cfg, args, 'SWE-bench-45 attempt; no training instrumentation', parent,
-                {'instance_id': iid, 'repetition': rep, 'seed': rep, 'control_run': control_dir.name})
+    target=attempt_path(root,iid,rep,cfg)
+    if target.exists():raise ValueError('Attempt already exists; never regenerate')
+    legacy=root/'runs'/attempt_name(iid,rep)
+    p = new_run(root, target.name, cfg, args, 'SWE-bench-45 attempt; no training instrumentation', parent,
+                {'instance_id': iid, 'repetition': rep, 'seed': rep, 'control_run': control_dir.name,
+                 'supersedes_setup':legacy.name if legacy.exists() else None,
+                 'execution_protocol':cfg['execution_protocol']})
     os.chdir(p)
     try:
         import docker as docker_sdk
@@ -262,7 +293,8 @@ def attempt(args):
             raise RuntimeError('Task image changed since its controls passed')
         (p / 'test-spec.json').write_text(json.dumps(spec.__dict__, indent=2) + '\n')
         wheels = control_dir / 'wheels'
-        provenance = export_workspace(spec, tasks[iid]['base_commit'], p / 'workspace')
+        provenance = export_workspace(spec, tasks[iid]['base_commit'], p / 'workspace',
+                                      preserve_runtime=cfg.get('workspace_runtime_artifacts',False))
         (p / 'public-task-provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
         effective = attempt_config(cfg, rep, control['image_id'])
         result = execute(p / 'workspace', p / 'agent', tasks[iid]['problem_statement'], effective, tools, binary, fixture=False)
@@ -274,6 +306,7 @@ def attempt(args):
         row.update(outcome_axes(row))
     except Exception as exc:
         row = {'instance_id': iid, 'repetition': rep, 'seed': rep, 'status': 'infrastructure_failure', 'resolved': None, 'error': str(exc)}
+    row['execution_protocol']=cfg['execution_protocol']
     finish_run(p, row)
     print(json.dumps({'instance_id': iid, 'repetition': rep, 'status': row['status'], 'official_resolved': (row.get('evaluation') or {}).get('official_resolved')}), flush=True)
 
@@ -284,16 +317,17 @@ def schedule_mode(args):
     if not valid_saved(root / 'runs' / GATE, cfg).get('passed'): raise ValueError('Passing native gate required')
     arm = runnable(cfg, ids)
     for iid in arm:
-        if valid_saved(current_control(root, iid)[0], cfg).get('status') != 'control_passed':
+        if saved_control(current_control(root, iid)[0], cfg).get('status') != 'control_passed':
             raise ValueError(f'Controls not passed for {iid}; resolve preflight first')
     pending, finished = [], []
     for iid, rep in schedule(arm, cfg['repetitions']):
-        p = root / 'runs' / attempt_name(iid, rep)
+        p = attempt_path(root,iid,rep,cfg)
         if not p.exists():
             pending.append((iid, rep)); continue
         if not (p / 'checksums.json').exists():
             finish_run(p, {'instance_id': iid, 'repetition': rep, 'status': 'interrupted', 'resolved': None,
                            'error': 'Attempt interrupted; never regenerated'})
+        valid_saved(p,cfg if p.name.endswith('-v2') else legacy_config(cfg))
         finished.append(p)
     unsynced = [p.name for p in finished if not (p / 'sync_receipt.json').exists()]
     if unsynced:
@@ -306,7 +340,7 @@ def schedule_mode(args):
     while batch or running:
         while batch and not halt and len(running) < cfg['concurrency']:
             iid, rep = batch.pop(0)
-            log = (logs / f'{attempt_name(iid, rep)}.log').open('w')
+            log = (logs / f'{attempt_path(root,iid,rep,cfg).name}.log').open('w')
             proc = subprocess.Popen([sys.executable, '-u', str(Path(__file__)), 'attempt', '--root', str(root),
                                      '--config', str(args.config.resolve()), '--instance', iid, '--rep', str(rep)],
                                     cwd=SOURCE, env=env, stdout=log, stderr=subprocess.STDOUT)
@@ -315,7 +349,7 @@ def schedule_mode(args):
         time.sleep(10)
         for proc in [x for x in running if x.poll() is not None]:
             iid, rep, log = running.pop(proc); log.close()
-            p = root / 'runs' / attempt_name(iid, rep)
+            p = attempt_path(root,iid,rep,cfg)
             if not p.exists():
                 # Failed before creating its run, so before any model call; see its log.
                 row = {'instance_id': iid, 'repetition': rep, 'status': 'infrastructure_failure',
@@ -341,14 +375,18 @@ def score(args):
     rows = {}
     for iid in ids:
         for rep in range(cfg['repetitions']):
-            p = root / 'runs' / attempt_name(iid, rep)
+            p = attempt_path(root,iid,rep,cfg)
             if (p / 'checksums.json').exists():
-                rows[(iid, rep)] = json.loads((p / 'results.json').read_text())
+                rows[(iid, rep)] = valid_saved(p,cfg if p.name.endswith('-v2') else legacy_config(cfg))
+                rows[(iid, rep)].setdefault('execution_protocol','legacy-v1')
     arm = [x for x in ids if x not in cfg['x86_ids']]
     by_repo = {}
     for iid in ids:
         by_repo.setdefault(tasks[iid]['repo'], []).append(iid)
     report = {
+        'execution_protocol':cfg['execution_protocol'],
+        'protocol_counts':{name:sum(r.get('execution_protocol')==name for r in rows.values())
+                           for name in sorted({r.get('execution_protocol') for r in rows.values()})},
         'paper': {'mean': 26.67, 'best': 44.44, 'vcr': 98.33, 'token_load_m': 4.770, 'tokens_per_success_m': 17.889},
         'all_45': {**aggregate(rows, ids, cfg['repetitions']), **bootstrap(rows, ids, cfg['repetitions'])},
         'arm_42': {**aggregate(rows, arm, cfg['repetitions']), **bootstrap(rows, arm, cfg['repetitions'])},

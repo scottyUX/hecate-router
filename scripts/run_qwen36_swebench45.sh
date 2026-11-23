@@ -3,7 +3,7 @@
 # Phase A (no model) runs separately: run_qwen36_swebench45.py preflight --root <root>.
 set -euo pipefail
 TASK_ROOT="${1:?task root}"
-cd "$TASK_ROOT/source"
+cd "${HECATE_TASK_SOURCE:-$TASK_ROOT/source}"
 export PYTHONPATH=src:scripts
 export HECATE_CODE_SHA
 HECATE_CODE_SHA="$(cat "$TASK_ROOT/COMMIT")"
