@@ -92,6 +92,36 @@ def grade(spec, patch, directory, timeout, *, wheelhouse=None):
         (directory / "outcome.json").write_text(json.dumps(outcome, indent=2) + "\n")
 
 
+REPLAY_DIR = '/tmp/hecate-recipe-replay'
+
+
+def official_recipe(spec):
+    """Source-editing pre_install commands from the pinned SWE-bench spec.
+
+    Package installs (apt-get, pip, conda) cannot run offline and do not touch
+    the tree; skipping them means any edit they would make still fails closed."""
+    from swebench.harness.constants import MAP_REPO_VERSION_TO_SPECS
+    commands = MAP_REPO_VERSION_TO_SPECS.get(getattr(spec, 'repo', None), {}).get(
+        getattr(spec, 'version', None), {}).get('pre_install') or []
+    return [c for c in commands if c.startswith(('sed ', 'grep '))]
+
+
+def replay_official_recipe(name, spec, base_commit):
+    commands = official_recipe(spec)
+    if not commands:
+        return None
+    replay = REPLAY_DIR
+    if docker('exec', '-w', '/testbed', name, 'git', 'worktree', 'add', '--detach', replay, base_commit, check=False).returncode:
+        return None
+    for command in commands:
+        if docker('exec', '-w', replay, name, 'bash', '-c', command, check=False).returncode:
+            return None
+    docker('exec', '-w', replay, name, 'git', 'add', '-A')
+    tree = docker('exec', '-w', replay, name, 'git', 'write-tree').stdout.strip()
+    changed = docker('exec', '-w', '/testbed', name, 'git', 'diff', '--name-only', base_commit, 'HEAD').stdout.splitlines()
+    return {'recipe': commands, 'changed_files': changed, 'tree': tree}
+
+
 def export_workspace(spec, base_commit, workspace):
     name = "hecate-task009-export-" + uuid.uuid4().hex[:10]
     try:
@@ -104,17 +134,12 @@ def export_workspace(spec, base_commit, workspace):
         # then export the dataset's exact base, never later history.
         setup_pin = None
         if actual_tree != expected_tree:
-            # SWE-bench's Astropy build recipes (5.0 and later, TASK-012) commit this
-            # dependency pin. Accept precisely that blob change, while exporting the original base.
-            if getattr(spec, 'repo', None) == 'astropy/astropy':
-                changed = docker('exec', '-w', '/testbed', name, 'git', 'diff', '--name-only', base_commit, 'HEAD').stdout.splitlines()
-                before = docker('exec', '-w', '/testbed', name, 'git', 'show', base_commit + ':pyproject.toml').stdout
-                after = docker('exec', '-w', '/testbed', name, 'git', 'show', 'HEAD:pyproject.toml').stdout
-                old = 'requires = ["setuptools",'
-                new = 'requires = ["setuptools==68.0.0",'
-                if changed == ['pyproject.toml'] and before.count(old) == 1 and after == before.replace(old, new):
-                    setup_pin = {'path': 'pyproject.toml', 'before': old, 'after': new}
-            if setup_pin is None:
+            # The official image commits SWE-bench's own pre_install edits (Astropy
+            # build pin, Sphinx dependency pins and pytest -rA). Accept the difference
+            # only if replaying that recipe on the base reproduces the image tree exactly.
+            # The agent still receives the original base (TASK-012 Amendment 3).
+            setup_pin = replay_official_recipe(name, spec, base_commit)
+            if setup_pin is None or setup_pin['tree'] != actual_tree:
                 raise ValueError("Task image source tree differs from the prescribed base")
         archive = subprocess.check_output(["docker", "exec", "-w", "/testbed", name,
                                            "git", "archive", base_commit], timeout=120)

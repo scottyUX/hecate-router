@@ -103,11 +103,18 @@ def test_export_accepts_empty_setup_commit_but_rejects_source_changes(tmp_path, 
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     original = subprocess.check_output
-    def docker(*args, **kwargs):
-        stdout = ""
-        if args[0] == "exec":
-            stdout = original(["git", "-C", str(repository), *args[5:]], text=True)
-        return subprocess.CompletedProcess(args, 0, stdout, "")
+    replay = tmp_path / "replay"
+    monkeypatch.setattr(module, "REPLAY_DIR", str(replay))
+    # Portable stand-in for SWE-bench's Astropy sed recipe (BSD sed differs).
+    monkeypatch.setattr(module, "official_recipe", lambda spec: [
+        "python3 -c \"import pathlib; p=pathlib.Path('pyproject.toml'); "
+        "p.write_text(p.read_text().replace('requires = [\\\"setuptools\\\",', 'requires = [\\\"setuptools==68.0.0\\\",', 1))\""])
+    def docker(*args, check=True, **kwargs):
+        if args[0] != "exec":
+            return subprocess.CompletedProcess(args, 0, "", "")
+        workdir = str(repository) if args[2] == "/testbed" else args[2]
+        result = subprocess.run(list(args[4:]), cwd=workdir, capture_output=True, text=True)
+        return subprocess.CompletedProcess(args, result.returncode, result.stdout, result.stderr)
     def archive(command, **kwargs):
         if command[0] == "docker":
             return original(["git", "-C", str(repository), "archive", command[-1]], **kwargs)

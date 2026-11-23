@@ -114,46 +114,50 @@ def test_control_retry_supersedes_without_overwriting(tmp_path, monkeypatch):
     assert module.control_name('x', 2) == 'task012-control-x-retry-02'
 
 
-def fake_export(monkeypatch, tmp_path, *, version, after_line, changed='pyproject.toml'):
+def fake_export(monkeypatch, tmp_path, *, repo, version, replay_tree='image-tree', failing=None):
     from types import SimpleNamespace
     monkeypatch.syspath_prepend(str(Path('scripts').resolve()))
     import run_qwen36_swebench_pilot as pilot
-    before = '[build-system]\nrequires = ["setuptools",\n  "wheel"]\n'
-    after = before.replace('requires = ["setuptools",', after_line)
+    calls = []
 
-    def docker(*args, **kwargs):
+    def docker(*args, check=True, **kwargs):
+        calls.append(args)
+        code, out = 0, 'head'
         if args[-2:] == ('rev-parse', 'HEAD^{tree}'):
             out = 'image-tree'
         elif args[-1].endswith('^{tree}'):
             out = 'base-tree'
+        elif args[-1] == 'write-tree':
+            out = replay_tree
         elif 'diff' in args:
-            out = changed + '\n'
-        elif args[-1] == 'HEAD:pyproject.toml':
-            out = after
-        elif args[-1].endswith(':pyproject.toml'):
-            out = before
-        else:
-            out = 'head'
-        return SimpleNamespace(stdout=out, returncode=0)
+            out = 'setup.py\ntox.ini\n'
+        elif failing and args[-1] == failing:
+            code = 1
+        return SimpleNamespace(stdout=out, returncode=code)
 
     monkeypatch.setattr(pilot, 'docker', docker)
     monkeypatch.setattr(pilot.subprocess, 'check_output', lambda *a, **k: b'')
     monkeypatch.setattr(pilot, 'extract_task_archive', lambda archive, workspace: workspace.mkdir(parents=True))
     monkeypatch.setattr(pilot.subprocess, 'run', lambda *a, **k: None)
-    spec = SimpleNamespace(repo='astropy/astropy', version=version, instance_image_key='img')
-    return pilot.export_workspace(spec, 'base', tmp_path / 'ws')
+    spec = SimpleNamespace(repo=repo, version=version, instance_image_key='img')
+    return pilot.export_workspace(spec, 'base', tmp_path / 'ws'), calls
 
 
-def test_astropy_setuptools_pin_accepted_for_any_version_only_when_exact(tmp_path, monkeypatch):
+def test_official_recipe_replay_must_reproduce_image_tree(tmp_path, monkeypatch):
     import pytest
-    pinned = 'requires = ["setuptools==68.0.0",'
-    for version in ('5.0', '5.1', '5.2'):
-        result = fake_export(monkeypatch, tmp_path / version, version=version, after_line=pinned)
-        assert result['image_setup_pin']['after'] == pinned
-    with pytest.raises(ValueError):
-        fake_export(monkeypatch, tmp_path / 'other-pin', version='5.1', after_line='requires = ["setuptools==69.0.0",')
-    with pytest.raises(ValueError):
-        fake_export(monkeypatch, tmp_path / 'extra-file', version='5.1', after_line=pinned, changed='pyproject.toml\nsetup.cfg')
+    for repo, version in (('astropy/astropy', '5.0'), ('astropy/astropy', '5.1'), ('sphinx-doc/sphinx', '3.1'),
+                          ('sphinx-doc/sphinx', '4.1'), ('sphinx-doc/sphinx', '7.2')):
+        result, calls = fake_export(monkeypatch, tmp_path / f'{repo}-{version}'.replace('/', '_'), repo=repo, version=version)
+        recipe = result['image_setup_pin']['recipe']
+        assert recipe and all(c.startswith(('sed ', 'grep ')) for c in recipe)
+        assert not any('apt-get' in ' '.join(c) for c in calls)
+    with pytest.raises(ValueError):  # replayed recipe differs from the image
+        fake_export(monkeypatch, tmp_path / 'differs', repo='sphinx-doc/sphinx', version='3.1', replay_tree='other-tree')
+    with pytest.raises(ValueError):  # no official source-editing recipe for this repo/version
+        fake_export(monkeypatch, tmp_path / 'none', repo='django/django', version='3.0')
+    with pytest.raises(ValueError):  # a recipe command failed
+        fake_export(monkeypatch, tmp_path / 'fails', repo='sphinx-doc/sphinx', version='3.1',
+                    failing="sed -i 's/pytest/pytest -rA/' tox.ini")
 
 
 def test_git_auto_gc_disabled_for_runner_git_commands(tmp_path, monkeypatch):

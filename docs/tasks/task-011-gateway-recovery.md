@@ -49,3 +49,11 @@ check. The adapter had dropped Codex's native grammar when converting its custom
 patch tool to a function. In the recovery profile, preserve that exact grammar
 in the function description and clarify the JSON wrapper versus raw input.
 Keep the failure and use native gate 02; do not raise its request allowance.
+
+## Closure (2026-11-22)
+
+Batch 1 completed: 5 attempts. The official verifier scored 1 resolved
+(django-16560) and 4 not resolved. Two of those 4 (astropy-13398, pylint-4551)
+are strict unknowns. Batch 2 halted at case 06 when sphinx-8548's control
+failed the image-tree check. Scott closed TASK-011 there. TASK-012 (full
+SWE-bench-45, 4 attempts) supersedes it, and its Amendment 3 resolves the Sphinx check.

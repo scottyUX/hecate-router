@@ -188,3 +188,25 @@ New TASK-012 control rule, replacing per-instance exceptions such as Pylint 4551
 
 Candidate grading is unchanged. The paper column uses the official label, and the
 strict column keeps unknowns separate.
+
+## Amendment 3 — Official image recipe replay (approved 2026-11-22)
+
+The full preflight at dd81002 passed 37 of 42 ARM controls. All five Sphinx tasks
+(7590, 8548, 9229, 9461, 11510) failed the image-tree check because their
+official images commit SWE-bench's own pre_install edits: dependency pins in
+`setup.py` and `pytest -rA` in `tox.ini`. The paper ran in these same images.
+Scott approved one general rule in place of Amendment 1's Astropy-specific check:
+- An image tree that differs from the base is accepted only if replaying the
+  pinned swebench 4.1.0 `pre_install` source edits (`sed`/`grep` commands only)
+  on the base commit, in a scratch worktree, reproduces the image tree exactly.
+- Anything else fails closed, including package-install steps, which cannot run
+  offline.
+- The replayed commands and changed files are recorded in the export provenance.
+  The agent still receives the dataset's original base.
+
+## Amendment 4 — D4 changed: TASK-011 closed at batch 1 (approved 2026-11-22)
+
+TASK-011 finished batch 1 (5 tasks). Batch 2 halted at case 06, where
+sphinx-8548's control hit the same image-tree check. Scott chose to close
+TASK-011 there rather than port this fix and finish it. TASK-012 reruns all
+of those tasks four times. TASK-012 now takes the GPU.
