@@ -45,9 +45,12 @@ def evaluation_patch(patch: str, rejected: list[str]) -> tuple[str, dict]:
             if len(values) > 1 or any(v not in {expected, "/dev/null"} for v in values):
                 raise ValueError("Unified patch paths disagree with diff header")
         if protected_test_path(old) or protected_test_path(new):
+            # An empty new file has no ---/+++ lines; git marks it with the empty blob.
+            empty_new = re.search(r"^index 0+\.\.e69de29(?:bb2d1d6434b8b29ae775ad8c2e48c5391)?(?: 100(?:644|755))?$", block, re.M) \
+                and not re.search(r"^(?:---|\+\+\+|@@) ", block, re.M)
             if (old != new or new not in rejected
                 or not re.search(r"^new file mode 100(?:644|755)$", block, re.M)
-                or "\n--- /dev/null\n" not in block):
+                or ("\n--- /dev/null\n" not in block and not empty_new)):
                 raise ValueError("Existing protected file change cannot be projected")
             excluded.append(new)
         else:

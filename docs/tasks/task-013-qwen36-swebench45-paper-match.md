@@ -111,3 +111,16 @@ connection with `timeout=600`, a Hecate deadline missed when the limits were rem
 It is now `timeout=None`; the gateway owns any request deadline (none under TASK-013).
 Attempts started after the deploy mount the fixed relay. django-11885 rep 0 is kept
 as recorded.
+
+## Amendment 3 — Empty scratch test files are excluded, not fatal (2026-11-23 ~06:30 PT)
+
+`django__django-14007` rep 0 finished normally (98 requests) but was recorded as
+`infrastructure_failure`: "Existing protected file change cannot be projected". The
+agent left an empty new file `django/db/test_writable.py`. Git writes no `---`/`+++`
+lines for an empty new file, so the projection did not recognize it as a new
+protected file to exclude. The projection now also accepts an empty new file
+(empty-blob index line, no hunks). Edits to existing protected files are still refused.
+
+The saved patch (`agent/patch.diff`) can be graded with the fixed projection without
+any model call. The runner has no regrade mode yet; that is pending Scott's review and
+will be recorded as a separate run that supersedes only the evaluation.

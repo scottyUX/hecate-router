@@ -76,3 +76,23 @@ def test_gateway_without_request_timeout_has_no_read_deadline(tmp_path, monkeypa
 def test_relay_has_no_read_deadline():
     source = Path('src/hecate/execution/codex_relay.py').read_text()
     assert 'UnixConnection("localhost", timeout=None)' in source and 'timeout=600' not in source
+
+
+def test_empty_new_scratch_test_file_is_excluded_not_fatal():
+    from hecate.execution.patch_evaluation import evaluation_patch
+    source = ('diff --git a/django/db/models/base.py b/django/db/models/base.py\n'
+              'index 1111111..2222222 100644\n--- a/django/db/models/base.py\n+++ b/django/db/models/base.py\n'
+              '@@ -1 +1 @@\n-a\n+b\n')
+    scratch = ('diff --git a/django/db/test_writable.py b/django/db/test_writable.py\n'
+               'new file mode 100644\nindex 0000000..e69de29\n')
+    derived, projection = evaluation_patch(source + scratch, ['django/db/test_writable.py'])
+    assert derived == source
+
+
+def test_existing_protected_file_edit_still_refused():
+    import pytest
+    from hecate.execution.patch_evaluation import evaluation_patch
+    edit = ('diff --git a/tests/test_x.py b/tests/test_x.py\nindex 1111111..2222222 100644\n'
+            '--- a/tests/test_x.py\n+++ b/tests/test_x.py\n@@ -1 +1 @@\n-a\n+b\n')
+    with pytest.raises(ValueError, match='cannot be projected'):
+        evaluation_patch(edit, ['tests/test_x.py'])
