@@ -114,3 +114,17 @@ def test_rerun_preserves_ten_ids_and_model_settings():
     assert corrected['run_prefix']=='task011'
     assert corrected['serving']['recover_model_outputs'] is True
     assert corrected['serving']['max_response_recoveries']==3
+
+
+def test_native_patch_grammar_is_preserved_for_function_adapter():
+    from hecate.execution.model_gateway import translate_request
+    request=body()
+    grammar='start: "*** Begin Patch" LF hunk "*** End Patch"'
+    request['tools'].append({'type':'custom','name':'apply_patch','description':'FREEFORM, do not wrap in JSON',
+                             'format':{'type':'grammar','syntax':'lark','definition':grammar}})
+    payload,_=translate_request(request,'fixture',{},preserve_patch_grammar=True)
+    tool=next(x['function'] for x in payload['tools'] if x['function']['name']=='apply_patch')
+    assert grammar in tool['description']
+    assert 'Do not put another JSON object' in tool['description']
+    assert 'FREEFORM, do not wrap in JSON' not in tool['description']
+    assert tool['parameters']['required']==['input']

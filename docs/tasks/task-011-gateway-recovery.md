@@ -42,3 +42,10 @@ stop on failed gates/controls and report unknowns separately from unsolved
 patches. Stop only owned servers on exit. No training telemetry or API spend.
 
 The first scikit-learn preflight with only pip pinned exposed modern setuptools editable-install recursion and was stopped. Retain that failure. The corrected environment pins both packages; when the official evaluator explicitly uses --no-build-isolation, no isolated-build wheelhouse dependencies are needed. Preserve official commands and require clean controls before model inference.
+
+Before any benchmark attempt, native gate 01 passed injected/live recovery,
+read, edit and test repair but exhausted its fixture budget in the final patch
+check. The adapter had dropped Codex's native grammar when converting its custom
+patch tool to a function. In the recovery profile, preserve that exact grammar
+in the function description and clarify the JSON wrapper versus raw input.
+Keep the failure and use native gate 02; do not raise its request allowance.

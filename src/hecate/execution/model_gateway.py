@@ -103,6 +103,7 @@ def translate_request(
     tool_decoding: str = "auto",
     editing_mode: str = "patch",
     message_layout: str = "native",
+    preserve_patch_grammar: bool = False,
 ) -> tuple[dict, dict]:
     if editing_mode not in {"patch", "shell"}:
         raise ProtocolError("Unknown editing mode")
@@ -145,6 +146,21 @@ def translate_request(
                     "additionalProperties": False,
                 },
             }
+            if preserve_patch_grammar:
+                grammar=tool.get('format',{}).get('definition')
+                if not grammar:
+                    raise ProtocolError('Native patch grammar missing')
+                fn['description'] = (
+                    'Edit files with the native Codex patch format below. This API adapter uses a JSON object '
+                    'with exactly one input field containing raw patch text. Do not put another JSON object '
+                    'inside input. Use @@ on a line by itself for a simple change; ordinary unified-diff '
+                    'numeric headers such as @@ -1,2 +1,2 @@ are not the Codex patch format. '
+                    'Preserve the original native grammar:\n' + grammar
+                )
+                fn['parameters']['properties']['input']['description'] = (
+                    'Raw patch text matching the native grammar, beginning with *** Begin Patch '
+                    'and ending with *** End Patch; use actual newline characters.'
+                )
         else:
             raise ProtocolError(f"Unsupported tool contract: {name}")
         if name in {"exec_command", "shell", "shell_command"}:
@@ -582,6 +598,7 @@ class Gateway:
             self.tool_decoding,
             self.editing_mode,
             self.message_layout,
+            preserve_patch_grammar=self.recover_model_outputs,
         )
         payload['messages'].extend(copy.deepcopy(recovery_history))
         self.record(
