@@ -75,7 +75,9 @@ linked from TASK-012). Run IDs keep the TASK-012 naming
 (`task012-<iid>-rep<r>-v2`); every manifest records
 `execution_protocol: paper-match-v3`. Phase A controls are rerun (sphinx images
 change; all controls are validated against the new protocol). Then the native
-gate, then checkpoints of 15 attempts.
+gate, then checkpoints. Checkpoint 1 is 15 attempts; from checkpoint 2,
+`checkpoint_attempts: 42` (scheduling-only, excluded from protocol validation)
+so one rep-0 pass over the 42 ARM tasks is not split by model reloads.
 
 ## Validation
 

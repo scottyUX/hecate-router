@@ -55,6 +55,7 @@ evaluator:
 run_prefix: task012
 repetitions: 4
 concurrency: 3
-checkpoint_attempts: 15
+# TASK-013: larger checkpoints cut model reloads and end-of-batch idle time.
+checkpoint_attempts: 42
 execution_protocol: paper-match-v3
 workspace_runtime_artifacts: true
