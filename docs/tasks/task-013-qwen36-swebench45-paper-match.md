@@ -155,3 +155,19 @@ is otherwise unchanged; verified on a copy of the saved workspace (applies clean
 `objects.inv` byte-identical). Attempts already running keep the old code. The saved
 workspace can be regraded without model calls once a regrade mode exists (same pending
 decision as django-14007).
+
+## Rep 0 result (complete 2026-11-23 ~14:15 PT)
+
+42 ARM tasks, one attempt each, official swebench 4.1.0 verdicts:
+
+| Denominator | Solved | Rate |
+|---|---|---|
+| all 45 (x86 tasks unresolved) | 10 | 22.2% |
+| arm 42 | 10 | 23.8% |
+| arm 42 minus 5 harness-ended attempts | 10/37 | 27.0% |
+
+Paper Mean-of-4: 26.67%. Solved: astropy-13579, astropy-14369, django-11138, -12708,
+-13128, -13449, -13837, pytest-5787, pytest-6197, sympy-12489. Harness-ended (bugs
+since fixed, Amendments 1–3, 5): django-10554, -11885, -13344, -14007, sphinx-9229.
+Request cap (200) reached: django-15503, -15957, -16263, sphinx-9461 (all graded
+unresolved). Reps 1–3 continue automatically (checkpoint 2 started 14:15 PT).
