@@ -13,7 +13,7 @@ trim_pid=''
 cleanup() {
     if [ -n "$trim_pid" ]; then kill "$trim_pid" 2>/dev/null || true; fi
     if [ -n "$started" ]; then
-        docker logs hecate-task010-model > "$TASK_ROOT/logs/model-batch-$BATCH.log" 2>&1 || true
+        docker logs hecate-task010-model > "$TASK_ROOT/logs/model-batch-$BATCH-$HECATE_CODE_SHA.log" 2>&1 || true
         docker stop hecate-task010-model >/dev/null 2>&1 || true
         docker rm hecate-task010-model >/dev/null 2>&1 || true
     fi

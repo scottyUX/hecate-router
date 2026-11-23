@@ -102,8 +102,20 @@ def export_workspace(spec, base_commit, workspace):
         expected_tree = docker("exec", "-w", "/testbed", name, "git", "rev-parse", base_commit + "^{tree}").stdout.strip()
         # Official setup adds an empty SWE-bench commit; compare source trees,
         # then export the dataset's exact base, never later history.
+        setup_pin = None
         if actual_tree != expected_tree:
-            raise ValueError("Task image source tree differs from the prescribed base")
+            # SWE-bench's Astropy 5.0 build recipe commits this dependency pin.
+            # Accept precisely that blob change, while exporting the original base.
+            if getattr(spec, 'repo', None) == 'astropy/astropy' and getattr(spec, 'version', None) == '5.0':
+                changed = docker('exec', '-w', '/testbed', name, 'git', 'diff', '--name-only', base_commit, 'HEAD').stdout.splitlines()
+                before = docker('exec', '-w', '/testbed', name, 'git', 'show', base_commit + ':pyproject.toml').stdout
+                after = docker('exec', '-w', '/testbed', name, 'git', 'show', 'HEAD:pyproject.toml').stdout
+                old = 'requires = ["setuptools",'
+                new = 'requires = ["setuptools==68.0.0",'
+                if changed == ['pyproject.toml'] and before.count(old) == 1 and after == before.replace(old, new):
+                    setup_pin = {'path': 'pyproject.toml', 'before': old, 'after': new}
+            if setup_pin is None:
+                raise ValueError("Task image source tree differs from the prescribed base")
         archive = subprocess.check_output(["docker", "exec", "-w", "/testbed", name,
                                            "git", "archive", base_commit], timeout=120)
         extract_task_archive(archive, workspace)
@@ -112,7 +124,8 @@ def export_workspace(spec, base_commit, workspace):
         subprocess.run(["git", "-C", str(workspace), "-c", "user.name=Hecate",
                         "-c", "user.email=fixture@localhost", "commit", "-qm", "Public task base"], check=True)
         return {"prescribed_base": base_commit, "image_head": revision,
-                "source_tree": expected_tree, "exported_revision": base_commit}
+                "source_tree": expected_tree, "exported_revision": base_commit,
+                "image_setup_pin": setup_pin}
     finally:
         docker("rm", "-f", name, check=False)
 

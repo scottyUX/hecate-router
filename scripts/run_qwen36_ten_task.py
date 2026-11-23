@@ -30,6 +30,28 @@ def valid_saved(path, config):
     return json.loads((path/'results.json').read_text())
 
 
+def case_name(index):
+    # Only these two setup-only records are superseded. Neither called the model.
+    return f'task010-case-{index:02d}-attempt-{2 if index in (2,3) else 1:02d}'
+
+
+def controls_pass(spec, bug, gold, unpatched_log):
+    if gold.get('status') != 'completed' or gold.get('resolved') is not True:
+        return False
+    if bug.get('status') == 'completed' and bug.get('resolved') is False:
+        return True
+    # This task's test patch imports a newly introduced API at collection time.
+    # Accept this known negative baseline only; candidate grading stays strict.
+    return (spec.instance_id == 'pylint-dev__pylint-4551'
+            and bug.get('status') == 'evaluator_failure'
+            and bug.get('official_resolved') is False
+            and bug.get('test_markers_found') is True
+            and not bug.get('timed_out')
+            and bool(bug.get('missing_required_tests'))
+            and 'ERROR collecting tests/unittest_pyreverse_writer.py' in unpatched_log
+            and "ImportError: cannot import name 'get_annotation' from 'pylint.pyreverse.utils'" in unpatched_log)
+
+
 def prepare_wheels(spec, directory):
     """Prepare public build dependencies with the task's own Python version."""
     directory.mkdir()
@@ -107,12 +129,12 @@ def main():
     if not valid_saved(gate,cfg).get('passed'): raise ValueError('Passing native gate required')
     if args.batch==2:
         for n in range(1,6):
-            p=root/f'runs/task010-case-{n:02d}-attempt-01';valid_saved(p,cfg)
+            p=root/'runs'/case_name(n);valid_saved(p,cfg)
             if json.loads((p/'sync_receipt.json').read_text()).get('status')!='verified_off_spark':
                 raise ValueError('Five-attempt review/off-Spark checkpoint incomplete')
     rows=[]
     for index in range((args.batch-1)*5,args.batch*5):
-        iid=ids[index];name=f'task010-case-{index+1:02d}-attempt-01';p=root/'runs'/name
+        iid=ids[index];name=case_name(index+1);p=root/'runs'/name
         if p.exists():
             if not (p/'checksums.json').exists():
                 finish_run(p,{'instance_id':iid,'status':'interrupted','resolved':None,'error':'Prior attempt interrupted; never regenerated automatically'})
@@ -120,6 +142,12 @@ def main():
             if row.get('status') in {'control_failure','interrupted'}:break
             continue
         p=new(name,'One fixed SWE-bench-45 task; one attempt; no training instrumentation')
+        if index+1 in (2,3):
+            previous=root/f'runs/task010-case-{index+1:02d}-attempt-01'
+            prior=valid_saved(previous,cfg)
+            if prior.get('resolved') is not None or (previous/'agent').exists():
+                raise ValueError('Setup resume may not regenerate model attempts')
+            (p/'supersedes-setup.json').write_text(json.dumps({'run_id':previous.name,'reason':'Authorized Astropy/Pylint harness correction; no prior model call'},indent=2)+'\n')
         old=Path.cwd();os.chdir(p)
         try:
             import docker as docker_sdk
@@ -136,7 +164,7 @@ def main():
             prepare_wheels(spec,p/'wheels')
             bug=grade(spec,'',p/'unpatched',900,wheelhouse=p/'wheels')
             gold=grade(spec,tasks[iid]['patch'],p/'gold',900,wheelhouse=p/'wheels')
-            if not (bug['status']==gold['status']=='completed' and bug['resolved'] is False and gold['resolved'] is True):
+            if not controls_pass(spec,bug,gold,(p/'unpatched/test_output.txt').read_text()):
                 raise RuntimeError('Official clean offline controls did not pass')
         except Exception as exc:
             row={'instance_id':iid,'status':'control_failure','resolved':None,'error':str(exc)}

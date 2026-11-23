@@ -80,19 +80,23 @@ def test_single_system_layout_preserves_tool_history():
     assert merged["messages"][1:] == [m for m in raw["messages"] if m["role"] != "system"]
 
 
-@pytest.mark.parametrize("changed", [False, True])
-def test_export_accepts_empty_setup_commit_but_rejects_source_changes(tmp_path, monkeypatch, changed):
+@pytest.mark.parametrize("change", ['empty', 'source', 'astropy-pin', 'pin-and-source', 'wrong-pin'])
+def test_export_accepts_empty_setup_commit_but_rejects_source_changes(tmp_path, monkeypatch, change):
     repository = tmp_path / "image-repository"
     repository.mkdir()
     subprocess.run(["git", "init", "-q", str(repository)], check=True)
     (repository / "source.py").write_text("value=1\n")
+    (repository / "pyproject.toml").write_text('[build-system]\nrequires = ["setuptools", "wheel"]\n')
     subprocess.run(["git", "-C", str(repository), "add", "."], check=True)
     commit = ["git", "-C", str(repository), "-c", "user.name=Fixture", "-c", "user.email=fixture@localhost", "commit", "-qm"]
     subprocess.run(commit + ["base"], check=True)
     base = subprocess.check_output(["git", "-C", str(repository), "rev-parse", "HEAD"], text=True).strip()
-    if changed:
+    if change in ('source', 'pin-and-source'):
         (repository / "source.py").write_text("value=2\n")
-        subprocess.run(["git", "-C", str(repository), "add", "."], check=True)
+    if change in ('astropy-pin', 'pin-and-source', 'wrong-pin'):
+        version = '69.0.0' if change == 'wrong-pin' else '68.0.0'
+        (repository / "pyproject.toml").write_text(f'[build-system]\nrequires = ["setuptools=={version}", "wheel"]\n')
+    subprocess.run(["git", "-C", str(repository), "add", "."], check=True)
     subprocess.run(commit + ["setup", "--allow-empty"], check=True)
     monkeypatch.syspath_prepend(str(Path("scripts").resolve()))
     spec = importlib.util.spec_from_file_location("swe_pilot", "scripts/run_qwen36_swebench_pilot.py")
@@ -111,11 +115,14 @@ def test_export_accepts_empty_setup_commit_but_rejects_source_changes(tmp_path, 
     monkeypatch.setattr(module, "docker", docker)
     monkeypatch.setattr(module.subprocess, "check_output", archive)
     workspace = tmp_path / "workspace"
-    if changed:
+    image_spec = SimpleNamespace(instance_image_key="fixture", repo='astropy/astropy', version='5.0')
+    if change in ('source', 'pin-and-source', 'wrong-pin'):
         with pytest.raises(ValueError, match="source tree differs"):
-            module.export_workspace(SimpleNamespace(instance_image_key="fixture"), base, workspace)
+            module.export_workspace(image_spec, base, workspace)
     else:
-        result = module.export_workspace(SimpleNamespace(instance_image_key="fixture"), base, workspace)
+        result = module.export_workspace(image_spec, base, workspace)
         assert result["exported_revision"] == base and result["image_head"] != base
         assert (workspace / "source.py").read_text() == "value=1\n"
+        assert 'setuptools==' not in (workspace / 'pyproject.toml').read_text()
+        assert bool(result['image_setup_pin']) == (change == 'astropy-pin')
         assert original(["git", "-C", str(workspace), "rev-list", "--count", "HEAD"], text=True).strip() == "1"

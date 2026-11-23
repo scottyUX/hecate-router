@@ -53,3 +53,22 @@ reported with evidence rather than bypassed.
 ## Setup amendment before any benchmark attempt
 
 Native gate run 01 read successfully. The edit fixture made seven malformed apply_patch calls, then edited and verified the correct source, but exhausted its ten-request setup budget before finishing. Preserve that failed gate. Gate run 02 increases only the fixture allowance to twenty requests; all ten task IDs and benchmark budgets remain unchanged. This is a setup correction made before benchmark outcomes.
+
+## Authorized harness correction and continuation
+
+Scott authorized fixing the Astropy/Pylint harness checks and continuing the same
+ten tasks. Preserve Django case 01 exactly; it has already received its model
+attempt. Preserve cases 02/03 attempt-01 as setup failures with no model calls;
+use attempt-02 for their corrected setup and first model attempt. All remaining
+task IDs, model settings and budgets stay fixed. Record this intervention when
+reporting comparisons with the paper.
+
+Astropy 5.0's official image commits a setuptools==68.0.0 pin. Accept only that
+exact pyproject.toml blob change, reject any additional tree change, record the
+exception, and still export the dataset's original base to the agent. Pylint
+4551's unpatched control cannot collect its new tests because get_annotation is
+absent. Accept that specific negative-control signature only when the reference
+patch passes every required test. Keep candidate grading strict: missing tests
+remain unknown. Preserve the original batch progress report before resuming and
+use distinct model logs for each source commit. Verify a copy off Spark after
+the first five records before continuing to the remaining five.
