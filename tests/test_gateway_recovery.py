@@ -177,3 +177,15 @@ def test_patch_call_with_extra_workdir_gets_tool_error_and_retries(tmp_path):
     feedback=sent[1]['messages'][-1]
     assert feedback['role']=='tool' and feedback['tool_call_id']=='p1' and '"workdir"' in feedback['content']
     assert g.requests==2
+
+
+def test_exec_command_without_cmd_gets_tool_error_and_retries(tmp_path):
+    bad=response({'content':None,'tool_calls':[{'id':'c1','type':'function','function':
+        {'name':'exec_command','arguments':'{"cd":"/testbed"}'}}]},'tool_calls')
+    answers=iter([bad,valid()]); sent=[]
+    def transport(payload):sent.append(payload);return next(answers)
+    g=gateway(tmp_path,transport)
+    result=g.complete(body())
+    assert result['output'][0]['name']=='exec_command'
+    feedback=sent[1]['messages'][-1]
+    assert feedback['tool_call_id']=='c1' and '"cmd"' in feedback['content']

@@ -40,12 +40,20 @@ class RecoverableModelOutput(ModelOutputError):
         self.kind, self.messages = kind, messages
 
 
-def _single_input(arguments: str) -> bool:
+def _argument_error(name: str, arguments: str, contract: dict) -> str | None:
+    """Why Codex would reject these arguments, or None if they are well formed."""
     try:
         value = json.loads(arguments)
     except (ValueError, TypeError):
-        return False
-    return isinstance(value, dict) and set(value) == {'input'} and isinstance(value['input'], str)
+        value = None
+    if name in contract['custom']:
+        if isinstance(value, dict) and set(value) == {'input'} and isinstance(value['input'], str):
+            return None
+        return (f'{name} accepts exactly one argument, "input": the full patch text. Other keys '
+                'such as "workdir" are not supported; patch paths are relative to the workspace root.')
+    if name == 'exec_command' and not (isinstance(value, dict) and isinstance(value.get('cmd'), str)):
+        return 'exec_command requires a JSON object with a "cmd" string, e.g. {"cmd": "cd /testbed && ls"}.'
+    return None
 
 
 def recovery_feedback(raw: dict, contract: dict) -> tuple[str, list[dict]] | None:
@@ -64,21 +72,19 @@ def recovery_feedback(raw: dict, contract: dict) -> tuple[str, list[dict]] | Non
             valid=False
         if not valid:
             return 'invalid_finish', [{'role':'user','content':'Your hecate_finish call was rejected because its arguments did not match the schema. No finish action was accepted. Call hecate_finish with a valid JSON object containing exactly one response string. Avoid embedded quotes if unnecessary.'}]
-    bad = [c for c in calls if c['function']['name'] in contract['custom']
-           and not _single_input(c['function']['arguments'])]
-    if bad and all(c['function']['name'] in contract['allowed'] for c in calls):
-        # TASK-013: e.g. apply_patch with an extra "workdir". Codex itself answers bad
-        # tool arguments with a tool error instead of ending the session.
+    errors = {c.get('id'): _argument_error(c['function']['name'], c['function']['arguments'], contract)
+              for c in calls if c['function']['name'] in contract['allowed']}
+    if any(errors.values()) and all(c['function']['name'] in contract['allowed'] for c in calls):
+        # TASK-013: e.g. apply_patch with an extra "workdir", exec_command without "cmd".
+        # Codex itself answers bad tool arguments with a tool error and continues.
         ids = [c.get('id') for c in calls]
         if not all(ids) or len(set(ids)) != len(ids):
             raise ModelOutputError('Invalid or duplicate recovery call ID')
         history = [{'role': 'assistant', 'content': message.get('content'),
                     'tool_calls': copy.deepcopy(calls)}]
         for call in calls:
-            error = (f'{call["function"]["name"]} accepts exactly one argument, "input": the full patch '
-                     'text. Other keys such as "workdir" are not supported; patch paths are relative '
-                     'to the workspace root.' if call in bad
-                     else 'Not executed: another call in this batch had invalid arguments.')
+            error = (errors[call['id']]
+                     or 'Not executed: another call in this batch had invalid arguments.')
             history.append({'role': 'tool', 'tool_call_id': call['id'],
                             'content': f'Error: {error} No action was executed. Retry with valid arguments.'})
         return 'invalid_arguments', history

@@ -124,3 +124,13 @@ protected file to exclude. The projection now also accepts an empty new file
 The saved patch (`agent/patch.diff`) can be graded with the fixed projection without
 any model call. The runner has no regrade mode yet; that is pending Scott's review and
 will be recorded as a separate run that supersedes only the evaluation.
+
+## Amendment 4 — exec_command argument errors also recover (2026-11-23 ~06:55 PT)
+
+`django__django-13837` rep 0 ended with `model_output_failure` after 122 requests when
+Qwen called `exec_command` with `{"cd": "/testbed"}` (no `cmd`). Its patch was already
+in place and is officially resolved, so the score is unaffected, but the same error
+mid-task would end an episode. Amendment 1's tool-error recovery now covers any
+advertised tool whose arguments Codex would reject: the patch tool (exactly one
+`input` string) and `exec_command` (a `cmd` string). Same bound: at most 3 recoveries
+per request, counted against the request cap; nothing is executed or rewritten.
