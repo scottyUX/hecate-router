@@ -24,10 +24,31 @@ from hecate.execution.patch_evaluation import evaluation_patch, outcome_axes
 from hecate.execution.swebench45_scoring import aggregate, bootstrap, schedule, labels
 from run_codex_baseline import execute, fixtures, init_fixture
 from run_qwen36_swebench_pilot import grade, export_workspace
-from run_qwen36_ten_task import prepare_wheels, valid_saved
+from run_qwen36_ten_task import prepare_wheels
 
 SOURCE = Path(__file__).resolve().parents[1]
 GATE = 'task012-native-gate-run-01'
+
+
+SCHEDULING_KEYS = {'excluded_ids', 'concurrency', 'checkpoint_attempts'}
+
+
+def protocol(cfg):
+    """Settings that define an attempt or control; scheduling scope may change between checkpoints."""
+    return {k: v for k, v in cfg.items() if k not in SCHEDULING_KEYS}
+
+
+def valid_saved(path, cfg):
+    if checksums(path) != json.loads((path / 'checksums.json').read_text()):
+        raise ValueError('Saved artifact checksum mismatch')
+    if protocol(json.loads((path / 'manifest.json').read_text())['config']) != protocol(cfg):
+        raise ValueError('Saved protocol configuration differs')
+    return json.loads((path / 'results.json').read_text())
+
+
+def runnable(cfg, ids):
+    """ARM tasks with usable controls; excluded tasks still count as unresolved in all_45."""
+    return [x for x in ids if x not in cfg['x86_ids'] and x not in cfg['excluded_ids']]
 
 
 def control_name(iid, retry=0):
@@ -84,7 +105,7 @@ def load(args):
         raise ValueError('Unexpected TASK-012 configuration')
     parent = json.loads((SOURCE / cfg['selection_manifest']).read_text())
     ids = parent['instance_ids']
-    if len(ids) != 45 or len(set(ids)) != 45 or not set(cfg['x86_ids']) <= set(ids):
+    if len(ids) != 45 or len(set(ids)) != 45 or not set(cfg['x86_ids']) | set(cfg['excluded_ids']) <= set(ids):
         raise ValueError('Requires the exact frozen SWE-bench-45 manifest')
     if importlib.metadata.version('swebench') != cfg['evaluator']['version']:
         raise ValueError('Evaluator version mismatch')
@@ -224,7 +245,7 @@ def attempt(args):
     """One task, one repetition, fresh workspace. Never reruns a saved attempt."""
     cfg, parent, ids, root, tasks = load(args)
     iid, rep = args.instance, args.rep
-    if iid not in ids or iid in cfg['x86_ids'] or not 0 <= rep < cfg['repetitions']:
+    if iid not in runnable(cfg, ids) or not 0 <= rep < cfg['repetitions']:
         raise ValueError('Attempt outside the ARM SWE-bench-45 schedule')
     binary = codex_binary(root, cfg); tools = binary.parent.parent
     if not valid_saved(root / 'runs' / GATE, cfg).get('passed'): raise ValueError('Passing native gate required')
@@ -261,7 +282,7 @@ def schedule_mode(args):
     """Run at most one checkpoint of new attempts, `concurrency` at a time."""
     cfg, parent, ids, root, tasks = load(args)
     if not valid_saved(root / 'runs' / GATE, cfg).get('passed'): raise ValueError('Passing native gate required')
-    arm = [x for x in ids if x not in cfg['x86_ids']]
+    arm = runnable(cfg, ids)
     for iid in arm:
         if valid_saved(current_control(root, iid)[0], cfg).get('status') != 'control_passed':
             raise ValueError(f'Controls not passed for {iid}; resolve preflight first')
@@ -331,13 +352,16 @@ def score(args):
         'paper': {'mean': 26.67, 'best': 44.44, 'vcr': 98.33, 'token_load_m': 4.770, 'tokens_per_success_m': 17.889},
         'all_45': {**aggregate(rows, ids, cfg['repetitions']), **bootstrap(rows, ids, cfg['repetitions'])},
         'arm_42': {**aggregate(rows, arm, cfg['repetitions']), **bootstrap(rows, arm, cfg['repetitions'])},
+        'runnable_40': {**aggregate(rows, runnable(cfg, ids), cfg['repetitions']),
+                        **bootstrap(rows, runnable(cfg, ids), cfg['repetitions'])},
+        'excluded': {'x86_pending': cfg['x86_ids'], 'controls_unusable': cfg['excluded_ids']},
         'by_repo': {repo: aggregate(rows, members, cfg['repetitions']) for repo, members in sorted(by_repo.items())},
         'per_attempt': [{'instance_id': i, 'repetition': r, 'status': rows[(i, r)].get('status'),
                          'termination_reason': rows[(i, r)].get('termination_reason'), **labels(rows[(i, r)])}
                         for i, r in sorted(rows)],
     }
     (root / 'task012-score.json').write_text(json.dumps(report, indent=2) + '\n')
-    print(json.dumps({k: report[k] for k in ('paper', 'all_45', 'arm_42')}, indent=2))
+    print(json.dumps({k: report[k] for k in ('paper', 'all_45', 'arm_42', 'runnable_40')}, indent=2))
 
 
 def disable_git_auto_gc(env=os.environ):

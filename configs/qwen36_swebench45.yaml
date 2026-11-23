@@ -45,6 +45,8 @@ limits:
   retries: 2
 selection_manifest: configs/kimi_codex_swebench45_tasks.json
 x86_ids: [pydata__xarray-3993, pydata__xarray-6992, sympy__sympy-14248]
+# Amendment 5: reference patch fails on fresh ARM builds (docutils 0.23 vs official 0.21.2).
+excluded_ids: [sphinx-doc__sphinx-7590, sphinx-doc__sphinx-8548]
 evaluator:
   version: 4.1.0
   task_id: TASK-012

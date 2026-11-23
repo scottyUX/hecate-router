@@ -185,3 +185,28 @@ def test_controls_follow_official_verifier(monkeypatch):
     assert not module.controls_pass({**crashed, 'error': 'Offline setup step failed; inspect test_output.txt'}, gold)
     assert not module.controls_pass({**crashed, 'test_markers_found': False}, gold)
     assert not module.controls_pass({**failed, 'official_resolved': True, 'resolved': True}, gold)
+
+
+def test_excluded_tasks_are_never_scheduled_but_stay_in_all_45(monkeypatch):
+    module = runner(monkeypatch)
+    cfg = yaml.safe_load(Path('configs/qwen36_swebench45.yaml').read_text())
+    ids = json.loads(Path(cfg['selection_manifest']).read_text())['instance_ids']
+    runnable = module.runnable(cfg, ids)
+    assert len(runnable) == 40
+    assert not set(runnable) & {'sphinx-doc__sphinx-7590', 'sphinx-doc__sphinx-8548', 'pydata__xarray-3993'}
+    rows = {(iid, r): row(True) for iid in runnable for r in range(4)}
+    assert aggregate(rows, ids, 4)['best_paper'] == 100 * 40 / 45
+
+
+def test_saved_records_survive_scheduling_scope_changes(tmp_path, monkeypatch):
+    import pytest
+    from hecate.execution.codex_artifacts import create_run, finish_run
+    module = runner(monkeypatch)
+    cfg = yaml.safe_load(Path('configs/qwen36_swebench45.yaml').read_text())
+    before = {k: v for k, v in cfg.items() if k != 'excluded_ids'}
+    p = create_run(tmp_path, 'control', before, {'git_commit': 'x'})
+    finish_run(p, {'status': 'control_passed'})
+    assert module.valid_saved(p, cfg)['status'] == 'control_passed'
+    changed = {**cfg, 'model': {**cfg['model'], 'context_tokens': 32768}}
+    with pytest.raises(ValueError):
+        module.valid_saved(p, changed)

@@ -210,3 +210,17 @@ TASK-011 finished batch 1 (5 tasks). Batch 2 halted at case 06, where
 sphinx-8548's control hit the same image-tree check. Scott chose to close
 TASK-011 there rather than port this fix and finish it. TASK-012 reruns all
 of those tasks four times. TASK-012 now takes the GPU.
+
+## Amendment 5 — Exclude sphinx-7590 and sphinx-8548 (approved 2026-11-22)
+
+After Amendment 3, both tasks passed the image check but their reference patch
+fails: `No module named 'docutils.utils.roman'`. Fresh ARM builds install
+docutils 0.23, while the official x86 images (inspected without running) have
+0.21.2. Scott chose exclusion over pinning. They are listed in `excluded_ids`,
+are never scheduled, and score as unresolved in `all_45`. `score` also reports
+`runnable_40` (ARM tasks with usable controls) and `arm_42`.
+
+Saved records are now validated against the protocol configuration, excluding
+scheduling-only keys (`excluded_ids`, `concurrency`, `checkpoint_attempts`).
+Adding the exclusion therefore does not invalidate earlier controls. Any model,
+serving, sandbox, limit or evaluator change still fails validation.
