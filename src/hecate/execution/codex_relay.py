@@ -1,8 +1,14 @@
 """Stdlib-only loopback HTTP → Unix socket relay inside a networkless container."""
 import http.client
 import socket
+import socketserver
 import sys
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
+    # Same as http.server.ThreadingHTTPServer (3.7+); task envs run Python 3.5/3.6 too.
+    daemon_threads = True
 
 
 class UnixConnection(http.client.HTTPConnection):

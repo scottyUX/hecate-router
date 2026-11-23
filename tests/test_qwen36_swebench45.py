@@ -210,3 +210,15 @@ def test_saved_records_survive_scheduling_scope_changes(tmp_path, monkeypatch):
     changed = {**cfg, 'model': {**cfg['model'], 'context_tokens': 32768}}
     with pytest.raises(ValueError):
         module.valid_saved(p, changed)
+
+
+def test_relay_does_not_need_python37_threading_server():
+    import ast as pyast
+    import socketserver
+    source = Path('src/hecate/execution/codex_relay.py').read_text()
+    for node in pyast.walk(pyast.parse(source)):
+        if isinstance(node, pyast.ImportFrom) and node.module == 'http.server':
+            assert 'ThreadingHTTPServer' not in {a.name for a in node.names}
+    from hecate.execution import codex_relay
+    assert issubclass(codex_relay.ThreadingHTTPServer, socketserver.ThreadingMixIn)
+    assert codex_relay.ThreadingHTTPServer.daemon_threads

@@ -224,3 +224,15 @@ Saved records are now validated against the protocol configuration, excluding
 scheduling-only keys (`excluded_ids`, `concurrency`, `checkpoint_attempts`).
 Adding the exclusion therefore does not invalidate earlier controls. Any model,
 serving, sandbox, limit or evaluator change still fails validation.
+
+## Harness fix — in-container relay on Python 3.6 (checkpoint 1)
+
+The first three Django attempts (10554, 11138, 11400, rep 0) ended with
+`sandbox_failure` before any model request:
+`ImportError: cannot import name 'ThreadingHTTPServer'`. The relay runs with the
+task's own Python, and Django 3.0–3.2 environments use Python 3.6, which predates
+that class (3.7). The three-failure halt stopped the scheduler. The relay now
+defines the same class from `socketserver.ThreadingMixIn` + `HTTPServer`. It was
+verified to start in one image of every repo/version among the 40 runnable tasks
+(Python 3.6.15, 3.8.20, 3.9.25, 3.11.18). Earlier pilots used only Python 3.9 and
+newer environments.
