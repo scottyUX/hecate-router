@@ -159,3 +159,14 @@ other file, still fails. The agent still receives the dataset's original base.
 The failed record `task012-control-astropy__astropy-14369` is kept. A rerun after
 an approved fix writes `task012-control-<id>-retry-NN` and records which record
 it supersedes (`preflight --retry <id>`). Attempts use the latest control record.
+
+## Harness fix — git auto-gc race (before any model call)
+
+Preflight of django__django-10554 failed with `No such file or directory: 'gc.pid'`.
+The workspace export's commit started a detached `git gc --auto`, which was
+still writing while the export check was deleted. The same race could change
+an attempt's `.git` after its checksums were taken. The runner and its attempt
+processes now set `gc.auto=0` through `GIT_CONFIG_*`. Task containers and grading
+are unaffected. Preflight was stopped and restarted. The failed (10554) and
+interrupted (11138) records are kept and superseded with `--retry`, as is
+astropy-14369 under Amendment 1.

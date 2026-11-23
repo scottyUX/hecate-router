@@ -323,7 +323,14 @@ def score(args):
     print(json.dumps({k: report[k] for k in ('paper', 'all_45', 'arm_42')}, indent=2))
 
 
+def disable_git_auto_gc(env=os.environ):
+    """Workspace export commits large repos; a detached `git gc --auto` then races
+    deletion and checksumming (django-10554 preflight). Inherited by attempt processes."""
+    env.update(GIT_CONFIG_COUNT='1', GIT_CONFIG_KEY_0='gc.auto', GIT_CONFIG_VALUE_0='0')
+
+
 def main():
+    disable_git_auto_gc()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('mode', choices=['preflight', 'gate', 'attempt', 'schedule', 'score'])
     ap.add_argument('--root', type=Path, required=True)

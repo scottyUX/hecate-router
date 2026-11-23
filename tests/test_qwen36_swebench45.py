@@ -154,3 +154,13 @@ def test_astropy_setuptools_pin_accepted_for_any_version_only_when_exact(tmp_pat
         fake_export(monkeypatch, tmp_path / 'other-pin', version='5.1', after_line='requires = ["setuptools==69.0.0",')
     with pytest.raises(ValueError):
         fake_export(monkeypatch, tmp_path / 'extra-file', version='5.1', after_line=pinned, changed='pyproject.toml\nsetup.cfg')
+
+
+def test_git_auto_gc_disabled_for_runner_git_commands(tmp_path, monkeypatch):
+    import os
+    import subprocess
+    module = runner(monkeypatch)
+    env = dict(os.environ)
+    module.disable_git_auto_gc(env)
+    value = subprocess.check_output(['git', 'config', 'gc.auto'], cwd=tmp_path, env=env, text=True).strip()
+    assert value == '0'
