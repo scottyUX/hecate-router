@@ -395,6 +395,7 @@ def score(args):
         'excluded': {'x86_pending': cfg['x86_ids'], 'controls_unusable': cfg['excluded_ids']},
         'by_repo': {repo: aggregate(rows, members, cfg['repetitions']) for repo, members in sorted(by_repo.items())},
         'per_attempt': [{'instance_id': i, 'repetition': r, 'status': rows[(i, r)].get('status'),
+                         'execution_protocol':rows[(i,r)].get('execution_protocol'),
                          'termination_reason': rows[(i, r)].get('termination_reason'), **labels(rows[(i, r)])}
                         for i, r in sorted(rows)],
     }

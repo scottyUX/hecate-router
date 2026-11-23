@@ -38,7 +38,7 @@ def main():
                                       text=True).split()
     args.mirror.mkdir(parents=True, exist_ok=True)
     for name in listing:
-        subprocess.run(['rsync', '-a', '--exclude', EXCLUDED, '--exclude', 'export-check/',
+        subprocess.run(['rsync', '-a', '--exclude', '/'+EXCLUDED, '--exclude', '/export-check/',
                         f'spark:{args.remote_root}/runs/{name}/', str(args.mirror / name) + '/'], check=True)
         receipt = verify(args.mirror / name)
         (args.mirror / name / 'sync_receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
