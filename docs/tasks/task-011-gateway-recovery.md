@@ -24,6 +24,8 @@ shared request cap, raw traces/usage retention, no unknown action execution,
 and legacy behavior unchanged. Then use actual Codex in the existing isolated
 fixture with injected initial responses to verify its complete tool round-trip,
 followed by native Qwen read/edit/test-repair and patch-tool gates before tasks.
+Also inject the two invalid responses before handing continuation to the live
+Qwen endpoint: require Qwen to recover, execute a real read, and finish normally.
 
 Run the same frozen ten IDs, one fresh model attempt each, under task011 run
 IDs and separate root/config snapshots. Keep model checkpoint, BF16, sampling,

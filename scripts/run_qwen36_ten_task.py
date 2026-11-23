@@ -123,6 +123,7 @@ def main():
             if cfg['serving'].get('recover_model_outputs'):
                 from gateway_recovery_fixture import recovery_fixture
                 recovery_fixture(p,cfg,tools,binary)
+                recovery_fixture(p,cfg,tools,binary,live=True)
             rows=fixtures(p,cfg,tools,binary)
             if len(rows)!=3 or not all(x['passed'] for x in rows):raise RuntimeError('Native capability gate failed')
             workspace=p/'workspace-patch'
