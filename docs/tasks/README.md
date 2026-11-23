@@ -33,3 +33,11 @@ Status: completed offline implementation and replay validation on `codex/task-00
 Reuse E7/current harness events to produce causal, versioned routing observations.
 
 - [TASK-004 reuse assessment and replay runbook](task-004-reuse-and-runbook.md)
+
+## TASK-012 — Qwen3.6 + Codex on the full SWE-bench-45
+
+Status: draft for review; no code or model calls.
+
+- [Task, protocol, decisions and acceptance criteria](task-012-qwen36-swebench45.md)
+
+All 45 tasks × 4 attempts, compared with arXiv:2610.32483v1 Tables 13/14/30.

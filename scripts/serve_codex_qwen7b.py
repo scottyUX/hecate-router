@@ -100,7 +100,7 @@ def main():
         "--max-model-len",
         str(cfg["model"]["context_tokens"]),
         "--max-num-seqs",
-        "1",
+        str(cfg["serving"].get("max_num_seqs", 1)),
         "--gpu-memory-utilization",
         str(cfg["serving"]["gpu_memory_utilization"]),
         "--enable-auto-tool-choice",
