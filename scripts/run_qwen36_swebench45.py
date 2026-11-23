@@ -30,8 +30,16 @@ SOURCE = Path(__file__).resolve().parents[1]
 GATE = 'task012-native-gate-run-01'
 
 
-def control_name(iid):
-    return f'task012-control-{iid}'
+def control_name(iid, retry=0):
+    return f'task012-control-{iid}' + (f'-retry-{retry:02d}' if retry else '')
+
+
+def current_control(root, iid):
+    """Latest control record; failed records stay in place and are superseded, never rerun."""
+    retry = 0
+    while (root / 'runs' / control_name(iid, retry + 1)).exists():
+        retry += 1
+    return root / 'runs' / control_name(iid, retry), retry
 
 
 def attempt_name(iid, rep):
@@ -121,18 +129,23 @@ def preflight(args):
     for iid in [x for x in ids if x not in cfg['x86_ids']]:
         if args.only and iid not in args.only:
             continue
-        p = root / 'runs' / control_name(iid)
+        p, retry = current_control(root, iid)
+        supersedes = None
         if p.exists():
             if not (p / 'checksums.json').exists():
                 finish_run(p, {'instance_id': iid, 'status': 'interrupted', 'error': 'Preflight interrupted; review before retry'})
-            summary.append(valid_saved(p, cfg)); continue
+            saved = valid_saved(p, cfg)
+            if iid not in (args.retry or []) or saved.get('status') == 'control_passed':
+                summary.append(saved); continue
+            supersedes, retry = p.name, retry + 1
         for _ in range(60):
             ok, usage = resources_ok()
             if ok: break
             print(json.dumps({'waiting_for_resources': usage}), flush=True); time.sleep(60)
         else:
             raise SystemExit(f'Insufficient disk or memory for preflight: {usage}')
-        p = new_run(root, control_name(iid), cfg, args, 'Official image build, export check and clean controls; no model calls', parent)
+        p = new_run(root, control_name(iid, retry), cfg, args, 'Official image build, export check and clean controls; no model calls',
+                    parent, {'supersedes': supersedes} if supersedes else None)
         old = Path.cwd(); os.chdir(p)
         try:
             spec = test_spec(cfg, tasks[iid])
@@ -198,10 +211,11 @@ def attempt(args):
         raise ValueError('Attempt outside the ARM SWE-bench-45 schedule')
     binary = codex_binary(root, cfg); tools = binary.parent.parent
     if not valid_saved(root / 'runs' / GATE, cfg).get('passed'): raise ValueError('Passing native gate required')
-    control = valid_saved(root / 'runs' / control_name(iid), cfg)
+    control_dir, _ = current_control(root, iid)
+    control = valid_saved(control_dir, cfg)
     if control.get('status') != 'control_passed': raise ValueError('Clean controls required before inference')
     p = new_run(root, attempt_name(iid, rep), cfg, args, 'SWE-bench-45 attempt; no training instrumentation', parent,
-                {'instance_id': iid, 'repetition': rep, 'seed': rep, 'control_run': control_name(iid)})
+                {'instance_id': iid, 'repetition': rep, 'seed': rep, 'control_run': control_dir.name})
     os.chdir(p)
     try:
         import docker as docker_sdk
@@ -209,7 +223,7 @@ def attempt(args):
         if docker_sdk.from_env().images.get(spec.instance_image_key).id != control['image_id']:
             raise RuntimeError('Task image changed since its controls passed')
         (p / 'test-spec.json').write_text(json.dumps(spec.__dict__, indent=2) + '\n')
-        wheels = root / 'runs' / control_name(iid) / 'wheels'
+        wheels = control_dir / 'wheels'
         provenance = export_workspace(spec, tasks[iid]['base_commit'], p / 'workspace')
         (p / 'public-task-provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
         effective = attempt_config(cfg, rep, control['image_id'])
@@ -232,7 +246,7 @@ def schedule_mode(args):
     if not valid_saved(root / 'runs' / GATE, cfg).get('passed'): raise ValueError('Passing native gate required')
     arm = [x for x in ids if x not in cfg['x86_ids']]
     for iid in arm:
-        if valid_saved(root / 'runs' / control_name(iid), cfg).get('status') != 'control_passed':
+        if valid_saved(current_control(root, iid)[0], cfg).get('status') != 'control_passed':
             raise ValueError(f'Controls not passed for {iid}; resolve preflight first')
     pending, finished = [], []
     for iid, rep in schedule(arm, cfg['repetitions']):
@@ -315,6 +329,7 @@ def main():
     ap.add_argument('--root', type=Path, required=True)
     ap.add_argument('--config', type=Path, default=SOURCE / 'configs/qwen36_swebench45.yaml')
     ap.add_argument('--only', nargs='*', help='preflight: restrict to these instance IDs')
+    ap.add_argument('--retry', nargs='*', help='preflight: supersede these failed control records after an approved fix')
     ap.add_argument('--instance'); ap.add_argument('--rep', type=int)
     ap.add_argument('--limit', type=int, help='schedule: new attempts this checkpoint (default from config)')
     args = ap.parse_args()

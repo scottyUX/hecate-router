@@ -148,3 +148,14 @@ Implementation (`scripts/run_qwen36_swebench45.py`, `configs/qwen36_swebench45.y
 - **Deferred:** D2's x86 path on hecate-worker is not built yet. It is a separate
   step after the 42 ARM tasks are running. Until then `score` counts the three
   x86 tasks as unresolved in `all_45` and also reports `arm_42`.
+
+## Amendment 1 — Astropy build pin for all versions (approved 2026-11-22)
+
+Preflight of astropy__astropy-14369 failed the image-tree check: its official
+image commits the same one-line `requires = ["setuptools==68.0.0",` change in
+`pyproject.toml` that TASK-011 approved for Astropy 5.0 only. Scott approved
+accepting that exact change for any Astropy version. Any other change, or any
+other file, still fails. The agent still receives the dataset's original base.
+The failed record `task012-control-astropy__astropy-14369` is kept. A rerun after
+an approved fix writes `task012-control-<id>-retry-NN` and records which record
+it supersedes (`preflight --retry <id>`). Attempts use the latest control record.

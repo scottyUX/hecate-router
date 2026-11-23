@@ -102,3 +102,55 @@ def test_halting_counts_only_infrastructure(monkeypatch):
 def test_serving_concurrency_defaults_to_one():
     source = Path('scripts/serve_codex_qwen7b.py').read_text()
     assert 'cfg["serving"].get("max_num_seqs", 1)' in source
+
+
+def test_control_retry_supersedes_without_overwriting(tmp_path, monkeypatch):
+    module = runner(monkeypatch)
+    (tmp_path / 'runs').mkdir()
+    assert module.current_control(tmp_path, 'x') == (tmp_path / 'runs/task012-control-x', 0)
+    (tmp_path / 'runs/task012-control-x').mkdir()
+    (tmp_path / 'runs/task012-control-x-retry-01').mkdir()
+    assert module.current_control(tmp_path, 'x') == (tmp_path / 'runs/task012-control-x-retry-01', 1)
+    assert module.control_name('x', 2) == 'task012-control-x-retry-02'
+
+
+def fake_export(monkeypatch, tmp_path, *, version, after_line, changed='pyproject.toml'):
+    from types import SimpleNamespace
+    monkeypatch.syspath_prepend(str(Path('scripts').resolve()))
+    import run_qwen36_swebench_pilot as pilot
+    before = '[build-system]\nrequires = ["setuptools",\n  "wheel"]\n'
+    after = before.replace('requires = ["setuptools",', after_line)
+
+    def docker(*args, **kwargs):
+        if args[-2:] == ('rev-parse', 'HEAD^{tree}'):
+            out = 'image-tree'
+        elif args[-1].endswith('^{tree}'):
+            out = 'base-tree'
+        elif 'diff' in args:
+            out = changed + '\n'
+        elif args[-1] == 'HEAD:pyproject.toml':
+            out = after
+        elif args[-1].endswith(':pyproject.toml'):
+            out = before
+        else:
+            out = 'head'
+        return SimpleNamespace(stdout=out, returncode=0)
+
+    monkeypatch.setattr(pilot, 'docker', docker)
+    monkeypatch.setattr(pilot.subprocess, 'check_output', lambda *a, **k: b'')
+    monkeypatch.setattr(pilot, 'extract_task_archive', lambda archive, workspace: workspace.mkdir(parents=True))
+    monkeypatch.setattr(pilot.subprocess, 'run', lambda *a, **k: None)
+    spec = SimpleNamespace(repo='astropy/astropy', version=version, instance_image_key='img')
+    return pilot.export_workspace(spec, 'base', tmp_path / 'ws')
+
+
+def test_astropy_setuptools_pin_accepted_for_any_version_only_when_exact(tmp_path, monkeypatch):
+    import pytest
+    pinned = 'requires = ["setuptools==68.0.0",'
+    for version in ('5.0', '5.1', '5.2'):
+        result = fake_export(monkeypatch, tmp_path / version, version=version, after_line=pinned)
+        assert result['image_setup_pin']['after'] == pinned
+    with pytest.raises(ValueError):
+        fake_export(monkeypatch, tmp_path / 'other-pin', version='5.1', after_line='requires = ["setuptools==69.0.0",')
+    with pytest.raises(ValueError):
+        fake_export(monkeypatch, tmp_path / 'extra-file', version='5.1', after_line=pinned, changed='pyproject.toml\nsetup.cfg')

@@ -104,9 +104,9 @@ def export_workspace(spec, base_commit, workspace):
         # then export the dataset's exact base, never later history.
         setup_pin = None
         if actual_tree != expected_tree:
-            # SWE-bench's Astropy 5.0 build recipe commits this dependency pin.
-            # Accept precisely that blob change, while exporting the original base.
-            if getattr(spec, 'repo', None) == 'astropy/astropy' and getattr(spec, 'version', None) == '5.0':
+            # SWE-bench's Astropy build recipes (5.0 and later, TASK-012) commit this
+            # dependency pin. Accept precisely that blob change, while exporting the original base.
+            if getattr(spec, 'repo', None) == 'astropy/astropy':
                 changed = docker('exec', '-w', '/testbed', name, 'git', 'diff', '--name-only', base_commit, 'HEAD').stdout.splitlines()
                 before = docker('exec', '-w', '/testbed', name, 'git', 'show', base_commit + ':pyproject.toml').stdout
                 after = docker('exec', '-w', '/testbed', name, 'git', 'show', 'HEAD:pyproject.toml').stdout
