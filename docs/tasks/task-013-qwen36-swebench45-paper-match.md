@@ -134,3 +134,11 @@ mid-task would end an episode. Amendment 1's tool-error recovery now covers any
 advertised tool whose arguments Codex would reject: the patch tool (exactly one
 `input` string) and `exec_command` (a `cmd` string). Same bound: at most 3 recoveries
 per request, counted against the request cap; nothing is executed or rewritten.
+
+## Decision — request cap stays at 200 (2026-11-23 ~10:05 PT)
+
+By 10:00 PT, 3 of 26 rep-0 attempts had reached `task_model_requests: 200`
+(`request_budget_exhausted`: django-15503, django-15957, django-16263). Each left a
+patch that the official grader scored unresolved. Per the review rule above, Scott
+reviewed the cap and kept it at 200 for all repetitions. Cap hits are still reported
+separately in the results.
