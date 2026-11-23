@@ -49,8 +49,9 @@ def test_unknown_and_reasoning_recover_before_exposing_only_valid_action(tmp_pat
     assert len([x for x in events if x['event']=='upstream_response'])==3
 
 
-def test_repeated_reasoning_stops_at_recovery_limit(tmp_path):
-    g=gateway(tmp_path,lambda _:response({'reasoning_content':'thinking','content':None}),max_response_recoveries=2)
+@pytest.mark.parametrize('visible', [None, '\n\n'])
+def test_repeated_reasoning_stops_at_recovery_limit(tmp_path,visible):
+    g=gateway(tmp_path,lambda _:response({'reasoning_content':'thinking','content':visible}),max_response_recoveries=2)
     with pytest.raises(ModelOutputError,match='recovery limit'):
         g.complete(body())
     assert g.requests==3 and len(g.metrics)==3
@@ -68,6 +69,22 @@ def test_legacy_behavior_and_real_final_answers(tmp_path):
     with pytest.raises(ModelOutputError,match='unadvertised'):
         g.complete(body())
     assert g.requests==1
+
+
+def test_invalid_batch_executes_nothing_and_removed_builtin_is_not_forwarded(tmp_path):
+    raw=valid()
+    raw['choices'][0]['message']['tool_calls']+=unknown()['choices'][0]['message']['tool_calls']
+    raw['choices'][0]['message']['tool_calls'][1]['function']['name']='view_image'
+    answers=iter([raw,response({'content':'Finished without executing the invalid batch.'})])
+    payloads=[]
+    def transport(payload):
+        payloads.append(payload)
+        return next(answers)
+    g=gateway(tmp_path,transport)
+    result=g.complete(body())
+    assert all(x['type']=='message' for x in result['output'])
+    errors=[x['content'] for x in payloads[1]['messages'] if x['role']=='tool']
+    assert len(errors)==2 and all('No action was executed' in x for x in errors)
     g=gateway(tmp_path,lambda _:response({'content':'Finished','reasoning':'private thought'}))
     result=g.complete(body())
     assert result['output'][0]['content'][0]['text']=='Finished'

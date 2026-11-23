@@ -65,7 +65,7 @@ def recovery_feedback(raw: dict, contract: dict) -> tuple[str, list[dict]] | Non
             history.append({'role': 'tool', 'tool_call_id': call['id'],
                             'content': f'Error: {error} No action was executed. Available tools: {available}. Use exec_command to read files when available. Choose an advertised tool or return a final answer.'})
         return 'unknown_tool', history
-    if (not calls and not message.get('content')
+    if (not calls and not (message.get('content') or '').strip()
             and (message.get('reasoning') or message.get('reasoning_content'))):
         return 'reasoning_only', [{'role': 'user', 'content':
             f'Your previous reply contained reasoning but no tool action or final answer. Continue the task with an advertised tool ({available}), or provide a final answer if finished. Do not stop with reasoning alone.'}]
