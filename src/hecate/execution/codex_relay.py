@@ -30,7 +30,8 @@ class Handler(BaseHTTPRequestHandler):
         if not 0 < n <= 16 * 1024 * 1024:
             self.send_error(413)
             return
-        connection = UnixConnection("localhost", timeout=600)
+        # No deadline here (TASK-013): the gateway owns the per-request timeout.
+        connection = UnixConnection("localhost", timeout=None)
         try:
             connection.request(
                 "POST",

@@ -71,3 +71,8 @@ def test_gateway_without_request_timeout_has_no_read_deadline(tmp_path, monkeypa
                       request_limit=1, sampling={}, timeout_s=None)
     assert gateway._post({}) == {'ok': True}
     assert seen['timeout'].read is None and seen['timeout'].connect == 30
+
+
+def test_relay_has_no_read_deadline():
+    source = Path('src/hecate/execution/codex_relay.py').read_text()
+    assert 'UnixConnection("localhost", timeout=None)' in source and 'timeout=600' not in source

@@ -101,3 +101,13 @@ Deployed mid-checkpoint 1. Attempts started after the deploy run the fix; their
 `git_commit` still shows the scheduler's start commit (`HECATE_CODE_SHA` is inherited).
 Earlier attempts, including django-10554 rep 0, are kept as recorded and are not rerun.
 Whether harness-ended attempts may be superseded is Scott's decision.
+
+## Amendment 2 — Relay socket deadline removed (2026-11-23 ~05:20 PT)
+
+`django__django-11885` rep 0 ended with `tool_protocol_failure` after 44 requests:
+Codex reported "stream disconnected before completion" about 600 s after its last
+request. The in-container relay (`codex_relay.py`) still opened its Unix-socket
+connection with `timeout=600`, a Hecate deadline missed when the limits were removed.
+It is now `timeout=None`; the gateway owns any request deadline (none under TASK-013).
+Attempts started after the deploy mount the fixed relay. django-11885 rep 0 is kept
+as recorded.
