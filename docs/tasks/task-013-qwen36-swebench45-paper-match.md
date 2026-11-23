@@ -86,3 +86,18 @@ so one rep-0 pass over the 42 ARM tasks is not split by model reloads.
   read deadline.
 - `tests/test_codex_compatibility.py::test_null_command_timeout_leaves_native_command_unwrapped`.
 - Spark: throughput check with CUDA graphs + prefix caching before launch.
+
+## Amendment 1 — Invalid patch-tool arguments get a tool error (2026-11-23 ~04:05 PT)
+
+`django__django-10554` rep 0 ended with `model_output_failure` after 77 requests:
+Qwen called `apply_patch` with `{"input": ..., "workdir": "/testbed"}` and the gateway
+ended the episode ("Custom patch tool requires exactly one input string"). Native Codex
+answers invalid tool arguments with a tool error and continues. The gateway now does the
+same through the existing bounded recovery path (`invalid_arguments`, at most 3 per
+request, counted against the request cap); nothing is executed or rewritten.
+
+Deployed mid-checkpoint 1. Attempts started after the deploy run the fix; their
+`source_snapshot/model_gateway.py` contains `invalid_arguments`, but their manifest
+`git_commit` still shows the scheduler's start commit (`HECATE_CODE_SHA` is inherited).
+Earlier attempts, including django-10554 rep 0, are kept as recorded and are not rerun.
+Whether harness-ended attempts may be superseded is Scott's decision.

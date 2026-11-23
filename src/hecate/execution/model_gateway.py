@@ -40,6 +40,14 @@ class RecoverableModelOutput(ModelOutputError):
         self.kind, self.messages = kind, messages
 
 
+def _single_input(arguments: str) -> bool:
+    try:
+        value = json.loads(arguments)
+    except (ValueError, TypeError):
+        return False
+    return isinstance(value, dict) and set(value) == {'input'} and isinstance(value['input'], str)
+
+
 def recovery_feedback(raw: dict, contract: dict) -> tuple[str, list[dict]] | None:
     """Feedback for non-executable output; never executes or renames an action."""
     choices = raw.get('choices') or []
@@ -56,6 +64,24 @@ def recovery_feedback(raw: dict, contract: dict) -> tuple[str, list[dict]] | Non
             valid=False
         if not valid:
             return 'invalid_finish', [{'role':'user','content':'Your hecate_finish call was rejected because its arguments did not match the schema. No finish action was accepted. Call hecate_finish with a valid JSON object containing exactly one response string. Avoid embedded quotes if unnecessary.'}]
+    bad = [c for c in calls if c['function']['name'] in contract['custom']
+           and not _single_input(c['function']['arguments'])]
+    if bad and all(c['function']['name'] in contract['allowed'] for c in calls):
+        # TASK-013: e.g. apply_patch with an extra "workdir". Codex itself answers bad
+        # tool arguments with a tool error instead of ending the session.
+        ids = [c.get('id') for c in calls]
+        if not all(ids) or len(set(ids)) != len(ids):
+            raise ModelOutputError('Invalid or duplicate recovery call ID')
+        history = [{'role': 'assistant', 'content': message.get('content'),
+                    'tool_calls': copy.deepcopy(calls)}]
+        for call in calls:
+            error = (f'{call["function"]["name"]} accepts exactly one argument, "input": the full patch '
+                     'text. Other keys such as "workdir" are not supported; patch paths are relative '
+                     'to the workspace root.' if call in bad
+                     else 'Not executed: another call in this batch had invalid arguments.')
+            history.append({'role': 'tool', 'tool_call_id': call['id'],
+                            'content': f'Error: {error} No action was executed. Retry with valid arguments.'})
+        return 'invalid_arguments', history
     if any(c['function']['name'] not in contract['allowed'] for c in calls):
         seen = set()
         for call in calls:

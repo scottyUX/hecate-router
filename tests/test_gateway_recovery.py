@@ -158,3 +158,22 @@ def test_finish_accepts_report_text_and_recovers_bad_json_without_repairing_it(t
     assert g.requests==2 and 'rejected' in sent[1]['messages'][-1]['content']
     assert len(result['output'])==2
     assert result['output'][-1]['content'][0]['text']=='Finished after reading the file.'
+
+
+def test_patch_call_with_extra_workdir_gets_tool_error_and_retries(tmp_path):
+    request=body()
+    request['tools'].append({'type':'custom','name':'apply_patch','description':'FREEFORM, do not wrap in JSON',
+                             'format':{'type':'grammar','syntax':'lark','definition':'start: "*** Begin Patch"'}})
+    patch='*** Begin Patch\n*** Add File: a.py\n+x = 1\n*** End Patch'
+    bad=response({'content':None,'tool_calls':[{'id':'p1','type':'function','function':
+        {'name':'apply_patch','arguments':json.dumps({'input':patch,'workdir':'/testbed'})}}]},'tool_calls')
+    good=response({'content':None,'tool_calls':[{'id':'p2','type':'function','function':
+        {'name':'apply_patch','arguments':json.dumps({'input':patch})}}]},'tool_calls')
+    answers=iter([bad,good]); sent=[]
+    def transport(payload):sent.append(payload);return next(answers)
+    g=gateway(tmp_path,transport)
+    result=g.complete(request)
+    assert result['output'][0]['type']=='custom_tool_call' and result['output'][0]['input']==patch
+    feedback=sent[1]['messages'][-1]
+    assert feedback['role']=='tool' and feedback['tool_call_id']=='p1' and '"workdir"' in feedback['content']
+    assert g.requests==2
