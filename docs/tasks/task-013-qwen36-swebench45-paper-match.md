@@ -142,3 +142,16 @@ By 10:00 PT, 3 of 26 rep-0 attempts had reached `task_model_requests: 200`
 patch that the official grader scored unresolved. Per the review rule above, Scott
 reviewed the cap and kept it at 200 for all repetitions. Cap hits are still reported
 separately in the results.
+
+## Amendment 5 — Non-UTF-8 "text" files no longer crash patch collection (2026-11-23 ~12:25 PT)
+
+`sphinx-doc__sphinx-9229` rep 0 finished its session (the agent built a scratch Sphinx
+project under `test_repro/_build/`) but was recorded as `infrastructure_failure`:
+"'utf-8' codec can't decode byte 0x90". The build's `objects.inv` has a text header and a
+zlib body with no NUL byte, so git diffed it as text and the raw bytes failed UTF-8
+decoding before any grading. `collect_patch` now marks exactly such files `binary` (via a
+temporary `core.attributesFile`) so `--binary` encodes them losslessly in ASCII. The patch
+is otherwise unchanged; verified on a copy of the saved workspace (applies cleanly,
+`objects.inv` byte-identical). Attempts already running keep the old code. The saved
+workspace can be regraded without model calls once a regrade mode exists (same pending
+decision as django-14007).

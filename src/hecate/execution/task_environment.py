@@ -13,6 +13,7 @@ import re
 import subprocess
 import time
 import tarfile
+import tempfile
 import uuid
 from pathlib import Path
 
@@ -252,10 +253,31 @@ def collect_patch(workspace: Path, base_commit: str = "HEAD") -> tuple[str, list
         ["git", "-C", str(workspace), "diff", "--name-only", base_commit], text=True
     ).splitlines()
     rejected = [p for p in files if protected_test_path(p)]
-    patch = subprocess.check_output(
-        ["git", "-C", str(workspace), "diff", "--binary", base_commit], text=True
-    )
-    return patch, rejected
+    return _binary_diff(workspace, base_commit, files), rejected
+
+
+def _binary_diff(workspace: Path, base_commit: str, files: list[str]) -> str:
+    """Files git sniffs as text but that are not UTF-8 (no NUL byte, e.g. a Sphinx
+    objects.inv: text header, zlib body) are marked binary so --binary encodes
+    them losslessly in ASCII instead of failing the attempt."""
+    command = ["git", "-C", str(workspace), "diff", "--binary", base_commit]
+    try:
+        return subprocess.check_output(command).decode()
+    except UnicodeDecodeError:
+        pass
+    undecodable = []
+    for path in files:
+        try:
+            subprocess.check_output(command + ["--", path]).decode()
+        except UnicodeDecodeError:
+            undecodable.append(path)
+    with tempfile.NamedTemporaryFile("w", suffix=".gitattributes") as attributes:
+        for path in undecodable:
+            pattern = re.sub(r"([\\*?\[\]!#])", r"\\\1", path).replace(" ", "[[:space:]]")
+            attributes.write(f"/{pattern} binary\n")
+        attributes.flush()
+        command[3:3] = ["-c", f"core.attributesFile={attributes.name}"]
+        return subprocess.check_output(command).decode()
 
 
 TEST_LINE = re.compile(r"^(\S+::\S+)\s+(PASSED|FAILED|ERROR|SKIPPED|XFAIL|XPASS)")

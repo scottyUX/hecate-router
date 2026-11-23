@@ -45,6 +45,19 @@ def test_restored_runtime_files_never_enter_source_patch(tmp_path,monkeypatch):
     assert 'value=2' in patch and '_compiler' not in patch and 'PKG-INFO' not in patch
 
 
+def test_non_utf8_text_file_becomes_lossless_binary_patch(tmp_path):
+    p=tmp_path/'workspace';repository(p)
+    inventory=b'# Sphinx inventory version 2\n# compressed using zlib.\nx\xda\x85\x90\xcd\n\x830\x10'
+    (p/'_build').mkdir();(p/'_build/objects.inv').write_bytes(inventory)
+    (p/'source.py').write_text('value=2\n')
+    patch,_=collect_patch(p)
+    assert patch.isascii() and 'GIT binary patch' in patch and '+value=2' in patch
+    clone=tmp_path/'clone'
+    subprocess.run(['git','clone','-q',str(p),str(clone)],check=True)
+    subprocess.run(['git','-C',str(clone),'apply','-'],input=patch.encode(),check=True)
+    assert (clone/'_build/objects.inv').read_bytes()==inventory
+
+
 def test_runtime_source_collision_fails_closed(tmp_path,monkeypatch):
     p=tmp_path/'workspace';repository(p)
     (p/'astropy').mkdir();(p/'astropy/version.py').write_text('original')
