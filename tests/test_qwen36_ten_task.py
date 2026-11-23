@@ -45,3 +45,14 @@ def test_control_collection_exception_is_narrow_and_resume_preserves_attempts(mo
     assert module.case_name(2)=='task010-case-02-attempt-02'
     assert module.case_name(3)=='task010-case-03-attempt-02'
     assert module.case_name(4)=='task010-case-04-attempt-01'
+    assert module.case_name(2,'task011')=='task011-case-02-attempt-01'
+
+
+def test_nonisolated_official_build_uses_existing_image_dependencies(tmp_path,monkeypatch):
+    monkeypatch.syspath_prepend(str(Path('scripts').resolve()))
+    spec=importlib.util.spec_from_file_location('ten_pilot', 'scripts/run_qwen36_ten_task.py')
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    def no_docker(*args,**kwargs):raise AssertionError('No isolated build dependency download needed')
+    monkeypatch.setattr(module,'docker',no_docker)
+    module.prepare_wheels(SimpleNamespace(eval_script_list=['python -m pip install --no-build-isolation -e .']),tmp_path/'wheels')
+    assert json.loads((tmp_path/'wheels/requirements.json').read_text())==[]

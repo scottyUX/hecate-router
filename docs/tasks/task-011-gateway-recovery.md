@@ -28,7 +28,7 @@ followed by native Qwen read/edit/test-repair and patch-tool gates before tasks.
 Run the same frozen ten IDs, one fresh model attempt each, under task011 run
 IDs and separate root/config snapshots. Keep model checkpoint, BF16, sampling,
 262144 context, 8192 output cap and task budgets unchanged. Record gateway
-recovery enabled and its three-recovery bound. Pin pip==24.0 in scikit-learn's
+recovery enabled and its three-recovery bound. Pin pip==24.0 and setuptools==68.0.0 in scikit-learn's
 environment to retain its official --no-use-pep517 recipe. Keep the original
 recipe and pin in the test spec; require clean reference-patch controls.
 Astropy's exact build-pin check and Pylint's narrow baseline exception remain.
@@ -38,3 +38,5 @@ Persist exact code/config/dependencies, attempts, raw outputs, patches and test
 reports. Run two five-task batches with verified off-Spark checkpoint copies;
 stop on failed gates/controls and report unknowns separately from unsolved
 patches. Stop only owned servers on exit. No training telemetry or API spend.
+
+The first scikit-learn preflight with only pip pinned exposed modern setuptools editable-install recursion and was stopped. Retain that failure. The corrected environment pins both packages; when the official evaluator explicitly uses --no-build-isolation, no isolated-build wheelhouse dependencies are needed. Preserve official commands and require clean controls before model inference.

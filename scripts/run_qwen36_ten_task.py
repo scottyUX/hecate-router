@@ -55,6 +55,12 @@ def controls_pass(spec, bug, gold, unpatched_log):
 def prepare_wheels(spec, directory):
     """Prepare public build dependencies with the task's own Python version."""
     directory.mkdir()
+    installs=[line for line in spec.eval_script_list if 'pip install' in line and '-e .' in line]
+    if installs and all('--no-build-isolation' in line for line in installs):
+        (directory/'requirements.json').write_text('[]\n')
+        (directory/'wheel-sha256.json').write_text('{}\n')
+        (directory/'download.log').write_text('Official editable install disables build isolation; uses image build dependencies.\n')
+        return
     result=docker('run','--rm','--network','none','--entrypoint','git',spec.instance_image_key,
                   '-C','/testbed','show','HEAD:pyproject.toml',check=False)
     requirements=['setuptools>=40.8.0','wheel']
@@ -163,7 +169,7 @@ def main():
             if prefix == 'task011' and iid == 'scikit-learn__scikit-learn-25102':
                 # Retain the official legacy build command with a compatible pip.
                 spec.env_image_tag=spec.instance_image_tag='task011'
-                spec.env_script_list.append('python -m pip install pip==24.0')
+                spec.env_script_list.append('python -m pip install pip==24.0 setuptools==68.0.0')
             (p/'test-spec.json').write_text(json.dumps(spec.__dict__,indent=2)+'\n')
             client=docker_sdk.from_env();_,failed=build_env_images(client,[spec],max_workers=1)
             if failed:raise RuntimeError('Official task environment build failed')
