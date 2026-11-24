@@ -1,6 +1,6 @@
 # TASK-013 — SWE-bench-45 paper match: remove our own caps
 
-Status: implemented; awaiting Spark throughput check, preflight and gate.
+Status: stopped 2026-11-23 after rep 0 (harness testing complete).
 
 ## Request and purpose
 
@@ -171,3 +171,19 @@ Paper Mean-of-4: 26.67%. Solved: astropy-13579, astropy-14369, django-11138, -12
 since fixed, Amendments 1–3, 5): django-10554, -11885, -13344, -14007, sphinx-9229.
 Request cap (200) reached: django-15503, -15957, -16263, sphinx-9461 (all graded
 unresolved). Reps 1–3 continue automatically (checkpoint 2 started 14:15 PT).
+
+## Stopped (2026-11-23 18:53 PT)
+
+Stopped at Scott's request: the harness testing goal is met. Final state:
+
+- Rep 0 complete (see above): 10/42 ARM tasks solved, 22.2% of 45, 27.0% excluding
+  the 5 harness-ended attempts.
+- Rep 1 partial: 11 graded, 4 solved (astropy-13579, django-11138, -12708, -13128),
+  no harness-ended attempts. In-flight django-11885, -13344, -13837 rep 1 were marked
+  `interrupted` (never regenerated). Reps 2–3 not started.
+- All 56 attempts have a verified off-Spark copy (`sync_receipt.json`); mirror at
+  `~/hecate-spark-mirror/task013/runs` on the Mac. `~/work/hecate-task013/STOPPED.txt`
+  on Spark. vLLM and agent containers removed.
+
+Not done: Mean-of-4 / Best-of-4 (needs reps 1–3), the 3 x86 tasks, and regrading
+django-14007 / sphinx-9229 rep 0 (no regrade mode yet).
