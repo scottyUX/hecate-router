@@ -1,0 +1,138 @@
+{
+  "version": "hecate.replay-inputs.v1",
+  "episodes": [
+    {
+      "format": "e7-session-v1",
+      "path": "data/outputs/task004-inputs/e7-session.jsonl",
+      "episode_id": "e7-train-pilot",
+      "task_id": "jd__tenacity.0d40e76f.pr_425",
+      "run_id": "exp-07_arm-weakalone_split-tenacitytrain_seed-0_run-8",
+      "session_id": "3734a410-2eee-48fd-8fa8-44424991330a",
+      "harness": "mini-swe-agent-e7",
+      "harness_version": "historical-e7",
+      "split": "train",
+      "model_role": "m1",
+      "execution_config": {}
+    },
+    {
+      "format": "hecate-codex-v1",
+      "path": "data/outputs/runs/task002-7b-pilot-run-02/jd__tenacity.0d40e76f.combine_module__yjmtlc2r/agent",
+      "episode_id": "task002-7b-jd__tenacity.0d40e76f.combine_module__yjmtlc2r",
+      "task_id": "jd__tenacity.0d40e76f.combine_module__yjmtlc2r",
+      "run_id": "task002-7b-pilot-run-02",
+      "session_id": "saved-agent-jd__tenacity.0d40e76f.combine_module__yjmtlc2r",
+      "harness": "codex",
+      "harness_version": "0.164.0",
+      "split": "train",
+      "model_revision": "c03e6d358207e414f1eca0bb1891e29f1db0e242",
+      "model_role": "m1",
+      "execution_config": {
+        "model": {
+          "id": "Qwen/Qwen2.5-Coder-7B-Instruct",
+          "revision": "c03e6d358207e414f1eca0bb1891e29f1db0e242",
+          "precision": "bfloat16",
+          "context_tokens": 16384,
+          "sampling": {
+            "temperature": 0,
+            "top_p": 1,
+            "max_tokens": 2048,
+            "seed": 0
+          }
+        },
+        "serving": {
+          "image": "sha256:bf05c8a0d56f7ed2fe279e0c0c876dd2bb813dd34702d975fa6ab640860ce825",
+          "endpoint": "http://127.0.0.1:8126/v1",
+          "parser": "hermes",
+          "tool_decoding": "required_with_finish",
+          "editing_mode": "shell",
+          "gpu_memory_utilization": 0.35,
+          "container_name": "hecate-task002-model"
+        },
+        "codex": {
+          "version": "0.164.0",
+          "package": "@openai/codex@0.164.0-linux-arm64",
+          "binary": "toolchain/package/vendor/aarch64-unknown-linux-musl/bin/codex"
+        },
+        "sandbox": {
+          "image": "sha256:bf35e4de2d5f0543c17d124c8ab0c98cf50b6c367dbc3d73f7cd6eec9125e38d"
+        },
+        "limits": {
+          "fixture_model_requests": 10,
+          "fixture_wall_s": 600,
+          "task_model_requests": 40,
+          "task_wall_s": 2700,
+          "command_timeout_s": 120,
+          "request_timeout_s": 360,
+          "retries": 2
+        },
+        "selection_manifest": "configs/codex_qwen_size_pilot_tasks.json",
+        "pilot": {
+          "task_id": "TASK-002",
+          "task_count": 20,
+          "continue_on_infrastructure_error": true,
+          "max_consecutive_infrastructure_errors": 3
+        }
+      }
+    },
+    {
+      "format": "hecate-codex-v1",
+      "path": "data/outputs/runs/task002-7b-pilot-run-02/jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__3ljvivv1/agent",
+      "episode_id": "task002-7b-jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__3ljvivv1",
+      "task_id": "jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__3ljvivv1",
+      "run_id": "task002-7b-pilot-run-02",
+      "session_id": "saved-agent-jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__3ljvivv1",
+      "harness": "codex",
+      "harness_version": "0.164.0",
+      "split": "train",
+      "model_revision": "c03e6d358207e414f1eca0bb1891e29f1db0e242",
+      "model_role": "m1",
+      "execution_config": {
+        "model": {
+          "id": "Qwen/Qwen2.5-Coder-7B-Instruct",
+          "revision": "c03e6d358207e414f1eca0bb1891e29f1db0e242",
+          "precision": "bfloat16",
+          "context_tokens": 16384,
+          "sampling": {
+            "temperature": 0,
+            "top_p": 1,
+            "max_tokens": 2048,
+            "seed": 0
+          }
+        },
+        "serving": {
+          "image": "sha256:bf05c8a0d56f7ed2fe279e0c0c876dd2bb813dd34702d975fa6ab640860ce825",
+          "endpoint": "http://127.0.0.1:8126/v1",
+          "parser": "hermes",
+          "tool_decoding": "required_with_finish",
+          "editing_mode": "shell",
+          "gpu_memory_utilization": 0.35,
+          "container_name": "hecate-task002-model"
+        },
+        "codex": {
+          "version": "0.164.0",
+          "package": "@openai/codex@0.164.0-linux-arm64",
+          "binary": "toolchain/package/vendor/aarch64-unknown-linux-musl/bin/codex"
+        },
+        "sandbox": {
+          "image": "sha256:bf35e4de2d5f0543c17d124c8ab0c98cf50b6c367dbc3d73f7cd6eec9125e38d"
+        },
+        "limits": {
+          "fixture_model_requests": 10,
+          "fixture_wall_s": 600,
+          "task_model_requests": 40,
+          "task_wall_s": 2700,
+          "command_timeout_s": 120,
+          "request_timeout_s": 360,
+          "retries": 2
+        },
+        "selection_manifest": "configs/codex_qwen_size_pilot_tasks.json",
+        "pilot": {
+          "task_id": "TASK-002",
+          "task_count": 20,
+          "continue_on_infrastructure_error": true,
+          "max_consecutive_infrastructure_errors": 3
+        }
+      }
+    }
+  ]
+}

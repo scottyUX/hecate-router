@@ -1,0 +1,44 @@
+{
+  "task_id": "TASK-002",
+  "selection": "Seed-0 within-type shuffle; round-robin across lexically ordered bug types; first 20 eligible E7 training tasks. Exclude all three TASK-001 smoke IDs. Balanced diagnostic sample, not prevalence-weighted. All overlap E7 advisor training.",
+  "seed": 0,
+  "source_sha256": "c8eb8bde2e75730823f8e98c00f290f0c5e200053e1306600d643bb08ceff1f4",
+  "excluded_instance_ids": [
+    "jd__tenacity.0d40e76f.combine_file__4gcf36bk",
+    "jd__tenacity.0d40e76f.combine_file__mged6jg2",
+    "jd__tenacity.0d40e76f.combine_file__oicq97rw"
+  ],
+  "instance_ids": [
+    "jd__tenacity.0d40e76f.combine_file__s0bcdks5",
+    "jd__tenacity.0d40e76f.combine_module__yjmtlc2r",
+    "jd__tenacity.0d40e76f.func_basic__7azvfd3s",
+    "jd__tenacity.0d40e76f.func_pm_ctrl_invert_if__ipm7o2gf",
+    "jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__3ljvivv1",
+    "jd__tenacity.0d40e76f.lm_rewrite__0siuyh3e",
+    "jd__tenacity.0d40e76f.pr_390",
+    "jd__tenacity.0d40e76f.pr_406",
+    "jd__tenacity.0d40e76f.pr_425",
+    "jd__tenacity.0d40e76f.combine_file__zg0hlvr9",
+    "jd__tenacity.0d40e76f.func_basic__1avsmufn",
+    "jd__tenacity.0d40e76f.func_pm_ctrl_invert_if__wwden9d5",
+    "jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__ld25mubm",
+    "jd__tenacity.0d40e76f.lm_rewrite__17y1km6x",
+    "jd__tenacity.0d40e76f.combine_file__x5zc4xb6",
+    "jd__tenacity.0d40e76f.func_basic__ttznt9oc",
+    "jd__tenacity.0d40e76f.func_pm_ctrl_invert_if__p67w1cck",
+    "jd__tenacity.0d40e76f.func_pm_ctrl_shuffle__x5mvcunm",
+    "jd__tenacity.0d40e76f.lm_rewrite__3rty13vw",
+    "jd__tenacity.0d40e76f.func_basic__ogh8drsw"
+  ],
+  "bug_type_counts": {
+    "combine_file": 3,
+    "combine_module": 1,
+    "func_basic": 4,
+    "func_pm_ctrl_invert_if": 3,
+    "func_pm_ctrl_shuffle": 3,
+    "lm_rewrite": 3,
+    "pr_390": 1,
+    "pr_406": 1,
+    "pr_425": 1
+  }
+}

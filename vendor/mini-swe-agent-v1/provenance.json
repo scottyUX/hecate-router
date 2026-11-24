@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/SWE-agent/mini-swe-agent",
+  "tag": "v1.0.0",
+  "commit": "a2b0efee5fd9c1d3bc9fdfc6fe88036a2235d74d",
+  "note": "Unmodified upstream core files; custom Hecate model/environment adapters. Historical package name microsweagent.",
+  "sha256": {
+    "LICENSE.md": "0f796e58f91d1c07bb2c1b1d0f8bf3a83017c3a5dec1bdc6fae733b2cd2e875b",
+    "microsweagent/__init__.py": "cbc090418283854cf1ea9d4293a0ed1250c7d95f6103aae782c00d0a176cff9a",
+    "microsweagent/config/default.yaml": "c891e065ba4f09faca49875857a93eaa9b33272ca1e1134d3bb96efb356c725f",
+    "microsweagent/agents/default.py": "ff6f63f2eb3355e3e6b035e857ce5fad572fdfb936a14cc525bf437fca792ac9"
+  }
+}

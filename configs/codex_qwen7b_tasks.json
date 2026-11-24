@@ -1,0 +1,9 @@
+{
+  "selection": "First three instance IDs in lexical order from E7 training pool; no outcome-based selection. All overlap E7 advisor training. No final evaluation tasks.",
+  "source_sha256": "c8eb8bde2e75730823f8e98c00f290f0c5e200053e1306600d643bb08ceff1f4",
+  "instance_ids": [
+    "jd__tenacity.0d40e76f.combine_file__4gcf36bk",
+    "jd__tenacity.0d40e76f.combine_file__mged6jg2",
+    "jd__tenacity.0d40e76f.combine_file__oicq97rw"
+  ]
+}

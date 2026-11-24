@@ -1,0 +1,135 @@
+from types import SimpleNamespace
+import json
+from pathlib import Path
+import importlib.util
+import subprocess
+
+import pytest
+import yaml
+from hecate.execution.swebench_pilot import validate_pilot, required_outcomes
+
+
+def test_exact_paper_model_and_task_scope():
+    config = yaml.safe_load(Path("configs/qwen36_local_evaluator.yaml").read_text())
+    manifest = json.loads(Path(config["selection_manifest"]).read_text())
+    instance = {"instance_id": "django__django-16560"}
+    validate_pilot(config, manifest, instance)
+    config["model"]["id"] = "Qwen/Qwen3-Coder-30B-A3B-Instruct"
+    with pytest.raises(ValueError):
+        validate_pilot(config, manifest, instance)
+
+
+@pytest.mark.parametrize("change", ["checkpoint", "precision", "codex", "task", "count", "arch"])
+def test_scope_rejects_unapproved_changes(change):
+    config = yaml.safe_load(Path("configs/qwen36_local_evaluator.yaml").read_text())
+    manifest = json.loads(Path(config["selection_manifest"]).read_text())
+    section, key, value = {"checkpoint": ("model", "revision", "new"),
+                           "precision": ("model", "precision", "fp8"),
+                           "codex": ("codex", "version", "new"),
+                           "task": ("evaluator", "instance_id", "other"),
+                           "count": ("evaluator", "task_count", 45),
+                           "arch": ("evaluator", "arch", "x86_64")}[change]
+    config[section][key] = value
+    with pytest.raises(ValueError):
+        validate_pilot(config, manifest, {"instance_id": "django__django-16560"})
+
+
+def test_missing_test_and_missing_markers_are_unknown_not_pass():
+    spec = SimpleNamespace(FAIL_TO_PASS=["fix"], PASS_TO_PASS=["stable"])
+    assert required_outcomes(spec, {"fix": "PASSED"}, True)["resolved"] is None
+    statuses = {"fix": "PASSED", "stable": "PASSED"}
+    assert required_outcomes(spec, statuses, False)["resolved"] is None
+    assert required_outcomes(spec, statuses, True, timed_out=True)["resolved"] is None
+    assert required_outcomes(spec, statuses, True)["resolved"] is True
+    assert required_outcomes(spec, {**statuses, "fix": "FAILED"}, True)["resolved"] is False
+    assert required_outcomes(spec, {**statuses, "stable": "ERROR"}, True)["resolved"] is False
+
+
+def test_qwen36_serving_configuration_is_explicit():
+    config = yaml.safe_load(Path("configs/qwen36_local_evaluator.yaml").read_text())
+    assert config["serving"]["reasoning_parser"] == "qwen3"
+    assert config["serving"]["language_model_only"] is True
+    assert config["serving"]["parser"] == "qwen3_coder"
+    assert config["model"]["context_tokens"] == 32768
+    assert config["serving"]["message_layout"] == "single_system_prefix"
+
+
+def test_single_system_layout_preserves_instructions_and_conversation_order():
+    from hecate.execution.model_gateway import translate_request
+    body = {"instructions": "base policy", "input": [
+        {"role": "developer", "content": "developer one"},
+        {"role": "user", "content": "task"},
+        {"role": "developer", "content": "developer two"},
+        {"role": "assistant", "content": "working"},
+    ]}
+    original, _ = translate_request(body, "local", {})
+    merged, _ = translate_request(body, "local", {}, message_layout="single_system_prefix")
+    assert sum(m["role"] == "system" for m in original["messages"]) == 3
+    assert merged["messages"][0] == {"role": "system", "content": "base policy\n\ndeveloper one\n\ndeveloper two"}
+    assert merged["messages"][1:] == [m for m in original["messages"] if m["role"] != "system"]
+
+
+def test_single_system_layout_preserves_tool_history():
+    from hecate.execution.model_gateway import translate_request
+    body = {"input": [{"role": "user", "content": "task"},
+                      {"role": "developer", "content": "instructions"},
+                      {"type": "function_call", "name": "exec_command", "call_id": "c", "arguments": '{"cmd":"ls"}'},
+                      {"type": "function_call_output", "call_id": "c", "output": "source.py"}]}
+    raw, _ = translate_request(body, "local", {})
+    merged, _ = translate_request(body, "local", {}, message_layout="single_system_prefix")
+    assert merged["messages"][1:] == [m for m in raw["messages"] if m["role"] != "system"]
+
+
+@pytest.mark.parametrize("change", ['empty', 'source', 'astropy-pin', 'pin-and-source', 'wrong-pin'])
+def test_export_accepts_empty_setup_commit_but_rejects_source_changes(tmp_path, monkeypatch, change):
+    repository = tmp_path / "image-repository"
+    repository.mkdir()
+    subprocess.run(["git", "init", "-q", str(repository)], check=True)
+    (repository / "source.py").write_text("value=1\n")
+    (repository / "pyproject.toml").write_text('[build-system]\nrequires = ["setuptools", "wheel"]\n')
+    subprocess.run(["git", "-C", str(repository), "add", "."], check=True)
+    commit = ["git", "-C", str(repository), "-c", "user.name=Fixture", "-c", "user.email=fixture@localhost", "commit", "-qm"]
+    subprocess.run(commit + ["base"], check=True)
+    base = subprocess.check_output(["git", "-C", str(repository), "rev-parse", "HEAD"], text=True).strip()
+    if change in ('source', 'pin-and-source'):
+        (repository / "source.py").write_text("value=2\n")
+    if change in ('astropy-pin', 'pin-and-source', 'wrong-pin'):
+        version = '69.0.0' if change == 'wrong-pin' else '68.0.0'
+        (repository / "pyproject.toml").write_text(f'[build-system]\nrequires = ["setuptools=={version}", "wheel"]\n')
+    subprocess.run(["git", "-C", str(repository), "add", "."], check=True)
+    subprocess.run(commit + ["setup", "--allow-empty"], check=True)
+    monkeypatch.syspath_prepend(str(Path("scripts").resolve()))
+    spec = importlib.util.spec_from_file_location("swe_pilot", "scripts/run_qwen36_swebench_pilot.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    original = subprocess.check_output
+    replay = tmp_path / "replay"
+    monkeypatch.setattr(module, "REPLAY_DIR", str(replay))
+    # Portable stand-in for SWE-bench's Astropy sed recipe (BSD sed differs).
+    monkeypatch.setattr(module, "official_recipe", lambda spec: [
+        "python3 -c \"import pathlib; p=pathlib.Path('pyproject.toml'); "
+        "p.write_text(p.read_text().replace('requires = [\\\"setuptools\\\",', 'requires = [\\\"setuptools==68.0.0\\\",', 1))\""])
+    def docker(*args, check=True, **kwargs):
+        if args[0] != "exec":
+            return subprocess.CompletedProcess(args, 0, "", "")
+        workdir = str(repository) if args[2] == "/testbed" else args[2]
+        result = subprocess.run(list(args[4:]), cwd=workdir, capture_output=True, text=True)
+        return subprocess.CompletedProcess(args, result.returncode, result.stdout, result.stderr)
+    def archive(command, **kwargs):
+        if command[0] == "docker":
+            return original(["git", "-C", str(repository), "archive", command[-1]], **kwargs)
+        return original(command, **kwargs)
+    monkeypatch.setattr(module, "docker", docker)
+    monkeypatch.setattr(module.subprocess, "check_output", archive)
+    workspace = tmp_path / "workspace"
+    image_spec = SimpleNamespace(instance_image_key="fixture", repo='astropy/astropy', version='5.0')
+    if change in ('source', 'pin-and-source', 'wrong-pin'):
+        with pytest.raises(ValueError, match="source tree differs"):
+            module.export_workspace(image_spec, base, workspace)
+    else:
+        result = module.export_workspace(image_spec, base, workspace)
+        assert result["exported_revision"] == base and result["image_head"] != base
+        assert (workspace / "source.py").read_text() == "value=1\n"
+        assert 'setuptools==' not in (workspace / 'pyproject.toml').read_text()
+        assert bool(result['image_setup_pin']) == (change == 'astropy-pin')
+        assert original(["git", "-C", str(workspace), "rev-list", "--count", "HEAD"], text=True).strip() == "1"

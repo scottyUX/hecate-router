@@ -107,7 +107,7 @@ function LoginForm() {
         </h1>
         <p className="text-sm text-muted-foreground">
           {mode === "signin"
-            ? "Journal access is invite-only for lab members."
+            ? "Private lab pages are invite-only for lab members."
             : "We’ll email you a link to set a new password."}
         </p>
       </div>

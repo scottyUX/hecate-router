@@ -46,6 +46,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   const isProtected =
+    path === "/alpha" ||
+    path.startsWith("/alpha/") ||
     path === "/journal" ||
     path.startsWith("/journal/") ||
     path === "/profile" ||

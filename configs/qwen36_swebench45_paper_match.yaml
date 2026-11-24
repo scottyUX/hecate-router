@@ -1,0 +1,61 @@
+model:
+  id: Qwen/Qwen3.6-35B-A3B
+  revision: 345d467b117d1fd5eda9b879a5988de9ae5f47a7
+  precision: bfloat16
+  context_tokens: 262144
+  # TASK-013: the paper reports no sampling or output cap. Send none, so the
+  # server applies the model's generation_config (temperature 1.0, top_p 0.95,
+  # top_k 20), Qwen's own SWE-bench setting; output may use the remaining context.
+  sampling:
+    # Replaced per attempt by the repetition index (0..3); see TASK-012.
+    seed: 0
+serving:
+  image: sha256:bf05c8a0d56f7ed2fe279e0c0c876dd2bb813dd34702d975fa6ab640860ce825
+  endpoint: http://127.0.0.1:8136/v1
+  parser: qwen3_coder
+  reasoning_parser: qwen3
+  language_model_only: true
+  enforce_eager: false
+  enable_prefix_caching: true
+  generation_config: auto
+  tool_decoding: auto_with_finish
+  editing_mode: patch
+  message_layout: single_system_prefix
+  gpu_memory_utilization: 0.8
+  max_num_seqs: 3
+  container_name: hecate-task012-model
+  prompt_profile: native
+  recover_model_outputs: true
+  max_response_recoveries: 3
+codex:
+  version: 0.164.0
+  package: '@openai/codex@0.164.0-linux-arm64'
+  binary: toolchain/package/vendor/aarch64-unknown-linux-musl/bin/codex
+sandbox:
+  image: sha256:bf35e4de2d5f0543c17d124c8ab0c98cf50b6c367dbc3d73f7cd6eec9125e38d
+limits:
+  fixture_model_requests: 20
+  fixture_wall_s: 600
+  task_model_requests: 200
+  # TASK-013: no wall-clock, per-request or per-command deadline (null).
+  task_wall_s: null
+  command_timeout_s: null
+  request_timeout_s: null
+  retries: 2
+selection_manifest: configs/kimi_codex_swebench45_tasks.json
+x86_ids: [pydata__xarray-3993, pydata__xarray-6992, sympy__sympy-14248]
+# TASK-013: sphinx-7590/8548 run with the official docutils 0.21.2 pin (ENV_PINS).
+excluded_ids: []
+evaluator:
+  version: 4.1.0
+  task_id: TASK-012
+  arch: arm64
+  timeout_s: 900
+  image_tag: task012
+run_prefix: task012
+repetitions: 4
+concurrency: 3
+# TASK-013: larger checkpoints cut model reloads and end-of-batch idle time.
+checkpoint_attempts: 42
+execution_protocol: paper-match-v3
+workspace_runtime_artifacts: true
