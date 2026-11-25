@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "malformed_request",
+    "message": "request body is not valid JSON",
+    "request_id": "6b1f0c73-2a45-4d19-8e07-5c3d9f1ab204"
+  }
+}

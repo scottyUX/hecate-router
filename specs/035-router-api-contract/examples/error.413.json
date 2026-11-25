@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "payload_too_large",
+    "message": "file_text exceeds the 256000 character maximum",
+    "request_id": "91d4a67f-30bc-4e28-a5f1-7b0c62e8d935"
+  }
+}
